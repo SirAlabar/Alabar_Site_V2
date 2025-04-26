@@ -1,0 +1,30 @@
+@media (max-width: 480px) {
+    #game-container {
+        height: 70vh;
+    }
+    
+    .game-card-container {
+        position: relative;
+        width: 100%;
+        right: 1rem;
+        padding: 0.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    #game-container {
+        height: 80vh;
+    }
+    
+    .game-card {
+        margin: 1rem;
+    }
+
+    .game-preview {
+        height: 200px;
+    }
+    
+    .play-button {
+        width: 100%;
+    }
+}

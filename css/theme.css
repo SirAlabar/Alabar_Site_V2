@@ -1,0 +1,31 @@
+.theme-toggle {
+    background: none;
+    border: none;
+    font-size: 40px;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+    z-index: 2100;
+}
+
+.theme-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+body[data-theme="dark"] header {
+    color: rgb(0, 183, 255);
+}
+
+body[data-theme="dark"] h1 {
+    color: rgb(255, 60, 60);
+}
+
+body[data-theme="dark"] h6 {
+    color: rgb(126, 255, 182);
+}
+
+:root {
+    --theme-light: 'light';
+    --theme-dark: 'dark';
+}
