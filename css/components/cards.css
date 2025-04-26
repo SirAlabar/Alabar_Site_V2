@@ -1,4 +1,5 @@
-.game-card-container {
+.game-card-container 
+{
     position: absolute;
     top: 0;
     right: 5rem;
@@ -11,13 +12,15 @@
     width: 700px;
 }
 
-.container-fluid.game-container.hidden {
+.container-fluid.game-container.hidden 
+{
     transform: translate(100%, -50%);
     opacity: 0;
     pointer-events: none;
 }
 
-.game-card {
+.game-card 
+{
     background-color: rgba(33, 37, 41, 0.2) !important;
     backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -28,13 +31,15 @@
     overflow-y: auto;
 }
 
-.game-card .card-header {
+.game-card .card-header 
+{
     background: rgba(0, 0, 0, 0.3);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding: 1rem;
 }
 
-.game-title {
+.game-title 
+{
     font-family: "Honk", serif;
     color: rgb(124, 127, 128);
     font-size: 2.8rem;
@@ -44,7 +49,8 @@
     text-shadow: 0 0 10px rgba(25, 228, 255, 0.5);
 }
 
-.game-preview {
+.game-preview 
+{
     position: center;
     width: 100%;
     height: 800px;
@@ -53,14 +59,16 @@
     margin: 1rem 0;
 }
 
-.game-preview img {
+.game-preview img 
+{
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: opacity 0.3s ease;
 }
 
-.game-description {
+.game-description 
+{
     font-family: "Honk", serif;
     color: rgb(168, 247, 201);
     text-align: center;
@@ -69,7 +77,8 @@
     text-shadow: 0 0 8px rgba(168, 247, 201, 0.3);
 }
 
-.progress-bar {
+.progress-bar 
+{
     height: 6px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
@@ -77,7 +86,8 @@
     overflow: hidden;
 }
 
-.progress-bar-fill {
+.progress-bar-fill 
+{
     height: 100%;
     background: rgb(25, 228, 255);
     transition: width 1s ease;
@@ -85,14 +95,16 @@
     box-shadow: 0 0 10px rgba(25, 228, 255, 0.5);
 }
 
-.game-buttons {
+.game-buttons 
+{
     display: flex;
     justify-content: center;
     gap: 0.8rem;
     margin-top: 1rem;
 }
 
-.game-select-btn {
+.game-select-btn 
+{
     width: 40px;
     height: 40px;
     border-radius: 8px;
@@ -107,20 +119,23 @@
     backdrop-filter: blur(4px);
 }
 
-.game-select-btn:hover {
+.game-select-btn:hover 
+{
     background: rgba(25, 228, 255, 0.2);
     transform: scale(1.05);
     box-shadow: 0 0 15px rgba(25, 228, 255, 0.3);
 }
 
-.game-select-btn.active {
+.game-select-btn.active 
+{
     background: rgb(255, 32, 32);
     color: black;
     transform: scale(1.1);
     box-shadow: 0 0 20px rgba(25, 228, 255, 0.5);
 }
 
-.play-button {
+.play-button 
+{
     width: auto;
     min-width: 150px;
     padding: 8px 16px;
@@ -141,13 +156,15 @@
     backdrop-filter: blur(2px);
 }
 
-.play-button:hover {
+.play-button:hover 
+{
     background: rgb(22, 163, 74);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(34, 197, 94, 0.4);
 }
 
-.toggle-card-btn {
+.toggle-card-btn 
+{
     position: fixed;
     right: 20px;
     top: 50%;
@@ -168,11 +185,13 @@
     transition: all 0.3s ease;
 }
 
-.toggle-card-btn:hover {
+.toggle-card-btn:hover 
+{
     background-color: rgba(33, 37, 41, 0.4);
     transform: translateY(-50%) scale(1.1);
 }
 
-.toggle-card-btn.active {
+.toggle-card-btn.active 
+{
     transform: translateY(-50%) rotate(180deg);
 }
