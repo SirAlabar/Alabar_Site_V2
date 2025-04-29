@@ -1,3 +1,97 @@
+@keyframes moveCloud {
+    from {left: 0px;}
+    to {left: 20px;}
+}
+
+/* Reset global */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    background-color: #000;
+    scrollbar-width: none;
+    -ms-overflow-style: none;    
+}
+
+.scene {
+    position: relative;
+    width: 100%;
+    max-width: 2000px;
+    margin: 0 auto;
+    height: 250vh;
+    overflow: visible;
+    overflow-x: hidden;
+    transform-style: preserve-3d;
+}
+
+.layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: repeat-y;
+    transition: transform 0.1s ease-out;
+    will-change: transform;
+    background-position: top center;
+}
+
+/* Background now uses color instead of image */
+#background { 
+    z-index: -10; 
+    background-color: var(--bg-color, #87CEEB); 
+    background-attachment: fixed; 
+}
+
+/* Other layers still use images */
+#mountain { z-index: -9; background-image: var(--mountain-image); background-position: top center; }
+#clouds   { z-index: -8; background-image: var(--clouds-image); }
+#field1   { z-index: -7; background-image: var(--field6-image); }
+#field2   { z-index: -6; background-image: var(--field5-image); }
+#field3   { z-index: -5; background-image: var(--field4-image); }
+#field4   { z-index: -4; background-image: var(--field3-image); }
+#field5   { z-index: -3; background-image: var(--field2-image); }
+#field6   { z-index: -2; background-image: var(--field1-image); }
+#castle   { z-index: -1; background-image: var(--castle-image); }
+
+#clouds {
+  animation-name: moveCloud;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  animation-direction: alternate;
+  mix-blend-mode: screen;
+}
+
+.header{
+    width: 100vw;
+    z-index: 100;
+    top: 0;
+    position: absolute;
+}
+
+/* Game container for PIXI.js */
+#game-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Make game elements interactive */
+#game-container canvas {
+    pointer-events: auto;
+}
+
 .theme-toggle {
     background: none;
     border: none;
@@ -6,7 +100,7 @@
     padding: 0;
     border-radius: 50%;
     transition: background-color 0.3s;
-    z-index: 2100;
+    z-index: 2000;
 }
 
 .theme-toggle:hover {
@@ -25,7 +119,24 @@ body[data-theme="dark"] h6 {
     color: rgb(126, 255, 182);
 }
 
+/* Theme variables */
 :root {
-    --theme-light: 'light';
-    --theme-dark: 'dark';
+    /* Background color variables */
+    --bg-color: #87CEEB; /* Sky blue for light theme default */
+    
+    /* Image paths will be set by JavaScript */
+    --mountain-image: none;
+    --clouds-image: none;
+    --castle-image: none;
+    --field1-image: none;
+    --field2-image: none;
+    --field3-image: none;
+    --field4-image: none;
+    --field5-image: none;
+    --field6-image: none;
+}
+
+body[data-theme="dark"] {
+    /* Dark theme background color */
+    --bg-color: #191970; /* Midnight blue */
 }
