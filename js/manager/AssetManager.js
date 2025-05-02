@@ -39,26 +39,28 @@ class AssetManager {
             backgrounds: {
                 light: {
                     backgroundColor: '#87CEEB',
-                    mountain: './assets/images/background/light/mountain.png',
+                    mountain: './assets/images/background/light/mountain.webp',
                     clouds: './assets/images/background/light/clouds.png',
-                    castle: './assets/images/background/light/castle.png',
-                    field1: './assets/images/background/light/field1.png',
-                    field2: './assets/images/background/light/field2.png',
-                    field3: './assets/images/background/light/field3.png',
-                    field4: './assets/images/background/light/field4.png',
-                    field5: './assets/images/background/light/field5.png',
-                    field6: './assets/images/background/light/field6.png'
+                    castle: './assets/images/background/light/castle.webp',
+                    field1: './assets/images/background/light/field1.webp',
+                    field2: './assets/images/background/light/field2.webp',
+                    field3: './assets/images/background/light/field3.webp',
+                    field4: './assets/images/background/light/field4.webp',
+                    field5: './assets/images/background/light/field5.webp',
+                    field6: './assets/images/background/light/field6.webp',
+                    field7: './assets/images/background/light/field7.webp'
                 },
                 dark: {
                     backgroundColor: '#191970',
                     mountain: './assets/images/background/dark/mountain_night.png',
-                    castle: './assets/images/background/dark/castle_night.png',
-                    field1: './assets/images/background/dark/field1_night.png',
-                    field2: './assets/images/background/dark/field2_night.png',
-                    field3: './assets/images/background/dark/field3_night.png',
-                    field4: './assets/images/background/dark/field4_night.png',
-                    field5: './assets/images/background/dark/field5_night.png',
-                    field6: './assets/images/background/dark/field6_night.png'
+                    moon: './assets/images/background/dark/moon_night.webp',
+                    castle: './assets/images/background/dark/castle_night.webp',
+                    field1: './assets/images/background/dark/field1_night.webp',
+                    field2: './assets/images/background/dark/field2_night.webp',
+                    field3: './assets/images/background/dark/field3_night.webp',
+                    field4: './assets/images/background/dark/field4_night.webp',
+                    field5: './assets/images/background/dark/field5_night.webp',
+                    field6: './assets/images/background/dark/field6_night.webp'
                 }
             }
         };
@@ -265,15 +267,17 @@ class AssetManager {
             document.documentElement.style.setProperty('--bg-image', 'none');
             
             // Apply light theme images
-            document.documentElement.style.setProperty('--mountain-image', `url(${baseUrl}assets/images/background/light/mountain.png)`);
+            document.documentElement.style.setProperty('--mountain-image', `url(${baseUrl}assets/images/background/light/mountain.webp)`);
             document.documentElement.style.setProperty('--clouds-image', `url(${baseUrl}assets/images/background/light/clouds.png)`);
-            document.documentElement.style.setProperty('--castle-image', `url(${baseUrl}assets/images/background/light/castle.png)`);
-            document.documentElement.style.setProperty('--field1-image', `url(${baseUrl}assets/images/background/light/field1.png)`);
-            document.documentElement.style.setProperty('--field2-image', `url(${baseUrl}assets/images/background/light/field2.png)`);
-            document.documentElement.style.setProperty('--field3-image', `url(${baseUrl}assets/images/background/light/field3.png)`);
-            document.documentElement.style.setProperty('--field4-image', `url(${baseUrl}assets/images/background/light/field4.png)`);
-            document.documentElement.style.setProperty('--field5-image', `url(${baseUrl}assets/images/background/light/field5.png)`);
-            document.documentElement.style.setProperty('--field6-image', `url(${baseUrl}assets/images/background/light/field6.png)`);
+            document.documentElement.style.setProperty('--moon-image', 'none');
+            document.documentElement.style.setProperty('--castle-image', `url(${baseUrl}assets/images/background/light/castle.webp)`);
+            document.documentElement.style.setProperty('--field1-image', `url(${baseUrl}assets/images/background/light/field1.webp)`);
+            document.documentElement.style.setProperty('--field2-image', `url(${baseUrl}assets/images/background/light/field2.webp)`);
+            document.documentElement.style.setProperty('--field3-image', `url(${baseUrl}assets/images/background/light/field3.webp)`);
+            document.documentElement.style.setProperty('--field4-image', `url(${baseUrl}assets/images/background/light/field4.webp)`);
+            document.documentElement.style.setProperty('--field5-image', `url(${baseUrl}assets/images/background/light/field5.webp)`);
+            document.documentElement.style.setProperty('--field6-image', `url(${baseUrl}assets/images/background/light/field6.webp)`);
+            document.documentElement.style.setProperty('--field7-image', `url(${baseUrl}assets/images/background/light/field7.webp)`);
         } 
         else if (theme === 'dark') {
             // For dark theme, use the background image instead of color
@@ -281,16 +285,18 @@ class AssetManager {
             document.documentElement.style.setProperty('--bg-image', `url(${baseUrl}assets/images/background/dark/background_night.png)`);
             
             // Apply dark theme images with _night suffix
-            document.documentElement.style.setProperty('--mountain-image', `url(${baseUrl}assets/images/background/dark/mountain_night.png)`);
+            document.documentElement.style.setProperty('--mountain-image', `url(${baseUrl}assets/images/background/dark/mountain_night.webp)`);
             // No clouds in dark mode
             document.documentElement.style.setProperty('--clouds-image', 'none');
-            document.documentElement.style.setProperty('--castle-image', `url(${baseUrl}assets/images/background/dark/castle_night.png)`);
-            document.documentElement.style.setProperty('--field1-image', `url(${baseUrl}assets/images/background/dark/field1_night.png)`);
-            document.documentElement.style.setProperty('--field2-image', `url(${baseUrl}assets/images/background/dark/field2_night.png)`);
-            document.documentElement.style.setProperty('--field3-image', `url(${baseUrl}assets/images/background/dark/field3_night.png)`);
-            document.documentElement.style.setProperty('--field4-image', `url(${baseUrl}assets/images/background/dark/field4_night.png)`);
-            document.documentElement.style.setProperty('--field5-image', `url(${baseUrl}assets/images/background/dark/field5_night.png)`);
-            document.documentElement.style.setProperty('--field6-image', `url(${baseUrl}assets/images/background/dark/field6_night.png)`);
+            document.documentElement.style.setProperty('--moon-image', `url(${baseUrl}assets/images/background/dark/moon_night.webp)`);
+            document.documentElement.style.setProperty('--castle-image', `url(${baseUrl}assets/images/background/dark/castle_night.webp)`);
+            document.documentElement.style.setProperty('--field1-image', `url(${baseUrl}assets/images/background/dark/field1_night.webp)`);
+            document.documentElement.style.setProperty('--field2-image', `url(${baseUrl}assets/images/background/dark/field2_night.webp)`);
+            document.documentElement.style.setProperty('--field3-image', `url(${baseUrl}assets/images/background/dark/field3_night.webp)`);
+            document.documentElement.style.setProperty('--field4-image', `url(${baseUrl}assets/images/background/dark/field4_night.webp)`);
+            document.documentElement.style.setProperty('--field5-image', `url(${baseUrl}assets/images/background/dark/field5_night.webp)`);
+            document.documentElement.style.setProperty('--field6-image', `url(${baseUrl}assets/images/background/dark/field6_night.webp)`);
+            document.documentElement.style.setProperty('--field7-image', `url(${baseUrl}assets/images/background/dark/field7_night.webp)`);
         }
     }
 }

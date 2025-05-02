@@ -3,6 +3,18 @@
     to {left: 20px;}
 }
 
+@keyframes moonGlow {
+    0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); }
+    50% { filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8)); }
+    100% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); }
+}
+
+@keyframes floatMoon {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
 /* Reset global */
 * {
     margin: 0;
@@ -38,7 +50,7 @@ html, body {
     height: 100%;
     background-size: cover;
     background-position: center;
-    background-repeat: repeat-y;
+    background-repeat: no-repeat;
     transition: transform 0.1s ease-out;
     will-change: transform;
     background-position: top center;
@@ -46,7 +58,7 @@ html, body {
 
 /* Background now uses color instead of image */
 #background { 
-    z-index: -10; 
+    z-index: -11; 
     background-color: var(--bg-color, #87CEEB); 
     background-attachment: fixed;
     background-image: var(--bg-image, none);
@@ -55,24 +67,32 @@ html, body {
 }
 
 /* Other layers still use images */
-#mountain { z-index: -9; background-image: var(--mountain-image); background-position: top center; }
-#clouds   { z-index: -8; background-image: var(--clouds-image); }
-#field1   { z-index: -7; background-image: var(--field6-image); }
-#field2   { z-index: -6; background-image: var(--field5-image); }
-#field3   { z-index: -5; background-image: var(--field4-image); }
-#field4   { z-index: -4; background-image: var(--field3-image); }
-#field5   { z-index: -3; background-image: var(--field2-image); }
-#field6   { z-index: -2; background-image: var(--field1-image); }
-#castle   { z-index: -1; background-image: var(--castle-image); }
-
-#clouds {
-  animation-name: moveCloud;
-  animation-duration: 2s;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-  animation-direction: alternate;
-  mix-blend-mode: screen;
+#mountain { z-index: -10; background-image: var(--mountain-image); background-position: top center; }
+#moon { 
+    z-index: -9; 
+    background-image: var(--moon-image); 
+    background-repeat: no-repeat;
+    animation: floatMoon 8s ease-in-out infinite, moonGlow 5s ease-in-out infinite;
 }
+#clouds { 
+    z-index: -9; 
+    background-image: var(--clouds-image);
+    animation-name: moveCloud;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+    animation-direction: alternate;
+    mix-blend-mode: screen;
+}
+#field1   { z-index: -8; background-image: var(--field7-image); }
+#field2   { z-index: -7; background-image: var(--field6-image); }
+#field3   { z-index: -6; background-image: var(--field5-image); }
+#field4   { z-index: -5; background-image: var(--field4-image); }
+#field5   { z-index: -4; background-image: var(--field3-image); }
+#field6   { z-index: -3; background-image: var(--field2-image); }
+#field7   { z-index: -2; background-image: var(--field1-image); }
+#castle   { z-index: -1; background-image: var(--castle-image); } 
+
 
 .header{
     width: 100vw;
@@ -130,6 +150,7 @@ body[data-theme="dark"] h6 {
     /* Image paths will be set by JavaScript */
     --mountain-image: none;
     --clouds-image: none;
+    --moon-image: none;    
     --castle-image: none;
     --field1-image: none;
     --field2-image: none;
@@ -137,9 +158,11 @@ body[data-theme="dark"] h6 {
     --field4-image: none;
     --field5-image: none;
     --field6-image: none;
+    --field7-image: none;
 }
 
 body[data-theme="dark"] {
     /* Dark theme background color */
     --bg-color: #191970; /* Midnight blue */
 }
+
