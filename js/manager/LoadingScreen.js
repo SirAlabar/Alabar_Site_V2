@@ -173,7 +173,7 @@
         // // Manager Scripts
         // './js/manager/EntityManager.js',
         './js/manager/InputManager.js',
-        // './js/manager/SceneManager.js',
+        './js/manager/SceneManager.js',
         // './js/manager/SpriteManager.js',
         
         // // Entity Scripts

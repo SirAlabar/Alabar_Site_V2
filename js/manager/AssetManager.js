@@ -254,17 +254,44 @@ class AssetManager {
     // Apply backgrounds to CSS based on theme
     applyBackgroundsToCSS(theme) {
         console.log(`Applying ${theme} theme to CSS`);
-        document.documentElement.style.setProperty('--bg-color', this.backgrounds[theme].backgroundColor);
-        // Set image paths for all other layers
-        document.documentElement.style.setProperty('--mountain-image', `url(${this.assetPaths.backgrounds[theme].mountain})`);
-        document.documentElement.style.setProperty('--clouds-image', `url(${this.assetPaths.backgrounds[theme].clouds})`);
-        document.documentElement.style.setProperty('--castle-image', `url(${this.assetPaths.backgrounds[theme].castle})`);
-        document.documentElement.style.setProperty('--field1-image', `url(${this.assetPaths.backgrounds[theme].field1})`);
-        document.documentElement.style.setProperty('--field2-image', `url(${this.assetPaths.backgrounds[theme].field2})`);
-        document.documentElement.style.setProperty('--field3-image', `url(${this.assetPaths.backgrounds[theme].field3})`);
-        document.documentElement.style.setProperty('--field4-image', `url(${this.assetPaths.backgrounds[theme].field4})`);
-        document.documentElement.style.setProperty('--field5-image', `url(${this.assetPaths.backgrounds[theme].field5})`);
-        document.documentElement.style.setProperty('--field6-image', `url(${this.assetPaths.backgrounds[theme].field6})`);
+        
+        // Get the base URL of the site
+        const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+        
+        if (theme === 'light') {
+            // Apply light theme background color
+            document.documentElement.style.setProperty('--bg-color', this.backgrounds[theme].backgroundColor);
+            // Set background to none since we're using a color
+            document.documentElement.style.setProperty('--bg-image', 'none');
+            
+            // Apply light theme images
+            document.documentElement.style.setProperty('--mountain-image', `url(${baseUrl}assets/images/background/light/mountain.png)`);
+            document.documentElement.style.setProperty('--clouds-image', `url(${baseUrl}assets/images/background/light/clouds.png)`);
+            document.documentElement.style.setProperty('--castle-image', `url(${baseUrl}assets/images/background/light/castle.png)`);
+            document.documentElement.style.setProperty('--field1-image', `url(${baseUrl}assets/images/background/light/field1.png)`);
+            document.documentElement.style.setProperty('--field2-image', `url(${baseUrl}assets/images/background/light/field2.png)`);
+            document.documentElement.style.setProperty('--field3-image', `url(${baseUrl}assets/images/background/light/field3.png)`);
+            document.documentElement.style.setProperty('--field4-image', `url(${baseUrl}assets/images/background/light/field4.png)`);
+            document.documentElement.style.setProperty('--field5-image', `url(${baseUrl}assets/images/background/light/field5.png)`);
+            document.documentElement.style.setProperty('--field6-image', `url(${baseUrl}assets/images/background/light/field6.png)`);
+        } 
+        else if (theme === 'dark') {
+            // For dark theme, use the background image instead of color
+            document.documentElement.style.setProperty('--bg-color', 'transparent'); // Make the background transparent
+            document.documentElement.style.setProperty('--bg-image', `url(${baseUrl}assets/images/background/dark/background_night.png)`);
+            
+            // Apply dark theme images with _night suffix
+            document.documentElement.style.setProperty('--mountain-image', `url(${baseUrl}assets/images/background/dark/mountain_night.png)`);
+            // No clouds in dark mode
+            document.documentElement.style.setProperty('--clouds-image', 'none');
+            document.documentElement.style.setProperty('--castle-image', `url(${baseUrl}assets/images/background/dark/castle_night.png)`);
+            document.documentElement.style.setProperty('--field1-image', `url(${baseUrl}assets/images/background/dark/field1_night.png)`);
+            document.documentElement.style.setProperty('--field2-image', `url(${baseUrl}assets/images/background/dark/field2_night.png)`);
+            document.documentElement.style.setProperty('--field3-image', `url(${baseUrl}assets/images/background/dark/field3_night.png)`);
+            document.documentElement.style.setProperty('--field4-image', `url(${baseUrl}assets/images/background/dark/field4_night.png)`);
+            document.documentElement.style.setProperty('--field5-image', `url(${baseUrl}assets/images/background/dark/field5_night.png)`);
+            document.documentElement.style.setProperty('--field6-image', `url(${baseUrl}assets/images/background/dark/field6_night.png)`);
+        }
     }
 }
 
