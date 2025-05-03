@@ -8,7 +8,7 @@ class ParallaxEffect
             scroll: { min: -3, max: 3 }
         };
         
-        this.smoothFactor = 0.025;
+        this.smoothFactor = 0.02;
         this.currentPositions = new Map();
 
         // Intensity multipliers

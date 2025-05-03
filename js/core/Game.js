@@ -13,7 +13,6 @@ class Game
       this.assetManager = new AssetManager(this);
       this.entityManager = new EntityManager(this);
       this.inputManager = new InputManager(this);
-      this.sceneManager = new SceneManager(this);
       
       this.renderSystem = new RenderSystem(this);
       this.combatSystem = new CombatSystem(this);

@@ -185,18 +185,3 @@ function initSceneManager()
     }
 }
 
-// Initialize the SceneManager after DOM loading
-document.addEventListener('DOMContentLoaded', () => {
-    // Check if AssetManager has already completed loading
-    if (window.assetManager && !window.assetManager.isLoading) {
-        initSceneManager();
-    } else {
-        // Wait for AssetManager to finish loading
-        const checkInterval = setInterval(() => {
-            if (window.assetManager && !window.assetManager.isLoading) {
-                clearInterval(checkInterval);
-                initSceneManager();
-            }
-        }, 100);
-    }
-});

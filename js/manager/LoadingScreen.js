@@ -4,8 +4,10 @@
      */
 
 
-    class LoadingScreen {
-        constructor() {
+    class LoadingScreen 
+    {
+        constructor() 
+        {
             // Loading state
             this.progress = 0;
             this.completed = false;
@@ -90,7 +92,7 @@
                     // Remove loading screen and initialize
                     setTimeout(() => {
                         this.loadingScreen.style.display = 'none';
-                        this.initGame();
+                        this.initSite();
                     }, 1000);
                 });
             }, 1000);
@@ -135,17 +137,32 @@
         }
         
         // Initialize the game
-        initGame() 
+        initSite() 
         {
             const currentTheme = localStorage.getItem('theme') || 'light';
-            if (window.assetManager) {
+            if (window.assetManager) 
+            {
                 window.assetManager.applyBackgroundsToCSS(currentTheme);
             }
-            
-            const gameContainer = document.getElementById('game-container');
-            if (window.Game) {
-                window.game = new Game(gameContainer);
+            if (window.initSceneManager) 
+            {
+                window.initSceneManager();
             }
+            // Small delay to ensure SceneManager has created all layers
+            setTimeout(() => {
+                // Now initialize CloudsManager after SceneManager is ready
+                if (window.CloudsManager && !window.cloudsManager) {
+                    console.log('Initializing CloudsManager from LoadingScreen');
+                    window.cloudsManager = new CloudsManager();
+                    window.cloudsManager.init();
+                }
+                
+                // Finally initialize the game if available
+                const gameContainer = document.getElementById('game-container');
+                if (window.Game) {
+                    window.game = new Game(gameContainer);
+                }
+            }, 500);
         }
     }
 
@@ -174,6 +191,8 @@
         // './js/manager/EntityManager.js',
         './js/manager/InputManager.js',
         './js/manager/SceneManager.js',
+        './js/manager/CloudsManager.js',
+        './js/manager/ParallaxEffect.js',
         // './js/manager/SpriteManager.js',
         
         // // Entity Scripts

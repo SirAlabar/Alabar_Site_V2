@@ -1,15 +1,14 @@
-class AssetManager {
-    constructor() {
+class AssetManager 
+{
+    constructor() 
+    {
         this.onProgress = null;
         this.onComplete = null;
-        
         // Asset lists
         this.textures = {};
         this.backgrounds = {};
-        
         // Loading state
         this.isLoading = false;
-        
         // Asset paths configuration
         this.assetPaths = {
             player: {
@@ -40,7 +39,7 @@ class AssetManager {
                 light: {
                     backgroundColor: '#87CEEB',
                     mountain: './assets/images/background/light/mountain.webp',
-                    clouds: './assets/images/background/light/clouds.png',
+                    clouds: './assets/images/background/light/clouds.webp',
                     castle: './assets/images/background/light/castle.webp',
                     field1: './assets/images/background/light/field1.webp',
                     field2: './assets/images/background/light/field2.webp',
@@ -52,7 +51,7 @@ class AssetManager {
                 },
                 dark: {
                     backgroundColor: '#191970',
-                    mountain: './assets/images/background/dark/mountain_night.png',
+                    mountain: './assets/images/background/dark/mountain_night.webp',
                     moon: './assets/images/background/dark/moon_night.webp',
                     castle: './assets/images/background/dark/castle_night.webp',
                     field1: './assets/images/background/dark/field1_night.webp',
@@ -66,34 +65,38 @@ class AssetManager {
         };
     }
     
-    loadAllAssets() {
+    loadAllAssets() 
+    {
         if (this.isLoading) return;
         this.isLoading = true;
         this.updateProgress(0);
         this.initAssets()
             .then(() => this.loadAssets())
             .catch(error => {
-                console.error("Error in asset loading:", error);
                 this.isLoading = false;
             });
     }
     
     // Initialize PIXI Assets with manifest
-    async initAssets() {
+    async initAssets() 
+    {
         const manifest = this.createManifest();
         await PIXI.Assets.init({manifest});
     }
     
     // Load all assets in bundles
-    async loadAssets() {
+    async loadAssets() 
+    {
         try {
             const manifest = this.createManifest();
             const bundleNames = manifest.bundles.map(bundle => bundle.name);
             let loadedBundles = 0;
             
             // Load each bundle and track progress
-            for (const bundleName of bundleNames) {
-                try {
+            for (const bundleName of bundleNames) 
+            {
+                try 
+                {
                     const resources = await PIXI.Assets.loadBundle(bundleName, (progress) => {
                         const overallProgress = 
                             ((loadedBundles + progress) / bundleNames.length) * 100;
@@ -102,22 +105,27 @@ class AssetManager {
                     
                     this.processLoadedResources(bundleName, resources);
                     loadedBundles++;
-                } catch (error) {
+                } 
+                catch (error) 
+                {
                     console.error(`Error loading bundle ${bundleName}:`, error);
                 }
             }
-            
             this.isLoading = false;
-            if (this.onComplete) {
+            if (this.onComplete) 
+            {
                 this.onComplete();
             }
-        } catch (error) {
+        } 
+        catch (error)
+        {
             throw error;
         }
     }
     
     // Create a manifest structure for PIXI.Assets
-    createManifest() {
+    createManifest() 
+    {
         const manifest = {
             bundles: []
         };
@@ -138,13 +146,15 @@ class AssetManager {
     }
     
     // Create player assets bundle
-    createPlayerBundle() {
+    createPlayerBundle() 
+    {
         const playerBundle = {
             name: 'player',
             assets: []
         };
         
-        for (const [key, src] of Object.entries(this.assetPaths.player)) {
+        for (const [key, src] of Object.entries(this.assetPaths.player)) 
+        {
             playerBundle.assets.push({
                 alias: `player_${key}`,
                 src
@@ -155,14 +165,17 @@ class AssetManager {
     }
     
     // Create monsters assets bundle
-    createMonstersBundle() {
+    createMonstersBundle() 
+    {
         const monstersBundle = {
             name: 'monsters',
             assets: []
         };
         
-        for (const [monsterType, animations] of Object.entries(this.assetPaths.monsters)) {
-            for (const [key, src] of Object.entries(animations)) {
+        for (const [monsterType, animations] of Object.entries(this.assetPaths.monsters))
+        {
+            for (const [key, src] of Object.entries(animations)) 
+            {
                 monstersBundle.assets.push({
                     alias: `${monsterType}_${key}`,
                     src
@@ -174,24 +187,27 @@ class AssetManager {
     }
     
     // Create background assets bundles
-    createBackgroundBundles() {
+    createBackgroundBundles() 
+    {
         const bgBundles = [];
         
-        for (const [theme, layers] of Object.entries(this.assetPaths.backgrounds)) {
+        for (const [theme, layers] of Object.entries(this.assetPaths.backgrounds)) 
+        {
             // Store background color
-            if (!this.backgrounds[theme]) {
+            if (!this.backgrounds[theme]) 
+            {
                 this.backgrounds[theme] = {};
             }
             this.backgrounds[theme].backgroundColor = layers.backgroundColor;
-            
             // Create bundle for this theme
             const themeBundle = {
                 name: `bg_${theme}`,
                 assets: []
             };
-            
-            for (const [key, src] of Object.entries(layers)) {
-                if (key !== 'backgroundColor') {
+            for (const [key, src] of Object.entries(layers)) 
+            {
+                if (key !== 'backgroundColor') 
+                {
                     themeBundle.assets.push({
                         alias: `${theme}_${key}`,
                         src
@@ -206,39 +222,50 @@ class AssetManager {
     }
     
     // Process resources after loading
-    processLoadedResources(bundleName, resources) {
-        if (bundleName === 'player') {
+    processLoadedResources(bundleName, resources) 
+    {
+        if (bundleName === 'player') 
+        {
             this.processPlayerResources(resources);
         }
-        else if (bundleName === 'monsters') {
+        else if (bundleName === 'monsters') 
+        {
             this.processMonsterResources(resources);
         }
-        else if (bundleName.startsWith('bg_')) {
+        else if (bundleName.startsWith('bg_')) 
+        {
             this.processBackgroundResources(bundleName, resources);
         }
     }
     
     // Process player resources
-    processPlayerResources(resources) {
-        for (const [alias, texture] of Object.entries(resources)) {
+    processPlayerResources(resources) 
+    {
+        for (const [alias, texture] of Object.entries(resources)) 
+        {
             this.textures[alias] = texture;
         }
     }
     
     // Process monster resources
-    processMonsterResources(resources) {
-        for (const [alias, texture] of Object.entries(resources)) {
+    processMonsterResources(resources) 
+    {
+        for (const [alias, texture] of Object.entries(resources)) 
+        {
             this.textures[alias] = texture;
         }
     }
     
     // Process background resources
-    processBackgroundResources(bundleName, resources) {
+    processBackgroundResources(bundleName, resources) 
+    {
         const theme = bundleName.substring(3); // Remove 'bg_' prefix
         
-        for (const [alias, texture] of Object.entries(resources)) {
+        for (const [alias, texture] of Object.entries(resources)) 
+        {
             const parts = alias.split('_');
-            if (parts.length >= 2) {
+            if (parts.length >= 2) 
+            {
                 const layerName = parts[1];
                 this.backgrounds[theme][layerName] = texture;
             }
@@ -246,29 +273,29 @@ class AssetManager {
     }
     
     // Update progress and notify
-    updateProgress(value) {
+    updateProgress(value) 
+    {
         const progress = Math.min(Math.round(value), 100);
-        if (this.onProgress) {
+        if (this.onProgress) 
+        {
             this.onProgress(progress);
         }
     }
     
     // Apply backgrounds to CSS based on theme
-    applyBackgroundsToCSS(theme) {
-        console.log(`Applying ${theme} theme to CSS`);
-        
+    applyBackgroundsToCSS(theme) 
+    {
         // Get the base URL of the site
         const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
-        
-        if (theme === 'light') {
+        if (theme === 'light') 
+        {
             // Apply light theme background color
             document.documentElement.style.setProperty('--bg-color', this.backgrounds[theme].backgroundColor);
             // Set background to none since we're using a color
             document.documentElement.style.setProperty('--bg-image', 'none');
-            
             // Apply light theme images
             document.documentElement.style.setProperty('--mountain-image', `url(${baseUrl}assets/images/background/light/mountain.webp)`);
-            document.documentElement.style.setProperty('--clouds-image', `url(${baseUrl}assets/images/background/light/clouds.png)`);
+            document.documentElement.style.setProperty('--clouds-image', `url(${baseUrl}assets/images/background/light/clouds.webp)`);
             document.documentElement.style.setProperty('--moon-image', 'none');
             document.documentElement.style.setProperty('--castle-image', `url(${baseUrl}assets/images/background/light/castle.webp)`);
             document.documentElement.style.setProperty('--field1-image', `url(${baseUrl}assets/images/background/light/field1.webp)`);
@@ -279,11 +306,11 @@ class AssetManager {
             document.documentElement.style.setProperty('--field6-image', `url(${baseUrl}assets/images/background/light/field6.webp)`);
             document.documentElement.style.setProperty('--field7-image', `url(${baseUrl}assets/images/background/light/field7.webp)`);
         } 
-        else if (theme === 'dark') {
+        else if (theme === 'dark') 
+        {
             // For dark theme, use the background image instead of color
             document.documentElement.style.setProperty('--bg-color', 'transparent'); // Make the background transparent
             document.documentElement.style.setProperty('--bg-image', `url(${baseUrl}assets/images/background/dark/background_night.png)`);
-            
             // Apply dark theme images with _night suffix
             document.documentElement.style.setProperty('--mountain-image', `url(${baseUrl}assets/images/background/dark/mountain_night.webp)`);
             // No clouds in dark mode
