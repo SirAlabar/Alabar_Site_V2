@@ -310,7 +310,7 @@ class AssetManager
         {
             // For dark theme, use the background image instead of color
             document.documentElement.style.setProperty('--bg-color', 'transparent'); // Make the background transparent
-            document.documentElement.style.setProperty('--bg-image', `url(${baseUrl}assets/images/background/dark/background_night.png)`);
+            document.documentElement.style.setProperty('--bg-image', `url(${baseUrl}assets/images/background/dark/background_night.webp)`);
             // Apply dark theme images with _night suffix
             document.documentElement.style.setProperty('--mountain-image', `url(${baseUrl}assets/images/background/dark/mountain_night.webp)`);
             // No clouds in dark mode

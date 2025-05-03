@@ -186,14 +186,10 @@ body[data-theme="dark"] {
     opacity: 1;
 }
 
-.cloud-item {
-    --base-scale: 1;
-}
-
 /* Horizontal movement animations */
 @keyframes cloudDriftLeftToRight {
     0% { 
-        transform: translateX(-100%) translateY(0); 
+        transform: scale(var(--base-scale)) translateX(-100%) translateY(0); 
         opacity: 0;
     }
     10% { opacity: var(--final-opacity, 0.2); }
@@ -260,9 +256,8 @@ body[data-theme="dark"] {
         filter: blur(3px) brightness(1.1);
     }
     100% {
-        transform: scale(calc(var(--base-scale) * 0.9));
+        transform: scale(var(--base-scale));
         filter: blur(0) brightness(1);
-        transform: scale(1);
     }
 }
 

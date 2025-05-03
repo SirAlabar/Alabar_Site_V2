@@ -73,6 +73,7 @@ class CloudsManager
         }
         // Create clouds
         this.refreshClouds();
+        this.startCloudLifecycle();
         // Set up cloud updates on theme changes
         this.setupThemeListeners();
         this.initialized = true;
@@ -93,9 +94,90 @@ class CloudsManager
         }
     }
     
+    startCloudLifecycle() 
+    {
+        this.cloudLifecycleInterval = setInterval(() => {
+            if (this.initialized && this.currentTheme === 'light') 
+            {
+                this.manageCloudLifecycle();
+            }
+        }, 5000); // Check every 5 seconds
+    }
+
+    manageCloudLifecycle() 
+    {
+        const cloudsContainer = document.getElementById('clouds');
+        if (!cloudsContainer) return;
+        // Get all cloud elements
+        const clouds = cloudsContainer.querySelectorAll('.cloud-item');
+        let visibleCount = 0;
+        let offscreenCount = 0;
+        // Check each cloud's position and visibility
+        clouds.forEach(cloud => {
+            const rect = cloud.getBoundingClientRect();
+            // Check if cloud is completely off-screen
+            if (rect.right < -100 || rect.left > window.innerWidth + 100) 
+            {
+                // Mark for removal
+                cloud.classList.add('cloud-remove');
+                offscreenCount++;
+            } 
+            else 
+            {
+                visibleCount++;
+            }
+        });
+        // Remove marked clouds
+        cloudsContainer.querySelectorAll('.cloud-remove').forEach(cloud => {
+            cloud.remove();
+        });
+        
+        // Add new clouds if needed
+        const targetCount = this.config.minClouds + 
+            Math.floor(Math.random() * (this.config.maxClouds - this.config.minClouds + 1));
+        
+        if (visibleCount < targetCount) 
+        {
+            const newCount = targetCount - visibleCount;
+            this.addNewClouds(newCount);
+        }
+    }
+    
+    addNewClouds(count) 
+    {
+        const cloudsContainer = document.getElementById('clouds');
+        if (!cloudsContainer) return;
+        // Screen dimensions for distribution
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight * 0.55;
+        // Track used positions including existing clouds
+        const usedPositions = [];
+        // Get positions of existing clouds to avoid overlap
+        cloudsContainer.querySelectorAll('.cloud-item').forEach(cloud => {
+            const top = parseInt(cloud.style.top);
+            const left = parseInt(cloud.style.left);
+            if (!isNaN(top) && !isNaN(left)) {
+                usedPositions.push({ top, left });
+            }
+        });
+        // Add new cloud count
+        const startIndex = cloudsContainer.childElementCount;
+        for (let i = 0; i < count; i++) 
+        {
+            this.createSingleCloud(cloudsContainer, startIndex + i, screenWidth, screenHeight, usedPositions);
+        }
+    }
+    
     refreshClouds() 
     {
-        const cloudCount = this.config.minClouds + Math.floor(Math.random() * (this.config.maxClouds - this.config.minClouds + 1));
+        const cloudsContainer = document.getElementById('clouds');
+        if (cloudsContainer) {
+            cloudsContainer.innerHTML = '';
+        }
+        
+        // Create initial set of clouds
+        const cloudCount = this.config.minClouds + 
+            Math.floor(Math.random() * (this.config.maxClouds - this.config.minClouds + 1));
         this.createClouds(cloudCount);
     }
     
@@ -254,8 +336,9 @@ class CloudsManager
             cloud.style.setProperty('--drift-delay', '0.5s');
         }
         // Apply random size
-        const randomScale = 0.5 + Math.random() * 2.5;
+        const randomScale = 0.5 + Math.random() * 5;
         cloud.style.setProperty('--base-scale', randomScale);
+        cloud.style.transform = `scale(${randomScale})`;
         // Add to container
         container.appendChild(cloud);
     }
