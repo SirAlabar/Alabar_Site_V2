@@ -11,8 +11,8 @@ class CloudsManager
         this.config = {
             minClouds: 4,
             maxClouds: 11,
-            minDistance: 100,
-            containerHeight: '55%',
+            minDistance: 20,
+            containerHeight: '50%',
             spriteSheetSize: '1024px 800px'
         };
         
@@ -326,7 +326,7 @@ class CloudsManager
             cloud.style.left = `${randomLeft}px`;
         }
         // Apply random delay to start all animations
-        const randomBaseDelay = Math.floor(Math.random() * 10); // Reduzido de 20 para 10
+        const randomBaseDelay = Math.floor(Math.random() * 10);
         cloud.style.setProperty('--drift-delay', `${randomBaseDelay + 1}s`);
         cloud.style.setProperty('--formation-delay', `${randomBaseDelay}s`);
         // Some clouds appear immediately

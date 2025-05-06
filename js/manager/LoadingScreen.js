@@ -136,7 +136,7 @@
             });
         }
         
-        // Initialize the game
+        // Initialize the site
         initSite() 
         {
             const currentTheme = localStorage.getItem('theme') || 'light';
@@ -151,17 +151,17 @@
             // Small delay to ensure SceneManager has created all layers
             setTimeout(() => {
                 // Now initialize CloudsManager after SceneManager is ready
-                if (window.CloudsManager && !window.cloudsManager) {
-                    console.log('Initializing CloudsManager from LoadingScreen');
+                if (window.CloudsManager && !window.cloudsManager) 
+                {
                     window.cloudsManager = new CloudsManager();
                     window.cloudsManager.init();
                 }
                 
-                // Finally initialize the game if available
-                const gameContainer = document.getElementById('game-container');
-                if (window.Game) {
-                    window.game = new Game(gameContainer);
-                }
+                // // Finally initialize the game if available
+                // const gameContainer = document.getElementById('game-container');
+                // if (window.Game) {
+                //     window.game = new Game(gameContainer);
+                // }
             }, 500);
         }
     }
