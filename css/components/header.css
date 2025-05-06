@@ -52,7 +52,7 @@ h1 {
     background-color: rgba(81, 81, 81, 0.2);
     border-radius: 10px;
     text-align: center;
-    font-size: 38px;
+    font-size: 32px;
     position: relative;
     border: 1px solid transparent;
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
@@ -77,7 +77,7 @@ h1 {
 .dropdown-item {
     color: white;
     font-family: "Honk", serif;
-    font-size: 36px;
+    font-size: 30px;
     transition: all 0.3s ease;
     border-radius: 8px;
     padding: 5px 15px;

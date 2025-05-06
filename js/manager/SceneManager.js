@@ -29,12 +29,10 @@ class SceneManager
         let existingScene = document.querySelector('.scene');
         if (existingScene) 
         {
-            console.log('Scene already exists, using existing one');
             this.sceneContainer = existingScene;
         } 
         else 
         {
-            console.log('Creating new scene');
             // Create the main container
             this.sceneContainer = document.createElement('div');
             this.sceneContainer.className = 'scene';
@@ -62,7 +60,6 @@ class SceneManager
             let layer = document.getElementById(config.id);
             if (!layer) 
             {
-                console.log(`Creating layer: ${config.id}`);
                 layer = document.createElement('div');
                 layer.id = config.id;
                 layer.className = 'layer';
@@ -71,26 +68,12 @@ class SceneManager
             }
             else 
             {
-                console.log(`Using existing layer: ${config.id}`);
                 // Update speed attribute for existing layer
                 layer.dataset.speed = config.speed;
             }
             this.layers[config.id] = layer;
         });
-        
-        // Check/create game container
-        let gameContainer = document.getElementById('game-container');
-        if (!gameContainer) 
-        {
-            console.log('Creating game container');
-            gameContainer = document.createElement('div');
-            gameContainer.id = 'game-container';
-            document.body.appendChild(gameContainer);
-        } 
-        else 
-        {
-            console.log('Using existing game container');
-        }
+
     }
     
     setupThemeToggle()
@@ -100,7 +83,6 @@ class SceneManager
         
         if (!themeToggle) 
         {
-            console.log('Creating theme toggle button');
             themeToggle = document.createElement('button');
             themeToggle.id = 'theme-toggle';
             themeToggle.className = 'theme-toggle';
@@ -150,7 +132,6 @@ class SceneManager
         // Check if AssetManager is available
         if (window.assetManager) 
         {
-            console.log(`Applying backgrounds for theme: ${this.currentTheme}`);
             // Use AssetManager to apply backgrounds to CSS
             window.assetManager.applyBackgroundsToCSS(this.currentTheme);
         } 
@@ -165,7 +146,6 @@ class SceneManager
         // Check if ParallaxEffect class is available
         if (window.ParallaxEffect) 
         {
-            console.log('Initializing parallax effect');
             this.parallaxEffect = new ParallaxEffect();
         } 
         else 
@@ -180,7 +160,6 @@ function initSceneManager()
 {
     if (!window.sceneManager) 
     {
-        console.log('Initializing SceneManager');
         window.sceneManager = new SceneManager();
     }
 }

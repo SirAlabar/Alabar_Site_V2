@@ -20,8 +20,6 @@ class ParallaxEffect
     
     init() 
     {
-        console.log('Initializing ParallaxEffect with', this.layers.length, 'layers');
-        
         // Initialize current positions for each layer
         this.layers.forEach(layer => {
             this.currentPositions.set(layer, { x: 0, y: 0 });
