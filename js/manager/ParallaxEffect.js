@@ -92,7 +92,7 @@ class ParallaxEffect
             current.y = this.lerp(current.y || 0, current.targetScrollY + (current.targetY || 0), this.smoothFactor);
             
             // Apply transform
-            layer.style.transform = `translate3d(${current.x}px, ${current.y}px, 0)`;
+            layer.style.transform = `translate3d(${current.x}px, ${current.y}px, 0) scale(var(--layer-scale))`;
         });
         
         // Continue animation loop

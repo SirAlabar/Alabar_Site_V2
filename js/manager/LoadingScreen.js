@@ -215,7 +215,7 @@ window.coreScripts = [
     // // Core Scripts
     // './js/core/Component.js',
     // './js/core/GameObjects.js',
-    './js/core/Game.js',
+    // './js/core/Game.js',
     
     // // Component Scripts
     // './js/components/SpriteComponent.js',
@@ -236,7 +236,7 @@ window.coreScripts = [
     './js/manager/InputManager.js',
     './js/manager/SceneManager.js',
     './js/manager/CloudsManager.js',
-    './js/manager/GameAreaManager.js',
+    // './js/manager/GameAreaManager.js',
     './js/manager/ParallaxEffect.js',
     // './js/manager/SpriteManager.js',
     
