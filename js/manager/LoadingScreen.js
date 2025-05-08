@@ -135,78 +135,62 @@ class LoadingScreen
         });
     }
     
-    // Initialize the site
+    // Initialize the game
     async initSite() 
     {
-        console.log('InitSite called');
         const currentTheme = localStorage.getItem('theme') || 'light';
-        if (window.assetManager) 
-        {
-            window.assetManager.applyBackgroundsToCSS(currentTheme);
-        }
-        if (window.initSceneManager) 
-        {
-            window.initSceneManager();
-        }
         
-        // Small delay to ensure SceneManager has created all layers
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Now initialize CloudsManager after SceneManager is ready
-        if (window.CloudsManager && !window.cloudsManager) 
-        {
-            window.cloudsManager = new CloudsManager();
-            window.cloudsManager.init();
-        }
-        
-        console.log('About to create game container');
-        // Create or find game container - must exist before Game is initialized
-        let gameContainer = document.getElementById('game-container');
-        if (!gameContainer) 
-        {
-            console.log('Creating game container');
-            gameContainer = document.createElement('div');
-            gameContainer.id = 'game-container';
-            document.body.appendChild(gameContainer);
-        } 
-        else 
-        {
-            console.log('Using existing game container');
-        }
-        
-        // Init Game only after container exists
+        // First initialize the game
+        const gameContainer = document.getElementById('game-container');
         if (window.Game) 
         {
-            console.log('Creating game instance');
+            console.log('Initializing Game');
             window.game = new Game(gameContainer);
-            // Wait for game to initialize
-            if (window.game.initialize) 
+            
+            // Wait for game initialization to complete
+            if (window.game.initialized === false && window.game.waitForInitialization) 
             {
-                try 
-                {
-                    await window.game.initialize();
-                    console.log('Game initialized successfully');
-                    // Initialize GameAreaManager after Game is fully initialized
-                    if (window.GameAreaManager) 
-                    {
-                        console.log('Initializing GameAreaManager');
-                        window.gameAreaManager = new GameAreaManager(window.game);
-                    }
-                } 
-                catch (error) 
-                {
-                    console.error('Error initializing game:', error);
-                }
-            } 
-            else 
-            {
-                console.error('Game.initialize method not found. Make sure Game class has proper async initialization.');
+                console.log('Waiting for game to initialize...');
+                await window.game.waitForInitialization();
             }
-        } 
-        else 
-        {
-            console.error('Game class not available. Check script loading.');
         }
+        
+        // Small delay to ensure all PIXI containers are ready
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Initialize SceneManager
+        if (window.initSceneManager) 
+        {
+            console.log('Initializing SceneManager');
+            window.initSceneManager();
+            
+            // Connect SceneManager with Game's PIXI containers
+            if (window.sceneManager && window.game && window.game.backgroundGroup) 
+            {
+                console.log('Connecting SceneManager to Game PIXI containers');
+                window.sceneManager.setBackgroundGroup(window.game.backgroundGroup, window.game.app);
+                
+                // Apply initial theme
+                window.sceneManager.applyTheme(currentTheme);
+            }
+        }
+        
+        // Initialize CloudsManager after SceneManager is ready
+        if (window.CloudsManager && !window.cloudsManager && window.game) 
+        {
+            console.log('Initializing CloudsManager');
+            window.cloudsManager = new CloudsManager(window.game.app, window.game.backgroundGroup);
+            window.cloudsManager.init(currentTheme);
+        }
+        
+        // Start any game systems that need to be running
+        if (window.game && window.game.start) 
+        {
+            console.log('Starting game systems');
+            window.game.start();
+        }
+        
+        console.log('Site initialization complete');
     }
 }
 
@@ -215,7 +199,7 @@ window.coreScripts = [
     // // Core Scripts
     // './js/core/Component.js',
     // './js/core/GameObjects.js',
-    // './js/core/Game.js',
+    './js/core/Game.js',
     
     // // Component Scripts
     // './js/components/SpriteComponent.js',
@@ -236,7 +220,7 @@ window.coreScripts = [
     './js/manager/InputManager.js',
     './js/manager/SceneManager.js',
     './js/manager/CloudsManager.js',
-    // './js/manager/GameAreaManager.js',
+    './js/manager/GameAreaManager.js',
     './js/manager/ParallaxEffect.js',
     // './js/manager/SpriteManager.js',
     

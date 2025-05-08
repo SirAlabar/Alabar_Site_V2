@@ -282,49 +282,77 @@ class AssetManager
         }
     }
     
-    // Apply backgrounds to CSS based on theme
-    applyBackgroundsToCSS(theme) 
+
+    // Get a background texture for a specific theme and layer
+    getBackgroundTexture(theme, layer) 
     {
-        // Get the base URL of the site
-        const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
-        if (theme === 'light') 
+        if (this.backgrounds[theme] && this.backgrounds[theme][layer]) 
         {
-            // Apply light theme background color
-            document.documentElement.style.setProperty('--bg-color', this.backgrounds[theme].backgroundColor);
-            // Set background to none since we're using a color
-            document.documentElement.style.setProperty('--bg-image', 'none');
-            // Apply light theme images
-            document.documentElement.style.setProperty('--mountain-image', `url(${baseUrl}assets/images/background/light/mountain.webp)`);
-            document.documentElement.style.setProperty('--clouds-image', `url(${baseUrl}assets/images/background/light/clouds.webp)`);
-            document.documentElement.style.setProperty('--moon-image', 'none');
-            document.documentElement.style.setProperty('--castle-image', `url(${baseUrl}assets/images/background/light/castle.webp)`);
-            document.documentElement.style.setProperty('--field1-image', `url(${baseUrl}assets/images/background/light/field1.webp)`);
-            document.documentElement.style.setProperty('--field2-image', `url(${baseUrl}assets/images/background/light/field2.webp)`);
-            document.documentElement.style.setProperty('--field3-image', `url(${baseUrl}assets/images/background/light/field3.webp)`);
-            document.documentElement.style.setProperty('--field4-image', `url(${baseUrl}assets/images/background/light/field4.webp)`);
-            document.documentElement.style.setProperty('--field5-image', `url(${baseUrl}assets/images/background/light/field5.webp)`);
-            document.documentElement.style.setProperty('--field6-image', `url(${baseUrl}assets/images/background/light/field6.webp)`);
-            document.documentElement.style.setProperty('--field7-image', `url(${baseUrl}assets/images/background/light/field7.webp)`);
-        } 
-        else if (theme === 'dark') 
-        {
-            // For dark theme, use the background image instead of color
-            document.documentElement.style.setProperty('--bg-color', 'transparent'); // Make the background transparent
-            document.documentElement.style.setProperty('--bg-image', `url(${baseUrl}assets/images/background/dark/background_night.webp)`);
-            // Apply dark theme images with _night suffix
-            document.documentElement.style.setProperty('--mountain-image', `url(${baseUrl}assets/images/background/dark/mountain_night.webp)`);
-            // No clouds in dark mode
-            document.documentElement.style.setProperty('--clouds-image', 'none');
-            document.documentElement.style.setProperty('--moon-image', `url(${baseUrl}assets/images/background/dark/moon_night.webp)`);
-            document.documentElement.style.setProperty('--castle-image', `url(${baseUrl}assets/images/background/dark/castle_night.webp)`);
-            document.documentElement.style.setProperty('--field1-image', `url(${baseUrl}assets/images/background/dark/field1_night.webp)`);
-            document.documentElement.style.setProperty('--field2-image', `url(${baseUrl}assets/images/background/dark/field2_night.webp)`);
-            document.documentElement.style.setProperty('--field3-image', `url(${baseUrl}assets/images/background/dark/field3_night.webp)`);
-            document.documentElement.style.setProperty('--field4-image', `url(${baseUrl}assets/images/background/dark/field4_night.webp)`);
-            document.documentElement.style.setProperty('--field5-image', `url(${baseUrl}assets/images/background/dark/field5_night.webp)`);
-            document.documentElement.style.setProperty('--field6-image', `url(${baseUrl}assets/images/background/dark/field6_night.webp)`);
-            document.documentElement.style.setProperty('--field7-image', `url(${baseUrl}assets/images/background/dark/field7_night.webp)`);
+            return this.backgrounds[theme][layer];
         }
+        console.warn(`Texture not found for ${theme}_${layer}`);
+        return null;
+    }
+    
+    // Get all background textures for a specific theme
+    getBackgroundTextures(theme) 
+    {
+        if (this.backgrounds[theme]) 
+        {
+            return this.backgrounds[theme];
+        }
+        console.warn(`No textures found for theme: ${theme}`);
+        return {};
+    }
+    
+     //Get background color or texture for a theme
+    getBackgroundInfo(theme) 
+    {
+        const result = {
+            color: 0x000000,
+            useTexture: false,
+            texture: null
+        };
+        
+        if (this.backgrounds[theme]) 
+        {
+            if (theme === 'light') 
+            {
+                // Light theme uses a solid color
+                result.color = this.hexToNumber(this.backgrounds[theme].backgroundColor);
+                result.useTexture = false;
+            } 
+            else if (theme === 'dark') 
+            {
+                // Dark theme uses a background image
+                result.color = 0x000000; // Black base
+                result.useTexture = true;
+                // Try to load the background texture
+                try 
+                {
+                    // The night background image path (adjust if your structure differs)
+                    const backgroundPath = './assets/images/background/dark/background_night.webp';
+                    result.texture = PIXI.Texture.from(backgroundPath);
+                } 
+                catch (error) 
+                {
+                    console.error("Error loading night background texture:", error);
+                    result.useTexture = false;
+                    result.color = this.hexToNumber(this.backgrounds[theme].backgroundColor);
+                }
+            }
+        }
+        
+        return result;
+    }
+    
+     //Convert hex color string to number for PIXI
+    hexToNumber(hex) 
+    {
+        // Remove # if present
+        hex = hex.replace('#', '');
+        // Convert to number
+        return parseInt(hex, 16);
     }
 }
 

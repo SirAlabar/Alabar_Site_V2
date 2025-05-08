@@ -1,5 +1,5 @@
 /**
- * Manages the game's playable area and canvas positioning
+ * Manages the game's playable area and PIXI container positioning
  * Responsible for confining entities to game bounds and handling screen resizing
  */
 class GameAreaManager 
@@ -7,167 +7,129 @@ class GameAreaManager
     constructor(gameInstance) 
     {
         this.gameInstance = gameInstance;
+        
         // Default bounds (will be updated based on screen size)
         this.bounds = {
             x: 0,
             y: 0,
             width: window.innerWidth,
             height: window.innerHeight * 0.4, // Default to bottom 40% of screen
-            bottom: window.innerHeight, // The bottom boundary
+            bottom: window.innerHeight,       // The bottom boundary
             fieldTop: window.innerHeight * 0.6 // Where fields start
         };
         
         // Initialize
         this.initialize();
+        
         // Event listeners
         window.addEventListener('resize', this.onResize.bind(this));
-        window.addEventListener('scroll', this.onScroll.bind(this));
     }
     
+    // Initialize game area and set up boundaries
     initialize() 
     {
         // Update bounds based on current screen size
         this.updateBounds();
-        this.updateGameContainer();
-        // Configure the Pixi application to fit in the game area
-        this.configurePixiApp();
+        
+        // Configure PIXI containers
+        this.configureGameArea();
     }
     
-    // Updates area bounds to target the bottom half of the scene (1600px of 3200px)
+    // Updates area bounds to target the bottom half of the scene
     updateBounds()
     {
-        // Find the scene container
-        const scene = document.querySelector('.scene');
-    
-        if (scene) {
-            // Get scene dimensions
-            const sceneRect = scene.getBoundingClientRect();
-            const sceneHeight = scene.clientHeight || sceneRect.height;
+        const screenHeight = window.innerHeight;
+        const screenWidth = window.innerWidth;
         
-            // Calculate the middle point - exactly half of the scene height
-            const middlePoint = (sceneHeight / 2);
+        // Calculate the middle point - where gameplay should begin
+        const middlePoint = (screenHeight / 2);
         
-            // Get current scroll position
-            const scrollY = window.scrollY;
-            
-            // Debug position information
-            console.log("Scene dimensions:", {
-                totalHeight: sceneHeight,
-                viewportTop: sceneRect.top,
-                viewportBottom: sceneRect.bottom,
-                scrollY: scrollY,
-                middlePoint: middlePoint
-            });
-            
-            // Calculate visibility
-            const isTopHalfVisible = sceneRect.top < 0 && sceneRect.top > -middlePoint;
-            const isBottomHalfVisible = sceneRect.bottom > 0 && sceneRect.top < window.innerHeight;
-            
-            // Debug visibility
-            console.log("Visibility check:", {
-                isTopHalfVisible: isTopHalfVisible,
-                isBottomHalfVisible: isBottomHalfVisible
-            });
+        // Set bounds to target only the bottom half of the screen
+        this.bounds = {
+            x: 0,
+            y: middlePoint,           // Start at the middle point
+            width: screenWidth,
+            height: screenHeight - middlePoint, // Height is the remaining space
+            bottom: screenHeight,      // Bottom of the screen
+            fieldTop: middlePoint      // Where the playable area starts
+        };
         
-            // Set bounds to target only the bottom half
-            this.bounds = {
-                x: 0,
-                y: middlePoint,  // Start at the middle point (1600px from top)
-                width: window.innerWidth,
-                height: middlePoint,  // Height is also half (1600px)
-                visible: isBottomHalfVisible
-            };
-        
-            console.log("Game area set to bottom 1600px of the 3200px scene");
-        } else {
-            console.warn("Scene not found, using fallback values");
-            // Fallback to standard 50% bottom half
-            this.bounds = {
-                x: 0,
-                y: 1600,  // Start at 1600px
-                width: window.innerWidth,
-                height: 1600,  // Height is 1600px
-                visible: true
-            };
-        }
+        console.log("Game area bounds updated:", this.bounds);
     }
 
-    // Applies bounds to game container element, syncing with field layers
-    updateGameContainer()
+    // Configure the PIXI containers for the game area
+    configureGameArea()
     {
-        const gameContainer = document.getElementById('game-container');
-        if (!gameContainer) return;
-    
-        // Position the game container
-        gameContainer.style.position = 'absolute';  // Changed from 'relative' to 'absolute'
-        gameContainer.style.top = `${this.bounds.y}px`;  // Use the calculated y position
-        gameContainer.style.left = '0';
-        gameContainer.style.width = '100%';
-        gameContainer.style.height = `${this.bounds.height}px`;  // Use calculated height
-        gameContainer.style.overflow = 'hidden';
-        gameContainer.style.pointerEvents = 'none';
-    
-        // Show/hide based on visibility of fields
-        gameContainer.style.display = 'block';
-    
-    
-        // Add a visible border for debugging
-        gameContainer.style.border = '2px dashed rgba(255, 0, 0, 0.5)';
-    
-        // Set z-index to appear between your parallax layers
-        gameContainer.style.zIndex = '25';
-    
-        // Debug container position
-        console.log("Game container positioned:", {
-            top: gameContainer.style.top,
-            height: gameContainer.style.height,
-            display: gameContainer.style.display,
-            position: gameContainer.style.position
-        });
-    }
-
-    // Configure the Pixi application to fit in the game area
-    configurePixiApp() 
-    {
-        if (!this.gameInstance || !this.gameInstance.app)
+        if (!this.gameInstance || !this.gameInstance.app || !this.gameInstance.gameplayGroup)
         { 
+            console.error("Game instance, app, or gameplay group not available");
             return;
         }
+        
         try 
         {
-            // Resize renderer to match container
-            this.gameInstance.app.renderer.resize(this.bounds.width, this.bounds.height);
+            // Position the gameplay group
+            const gameplayGroup = this.gameInstance.gameplayGroup;
             
-            // Position the Pixi canvas within the container
-            const canvas = this.gameInstance.app.canvas;
-            if (canvas) 
-            {
-                canvas.style.position = 'absolute';
-                canvas.style.top = '0';
-                canvas.style.left = '0';
-                canvas.style.width = '100%';
-                canvas.style.height = '100%';
-                canvas.style.pointerEvents = 'none';
-
-                // Ensure the canvas can still receive keyboard focus for keyboard events
-                canvas.setAttribute('tabindex', '0');
-            }
+            // Set position to match the bounds
+            gameplayGroup.position.set(this.bounds.x, this.bounds.y);
             
-            // Set up a world container in Pixi that will hold all game objects
-            if (!this.gameInstance.worldContainer) 
-            {
-                this.gameInstance.worldContainer = new PIXI.Container();
-                this.gameInstance.app.stage.addChild(this.gameInstance.worldContainer);
-            }
+            // Add a mask to confine visuals within the gameplay area
+            this.createGameAreaMask();
+            
+            console.log("Game area configured in PIXI");
         }
         catch (error) 
         {
-            console.error("Error configuring PIXI app:", error);
+            console.error("Error configuring game area:", error);
         }
     }
     
-
-    // Constrains a position to stay within bounds
+    // Create a visual mask for the game area
+    createGameAreaMask()
+    {
+        if (!this.gameInstance || !this.gameInstance.gameplayGroup)
+        { 
+            return;
+        }
+        
+        // Create a mask graphics object
+        const mask = new PIXI.Graphics();
+        mask.beginFill(0xFFFFFF);
+        mask.drawRect(0, 0, this.bounds.width, this.bounds.height);
+        mask.endFill();
+        
+        // Apply the mask to the gameplay group if needed
+        // Note: Only uncomment this if you want to strictly mask gameplay elements
+        // this.gameInstance.gameplayGroup.mask = mask;
+        
+        // Add to gameplay group for reference
+        this.gameInstance.gameplayGroup.addChild(mask);
+        
+        // Add a debug border around the game area
+        this.addDebugBorder();
+    }
+    
+    // Add a debug border to visualize the game area boundaries
+    addDebugBorder()
+    {
+        // Only in development/debug mode
+        if (!this.gameInstance.debug)
+        {
+            return;
+        }
+        
+        const debugBorder = new PIXI.Graphics();
+        debugBorder.lineStyle(2, 0xFF0000, 0.5);
+        debugBorder.drawRect(0, 0, this.bounds.width, this.bounds.height);
+        
+        // Add to gameplay group
+        this.gameInstance.gameplayGroup.addChild(debugBorder);
+        
+        console.log("Debug border added to game area");
+    }
+    
+    // Constrains a position to stay within the game bounds
     constrainToArea(position, entityWidth, entityHeight) 
     {
         const halfWidth = entityWidth / 2;
@@ -182,21 +144,11 @@ class GameAreaManager
     // Handle window resize events
     onResize() 
     {
+        // Update the game area bounds
         this.updateBounds();
-        this.updateGameContainer();
         
-        // Update the Pixi renderer
-        if (this.gameInstance && this.gameInstance.app) 
-        {
-            try 
-            {
-                this.gameInstance.app.renderer.resize(this.bounds.width, this.bounds.height);
-            } 
-            catch (error) 
-            {
-                console.error("Error resizing PIXI renderer:", error);
-            }
-        }
+        // Update PIXI containers and masks
+        this.updateContainers();
         
         // Notify game of resize
         if (this.gameInstance && this.gameInstance.onResize) 
@@ -204,12 +156,63 @@ class GameAreaManager
             this.gameInstance.onResize(this.bounds);
         }
     }
-
-    // Handle scroll events - update position to stay with fields
-    onScroll() 
+    
+    // Update PIXI containers after resize
+    updateContainers()
     {
-        // this.updateBounds();
-        // this.updateGameContainer();
+        if (!this.gameInstance || !this.gameInstance.app || !this.gameInstance.gameplayGroup)
+        { 
+            return;
+        }
+        
+        // Update gameplay group position
+        this.gameInstance.gameplayGroup.position.set(this.bounds.x, this.bounds.y);
+        
+        // Remove old mask
+        const oldMask = this.gameInstance.gameplayGroup.mask;
+        if (oldMask)
+        {
+            oldMask.destroy();
+            this.gameInstance.gameplayGroup.mask = null;
+        }
+        
+        // Create new mask
+        this.createGameAreaMask();
+    }
+    
+    // Check if a position is within the game area
+    isInGameArea(x, y)
+    {
+        return (
+            x >= this.bounds.x && 
+            x <= this.bounds.x + this.bounds.width &&
+            y >= this.bounds.y && 
+            y <= this.bounds.y + this.bounds.height
+        );
+    }
+    
+    // Convert world coordinates to local game area coordinates
+    worldToLocal(worldX, worldY)
+    {
+        return {
+            x: worldX - this.bounds.x,
+            y: worldY - this.bounds.y
+        };
+    }
+    
+    // Convert local game area coordinates to world coordinates
+    localToWorld(localX, localY)
+    {
+        return {
+            x: localX + this.bounds.x,
+            y: localY + this.bounds.y
+        };
+    }
+    
+    // Clean up resources when manager is destroyed
+    destroy()
+    {
+        window.removeEventListener('resize', this.onResize.bind(this));
     }
 }
 

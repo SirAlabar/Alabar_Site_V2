@@ -1,128 +1,8 @@
-/* ===== DETAILED RESPONSIVENESS ===== */
+/* ===== RESPONSIVE STYLES ===== */
+/* Most background scaling now handled by PIXI directly */
 
-/* Very small screens (320px - 480px) - Small smartphones */
+/* Mobile adjustments for remaining DOM elements */
 @media (max-width: 480px) {
-    :root {
-        --scene-height: 125vh;
-        --layer-scale: 0.8;
-    }
-    
-    .layer {
-        background-size: auto 125vh;
-    }
-}
-
-/* Small screens (481px - 767px) - Large smartphones */
-@media (min-width: 481px) and (max-width: 767px) {
-    :root {
-        --scene-height: 150vh;
-        --layer-scale: 0.9;
-    }
-    
-    .layer {
-        background-size: auto 150vh;
-    }
-}
-
-/* Medium screens (768px - 1023px) - Tablets */
-@media (min-width: 768px) and (max-width: 1023px) {
-    :root {
-        --scene-height: 200vh;
-        --layer-scale: 1;
-    }
-    
-    .layer {
-        background-size: auto 200vh;
-    }
-}
-
-/* Medium-large screens (1024px - 1365px) - Laptops */
-@media (min-width: 1024px) and (max-width: 1365px) {
-    :root {
-        --scene-height: 250vh;
-        --layer-scale: 1;
-    }
-    
-    .layer {
-        background-size: auto 250vh;
-    }
-}
-
-/* Large screens (1366px - 1919px) - Desktops */
-@media (min-width: 1366px) and (max-width: 2127px) {
-    :root {
-        --scene-height: 300vh;
-        --layer-scale: 1;
-    }
-    
-    .layer {
-        background-size: auto 300vh;
-    }
-}
-
-/* Very large screens (1920px+) - 4K and ultrawide */
-@media (min-width: 1920px) {
-    :root {
-        --scene-height: 500vh;
-    }
-    
-    .scene {
-        height: 500vh;
-    }
-    
-    .layer {
-        background-size: 100vw 400vh;
-    }
-}
-
-/* ===== ORIENTATION ADJUSTMENTS ===== */
-
-/* Portrait devices */
-@media (orientation: portrait) {
-    :root {
-        --scene-height: calc(100vh + 50vh);
-    }
-    
-    .layer {
-        background-size: auto calc(100vh + 50vh);
-    }
-}
-
-/* Landscape devices with low height */
-@media (orientation: landscape) and (max-height: 500px) {
-    :root {
-        --scene-height: 200vh;
-    }
-    
-    .layer {
-        background-size: auto 200vh;
-    }
-}
-
-/* ===== ASPECT RATIO ADJUSTMENTS ===== */
-
-/* Ultrawide screens */
-@media (min-aspect-ratio: 21/9) {
-    .layer {
-        background-size: 100vw auto;
-        background-position: center top;
-    }
-}
-
-/* Very narrow screens */
-@media (max-aspect-ratio: 9/16) {
-    .layer {
-        background-size: cover;
-        background-position: center top;
-    }
-}
-
-/* Mobile adjustments */
-@media (max-width: 480px) {
-    #game-container {
-        height: 70vh;
-    }
-    
     .game-card-container {
         position: relative;
         width: 100%;
@@ -132,10 +12,6 @@
 }
 
 @media (max-width: 768px) {
-    #game-container {
-        height: 80vh;
-    }
-    
     .game-card {
         margin: 1rem;
     }
@@ -146,5 +22,24 @@
     
     .play-button {
         width: 100%;
+    }
+    
+    .header h1 {
+        font-size: 32px;
+    }
+    
+    .theme-toggle {
+        font-size: 30px;
+    }
+}
+
+/* Landscape orientation - special handling for UI */
+@media (orientation: landscape) and (max-height: 500px) {
+    .header {
+        height: 40px;
+    }
+    
+    .header h1 {
+        font-size: 20px;
     }
 }
