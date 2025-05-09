@@ -8,7 +8,7 @@
     }
     
     .layer {
-        background-size: auto 125vh;
+        background-size: cover;
     }
 }
 
@@ -20,7 +20,7 @@
     }
     
     .layer {
-        background-size: auto 150vh;
+        background-size: cover;
     }
 }
 
@@ -32,7 +32,7 @@
     }
     
     .layer {
-        background-size: auto 200vh;
+        background-size: cover;
     }
 }
 
@@ -44,7 +44,7 @@
     }
     
     .layer {
-        background-size: auto 250vh;
+        background-size: cover;
     }
 }
 
@@ -56,7 +56,7 @@
     }
     
     .layer {
-        background-size: auto 300vh;
+        background-size: cover;
     }
 }
 
@@ -71,7 +71,7 @@
     }
     
     .layer {
-        background-size: 100vw 400vh;
+        background-size: cover;
     }
 }
 
@@ -95,7 +95,7 @@
     }
     
     .layer {
-        background-size: auto 200vh;
+        background-size: cover;
     }
 }
 
@@ -104,7 +104,7 @@
 /* Ultrawide screens */
 @media (min-aspect-ratio: 21/9) {
     .layer {
-        background-size: 100vw auto;
+        background-size: cover;
         background-position: center top;
     }
 }
