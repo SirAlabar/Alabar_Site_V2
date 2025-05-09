@@ -134,60 +134,75 @@ class LoadingScreen
             loadNextScript(0);
         });
     }
-    
-    // Initialize the game
+
+    // Creates render groups to separate background and gameplay elements
+    createRenderGroups(app)
+    {
+        // Create a background group for parallax layers
+        const backgroundGroup = new PIXI.Container();
+        backgroundGroup.name = "backgroundGroup";
+        
+        // Create a gameplay group for game entities (player, monsters, etc.)
+        const gameplayGroup = new PIXI.Container();
+        gameplayGroup.name = "gameplayGroup";
+        
+        // Create a UI group for HUD elements
+        const uiGroup = new PIXI.Container();
+        uiGroup.name = "uiGroup";
+        
+        // Add all groups to the stage in the correct order
+        app.stage.addChild(backgroundGroup);
+        app.stage.addChild(gameplayGroup);
+        app.stage.addChild(uiGroup);
+        
+        console.log("Render groups created for background, gameplay, and UI");
+        
+        // Return the created groups for use by initSite
+        return {
+            backgroundGroup,
+            gameplayGroup,
+            uiGroup
+        };
+    }  
+
     async initSite() 
     {
         const currentTheme = localStorage.getItem('theme') || 'light';
         
-        // First initialize the game
         const gameContainer = document.getElementById('game-container');
-        if (window.Game) 
-        {
-            console.log('Initializing Game');
-            window.game = new Game(gameContainer);
-            
-            // Wait for game initialization to complete
-            if (window.game.initialized === false && window.game.waitForInitialization) 
-            {
-                console.log('Waiting for game to initialize...');
-                await window.game.waitForInitialization();
-            }
-        }
+        const app = new PIXI.Application();
+        await app.init({
+            width: window.innerWidth,
+            height: window.innerHeight,
+            backgroundColor: 0x000000,
+            backgroundAlpha: 0,
+            antialias: true
+        });
+        gameContainer.appendChild(app.canvas);
         
-        // Small delay to ensure all PIXI containers are ready
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Create render groups using the dedicated method
+        const { backgroundGroup, gameplayGroup, uiGroup } = this.createRenderGroups(app);
         
-        // Initialize SceneManager
         if (window.initSceneManager) 
         {
-            console.log('Initializing SceneManager');
             window.initSceneManager();
-            
-            // Connect SceneManager with Game's PIXI containers
-            if (window.sceneManager && window.game && window.game.backgroundGroup) 
+            if (window.sceneManager) 
             {
-                console.log('Connecting SceneManager to Game PIXI containers');
-                window.sceneManager.setBackgroundGroup(window.game.backgroundGroup, window.game.app);
-                
-                // Apply initial theme
+                window.sceneManager.setBackgroundGroup(backgroundGroup, app);
                 window.sceneManager.applyTheme(currentTheme);
             }
         }
         
-        // Initialize CloudsManager after SceneManager is ready
-        if (window.CloudsManager && !window.cloudsManager && window.game) 
+        if (window.Game) 
         {
-            console.log('Initializing CloudsManager');
-            window.cloudsManager = new CloudsManager(window.game.app, window.game.backgroundGroup);
-            window.cloudsManager.init(currentTheme);
+            window.game = new Game();
+            window.game.setGameplayGroup(gameplayGroup, app, gameContainer);
         }
         
-        // Start any game systems that need to be running
-        if (window.game && window.game.start) 
+        if (window.CloudsManager && !window.cloudsManager) 
         {
-            console.log('Starting game systems');
-            window.game.start();
+            window.cloudsManager = new CloudsManager(app, backgroundGroup);
+            window.cloudsManager.init(currentTheme);
         }
         
         console.log('Site initialization complete');
@@ -199,7 +214,7 @@ window.coreScripts = [
     // // Core Scripts
     // './js/core/Component.js',
     // './js/core/GameObjects.js',
-    './js/core/Game.js',
+    // './js/core/Game.js',
     
     // // Component Scripts
     // './js/components/SpriteComponent.js',
@@ -220,7 +235,7 @@ window.coreScripts = [
     './js/manager/InputManager.js',
     './js/manager/SceneManager.js',
     './js/manager/CloudsManager.js',
-    './js/manager/GameAreaManager.js',
+    // './js/manager/GameAreaManager.js',
     './js/manager/ParallaxEffect.js',
     // './js/manager/SpriteManager.js',
     

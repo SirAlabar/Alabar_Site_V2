@@ -31,6 +31,8 @@ class SceneManager
         
         // Set up theme toggle button
         this.setupThemeToggle();
+        // Resize listener to update scaling when window size changes
+        window.addEventListener('resize', this.handleResize.bind(this));
     }
     
     /**
@@ -87,10 +89,7 @@ class SceneManager
         console.log("PIXI scene created with layers:", Object.keys(this.layers));
     }
     
-    /**
-     * Apply a theme to the scene
-     * @param {string} theme - 'light' or 'dark'
-     */
+    // Apply a theme to the scene
     applyTheme(theme) 
     {
         if (!this.backgroundGroup || !this.app) 
@@ -104,6 +103,14 @@ class SceneManager
         {
             console.error("AssetManager not available");
             return;
+        }
+        
+        console.log(`Applying theme: ${theme}`);
+        
+        // First, make all layers visible
+        for (const [id, container] of Object.entries(this.layers)) 
+        {
+            container.visible = true;
         }
         
         // Set up the base background (color or image)
@@ -134,18 +141,18 @@ class SceneManager
             
             // Clear existing sprites
             container.removeChildren();
-            container.visible = true;
             
             // Get the texture for this layer
+            console.log(`Loading texture for ${id} in theme ${theme}`);
             const texture = window.assetManager.getBackgroundTexture(theme, id);
+            console.log(`Texture found for ${id}:`, texture ? 'Yes' : 'No');
+            
             if (texture) 
             {
                 const sprite = new PIXI.Sprite(texture);
                 
-                const originalRatio = sprite.texture.baseTexture.width / sprite.texture.baseTexture.height;
-                const screenRatio = this.app.screen.width / this.app.screen.height;
-                
-                // Add to container
+                // Add to container without setting dimensions yet
+                // We'll apply scaling to all sprites at once later
                 container.addChild(sprite);
             } 
             else 
@@ -153,6 +160,9 @@ class SceneManager
                 console.warn(`No texture found for layer ${id} in theme ${theme}`);
             }
         }
+        
+        // Apply scaling to all layers to maintain 2:1 aspect ratio
+        this.applyBackgroundScaling();
         
         // Apply special effects for certain layers
         this.applySpecialEffects(theme);
@@ -175,45 +185,71 @@ class SceneManager
      * Set up the background layer (color or image)
      * @param {string} theme - 'light' or 'dark'
      */
-    setupBackground(theme) 
-    {
+    setupBackground(theme) {
         const backgroundContainer = this.layers['background'];
-        if (!backgroundContainer) 
-        {
-            return;
-        }
+        if (!backgroundContainer) return;
         
         // Clear existing content
         backgroundContainer.removeChildren();
         
-        // Get background information from AssetManager
-        const bgInfo = window.assetManager.getBackgroundInfo(theme);
-        
-        // Create a full-screen graphics object for the color
-        const bgGraphics = new PIXI.Graphics();
-        bgGraphics.beginFill(bgInfo.color);
-        bgGraphics.drawRect(0, 0, this.app.screen.width, this.app.screen.height);
-        bgGraphics.endFill();
-        backgroundContainer.addChild(bgGraphics);
-        
-        // If dark theme, add the background image
-        if (bgInfo.useTexture && bgInfo.texture)
-        {
-            const bgSprite = new PIXI.Sprite(bgInfo.texture);
+        // For BOTH themes, create a proper sprite setup
+        if (theme === 'dark') {
+            // Try to get background texture for dark theme
+            const bgTexture = window.assetManager.getBackgroundTexture('dark', 'background');
             
-            // Size to cover the screen
-            bgSprite.width = this.app.screen.width;
-            bgSprite.height = this.app.screen.height;
+            if (bgTexture) {
+                // Create sprite with the texture
+                const bgSprite = new PIXI.Sprite(bgTexture);
+                this.setupBackgroundSprite(bgSprite);
+                backgroundContainer.addChild(bgSprite);
+            } else {
+                // Create a colored rectangle but with proper sprite-like handling
+                this.createColorBackground(backgroundContainer, 0x191970); // Midnight blue
+            }
+        } else {
+            // For light theme, use BOTH approaches:
+            // 1. Try to get a day background texture if it exists
+            const bgTexture = window.assetManager.getBackgroundTexture('light', 'background');
             
-            // Add to container
-            backgroundContainer.addChild(bgSprite);
+            if (bgTexture) {
+                // If we have a texture, use it
+                const bgSprite = new PIXI.Sprite(bgTexture);
+                this.setupBackgroundSprite(bgSprite);
+                backgroundContainer.addChild(bgSprite);
+            } else {
+                // Otherwise create a colored rectangle but with proper sprite-like handling
+                this.createColorBackground(backgroundContainer, 0x87CEEB); // Sky blue
+            }
         }
+        
+        // Apply also to CSS for fallback
+        document.documentElement.style.setProperty('--bg-color', theme === 'light' ? '#87CEEB' : '#191970');
+        document.documentElement.style.setProperty('--bg-image', theme === 'dark' ? 'url(assets/images/background/dark/background_night.webp)' : 'none');
     }
-    
-    /**
-     * Apply special effects to certain layers
-     * @param {string} theme - 'light' or 'dark'
-     */
+    // Add these helper methods to your SceneManager class
+    setupBackgroundSprite(sprite) {
+        // Apply consistent sizing and positioning for ALL sprites
+        sprite.width = this.app.screen.width;
+        sprite.height = Math.max(this.app.screen.height * 3, this.app.screen.width * 2);
+        
+        // Important: Set the anchor point for proper positioning
+        sprite.anchor.set(0.5, 0);
+        sprite.position.set(this.app.screen.width / 2, 0);
+    }
+
+    createColorBackground(container, color) {
+        // Create a PIXI.Sprite instead of Graphics for consistent handling
+        const colorTexture = PIXI.Texture.WHITE;
+        const bgSprite = new PIXI.Sprite(colorTexture);
+        
+        // Set the tint to apply the color
+        bgSprite.tint = color;
+        
+        // Use the same setup method as image sprites
+        this.setupBackgroundSprite(bgSprite);
+        container.addChild(bgSprite);
+    }
+     //Apply special visual effects to certain layers
     applySpecialEffects(theme)
     {
         // Moon animation in dark theme
@@ -224,17 +260,34 @@ class SceneManager
             {
                 const moonSprite = moonContainer.children[0];
                 
-                // Create a glow filter
-                const glowFilter = new PIXI.filters.GlowFilter({
-                    distance: 15,
-                    outerStrength: 2,
-                    innerStrength: 1,
-                    color: 0xFFFFFF,
-                    quality: 0.5
-                });
-                
-                // Apply filter
-                moonSprite.filters = [glowFilter];
+                // Add a simple glow effect using core PIXI filters
+                try 
+                {
+                    // Create a simple glow effect without GlowFilter
+                    // Since GlowFilter is part of pixi-filters package which we may not have
+                    if (PIXI.filters && PIXI.filters.ColorMatrixFilter) 
+                    {
+                        // Use ColorMatrixFilter for a simple brightness effect
+                        const brightFilter = new PIXI.filters.ColorMatrixFilter();
+                        brightFilter.brightness(1.3); // Increase brightness for glow effect
+                        
+                        // Create a blur filter for soft edges
+                        const blurFilter = new PIXI.filters.BlurFilter(2);
+                        blurFilter.quality = 1; // Lower quality for better performance
+                        
+                        // Apply filters
+                        moonSprite.filters = [brightFilter, blurFilter];
+                    } 
+                    else 
+                    {
+                        console.log("ColorMatrixFilter not available, skipping glow effect");
+                    }
+                } 
+                catch (error) 
+                {
+                    console.warn("Error applying filter to moon:", error);
+                    // Continue without filter
+                }
                 
                 // Set up animation
                 this.animateMoon(moonSprite);
@@ -304,21 +357,45 @@ class SceneManager
     {
         // Toggle theme
         const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+        console.log(`Toggling theme from ${this.currentTheme} to ${newTheme}`);
+        
+        // Store the new theme in localStorage
+        localStorage.setItem('theme', newTheme);
         
         // Apply the new theme to PIXI scene
-        this.applyTheme(newTheme);
+        try {
+            this.applyTheme(newTheme);
+        } catch (error) {
+            console.error("Error applying PIXI theme:", error);
+        }
         
-        // Note: We'll still need to update the toggle button here
+        // Update the toggle button
         const themeToggle = document.getElementById('theme-toggle');
         if (themeToggle) 
         {
             themeToggle.textContent = newTheme === 'light' ? '🌚' : '🌞';
         }
         
+        // Apply theme to body for CSS styling
+        document.body.setAttribute('data-theme', newTheme);
+        console.log(`Body data-theme attribute updated to: ${newTheme}`);
+        
         // If CloudsManager exists, refresh it
         if (window.cloudsManager) 
         {
-            window.cloudsManager.refreshClouds();
+            console.log("Refreshing clouds for theme:", newTheme);
+            try {
+                // If the clouds manager has init method for the theme, use it
+                if (typeof window.cloudsManager.init === 'function') {
+                    window.cloudsManager.init(newTheme);
+                } 
+                // Otherwise use the refresh method
+                else if (typeof window.cloudsManager.refreshClouds === 'function') {
+                    window.cloudsManager.refreshClouds();
+                }
+            } catch (error) {
+                console.warn("Error refreshing clouds:", error);
+            }
         }
     }
     
@@ -336,24 +413,27 @@ class SceneManager
         console.log("PIXI parallax effect initialized");
     }
     
-    /**
-     * Set up parallax event handlers
-     */
+     //Set up event handlers for parallax effects
     setupParallaxEvents()
     {
         if (!this.app)
         {
             return;
         }
+        
         // Store movement targets
         this.parallaxTargets = {};
+        
         // Initialize all layers with zero offset
         for (const [id, container] of Object.entries(this.layers)) 
         {
             this.parallaxTargets[id] = {
                 x: 0,
                 y: 0,
-                scrollY: 0
+                scrollY: 0,
+                // Store the original position
+                originalX: container.position.x,
+                originalY: container.position.y
             };
         }
         
@@ -365,45 +445,72 @@ class SceneManager
             for (const [id, container] of Object.entries(this.layers)) 
             {
                 // Skip background
-                if (id === 'background') 
+                if (id === 'background' || !container.visible) 
                 {
                     continue;
                 }
-                const speed = container.parallaxSpeed;
-                const mouseIntensity = 0.2;
+                
+                const speed = container.parallaxSpeed || 0;
+                const mouseIntensity = 0.3; // Increased for more noticeable effect
+                
                 // Calculate offsets
                 const targetX = (e.clientX - centerX) * speed * mouseIntensity;
                 const targetY = (e.clientY - centerY) * speed * mouseIntensity;
+                
                 // Store targets
-                this.parallaxTargets[id].targetX = this.boundValue(targetX, -50, 50);
-                this.parallaxTargets[id].targetY = this.boundValue(targetY, -50, 50);
+                this.parallaxTargets[id].targetX = this.boundValue(targetX, -80, 80);
+                this.parallaxTargets[id].targetY = this.boundValue(targetY, -80, 80);
             }
         });
         
-        // Scroll handler
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
+        // Scroll handler with more impactful effect
+        const handleScroll = () => {
+            // Get scroll position
+            const scrolled = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+            
+            console.log("Scroll position detected:", scrolled);
             
             for (const [id, container] of Object.entries(this.layers)) 
             {
-                // Skip background
-                if (id === 'background') 
+                // Skip background or invisible layers
+                if (id === 'background' || !container.visible) 
                 {
                     continue;
                 }
-                const speed = container.parallaxSpeed;
-                const scrollIntensity = 0.1;
-                // Calculate offset
-                const targetScrollY = -(scrolled * speed * scrollIntensity);
-                // Store target
-                this.parallaxTargets[id].targetScrollY = this.boundValue(targetScrollY, -150, 150);
+                
+                // Get parallax speed or default to zero
+                const speed = container.parallaxSpeed || 0;
+                
+                // Skip layers with zero speed
+                if (speed === 0) continue;
+                
+                // Use a stronger effect for scroll - direct mapping
+                const yOffset = -scrolled * speed * 1.0;
+                
+                // Apply scroll effect to target
+                this.parallaxTargets[id].targetScrollY = yOffset;
+                
+                // Debug logging for specific layers
+                if (id === 'mountain' || id === 'field1' || id === 'castle') {
+                    console.log(`Parallax for ${id}: speed=${speed}, offset=${yOffset}`);
+                }
             }
-        });
+        };
         
-        // Set up animation ticker
-        this.app.ticker.add(() => this.updateParallax());
+        // Add event listeners
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        document.addEventListener('DOMContentLoaded', handleScroll);
+        window.addEventListener('resize', handleScroll);
+        
+        // Force initial update
+        setTimeout(handleScroll, 100);
+        
+        // Increase ticker priority for smoother parallax
+        this.app.ticker.add(this.updateParallax.bind(this), null, PIXI.UPDATE_PRIORITY.HIGH);
+        
+        console.log("Parallax scroll events configured");
     }
-    
+
     /**
      * Update parallax positions on each frame
      */
@@ -414,10 +521,10 @@ class SceneManager
             return;
         }
         
-        const smoothFactor = 0.05;
+        const smoothFactor = 0.1; // Increased for faster movement
         
         for (const [id, container] of Object.entries(this.layers)) 
-            {
+        {
             // Skip background
             if (id === 'background') 
             {
@@ -425,48 +532,103 @@ class SceneManager
             }
             
             const target = this.parallaxTargets[id];
+            
+            // Skip if no target data
+            if (!target) continue;
+            
             // Initialize values if needed
             if (target.x === undefined) target.x = 0;
             if (target.y === undefined) target.y = 0;
             if (target.targetX === undefined) target.targetX = 0;
             if (target.targetY === undefined) target.targetY = 0;
             if (target.targetScrollY === undefined) target.targetScrollY = 0;
+            
             // Smoothly interpolate to target values
             target.x = this.lerp(target.x, target.targetX, smoothFactor);
             target.y = this.lerp(target.y, target.targetScrollY + target.targetY, smoothFactor);
+            
             // Apply the transform to the PIXI container
-            container.position.x = target.x;
-            container.position.y = target.y;
+            container.position.x = (target.originalX || 0) + target.x;
+            container.position.y = (target.originalY || 0) + target.y;
+            
+            // Debug logging for first few frames of mountain layer
+            if ((id === 'mountain' || id === 'field1') && this.app.ticker.elapsedMS < 1000) {
+                console.log(`Parallax update ${id}: x=${container.position.x}, y=${container.position.y}`);
+            }
+        }
+    }
+
+    // Apply scaling to maintain 2:1 ratio (height:width) for all devices
+applyBackgroundScaling() {
+    // Calculate required height based on current screen width (2:1 ratio)
+    const screenWidth = this.app.screen.width;
+    const requiredHeight = screenWidth * 2; // 2:1 ratio (height:width)
+    
+    // Adjust all sprites consistently
+    for (const [id, container] of Object.entries(this.layers)) {
+        for (let i = 0; i < container.children.length; i++) {
+            const child = container.children[i];
+            
+            if (child instanceof PIXI.Sprite) {
+                // Always set width to screen width
+                child.width = screenWidth;
+                
+                // For background layer, always enforce the 2:1 ratio
+                if (id === 'background') {
+                    child.height = requiredHeight;
+                } else {
+                    // For other layers, check the original aspect ratio
+                    let originalRatio = 2; // Default
+                    if (child.texture && child.texture.width && child.texture.height) {
+                        originalRatio = child.texture.width / child.texture.height;
+                    }
+                    
+                    // Set height based on original ratio first
+                    child.height = screenWidth / originalRatio;
+                    
+                    // If height is less than required, scale up to cover
+                    if (child.height < requiredHeight) {
+                        const scale = requiredHeight / child.height;
+                        child.width *= scale;
+                        child.height = requiredHeight;
+                    }
+                }
+                
+                // Center align all sprites horizontally
+                if (child.anchor.x === 0.5) {
+                    child.position.x = screenWidth / 2;
+                }
+            }
         }
     }
     
-    /**
-     * Linear interpolation helper
-     */
-    lerp(start, end, factor) 
-    {
-        return start + (end - start) * factor;
-    }
+    // Rest of your existing code...
+    // Set the CSS variables for responsive layout
+    const viewportHeightRatio = requiredHeight / window.innerHeight;
+    const viewportPercent = Math.max(viewportHeightRatio * 100, 250);
     
-    /**
-     * Bound a value between min and max
-     */
-    boundValue(value, min, max) 
-    {
-        return Math.min(Math.max(value, min), max);
-    }
-    
-    /**
-     * Handle window resize
-     */
+    document.documentElement.style.setProperty('--scene-height', `${viewportPercent}vh`);
+    document.body.style.height = `${viewportPercent}vh`;
+    document.body.style.minHeight = `${viewportPercent}vh`;
+}
+
+    // Handle window resize events
     onResize(width, height) 
     {
-        if (!this.app || !this.backgroundGroup)
+        if (!this.app || !this.backgroundGroup) 
         { 
             return;
         }
-    
-        // Resize each layer's content
+        
+        console.log(`Handling resize event: ${width}x${height}`);
+        
+        // Update the renderer dimensions
+        if (this.app.renderer) 
+        {
+            this.app.renderer.resize(width, height);
+        }
+        
+        // Resize layers with true "cover" behavior
         for (const [id, container] of Object.entries(this.layers)) 
         {
             // Skip empty containers
@@ -475,36 +637,84 @@ class SceneManager
                 continue;
             }
             
-            // Resize all sprites in the container
-            container.children.forEach(sprite => {
-                if (sprite instanceof PIXI.Sprite) 
+            // Resize all sprites and graphics
+            container.children.forEach(child => {
+                if (child instanceof PIXI.Sprite) 
                 {
-                    // Resize to fit the screen
-                    sprite.width = width;
-                    sprite.height = height;
-                    
-                    // Center position if using anchor
-                    if (sprite.anchor.x === 0.5) 
-                    {
-                        sprite.position.x = width / 2;
+                    // Get original image aspect ratio if available
+                    let originalRatio = 2; // Default to 2:1 ratio
+                    if (child.texture && child.texture.width && child.texture.height) {
+                        originalRatio = child.texture.width / child.texture.height;
                     }
-                    if (sprite.anchor.y === 0.5) 
+                    
+                    // Apply true "cover" behavior based on original aspect ratio
+                    // This ensures image fills the entire screen width and adjusts height
+                    // to maintain proper proportions
+                    const requiredHeight = width * 2; // 2:1 scene ratio
+                    
+                    child.width = width;
+                    child.height = width / originalRatio;
+                    
+                    // If sprite height is less than required scene height, 
+                    // scale up to cover entire height
+                    if (child.height < requiredHeight) {
+                        const scale = requiredHeight / child.height;
+                        child.width *= scale;
+                        child.height = requiredHeight;
+                    }
+                    
+                    // Center position horizontally
+                    if (child.anchor.x === 0.5) 
                     {
-                        sprite.position.y = height / 2;
+                        child.position.x = width / 2;
                     }
                 } 
-                else if (sprite instanceof PIXI.Graphics) 
+                else if (child instanceof PIXI.Graphics) 
                 {
                     // For background color graphics
-                    sprite.clear();
-                    sprite.beginFill(sprite.tint);
-                    sprite.drawRect(0, 0, width, height);
-                    sprite.endFill();
+                    child.clear();
+                    child.beginFill(child.tint);
+                    child.drawRect(0, 0, width, Math.max(height * 3, width * 2));
+                    child.endFill();
                 }
             });
         }
         
+        // Apply scaling to update document height based on new dimensions
+        this.applyBackgroundScaling();
+        
         console.log(`Scene resized to ${width}x${height}`);
+    }
+
+    /**
+     * Handle window resize events to update scaling
+     */
+    handleResize() 
+    {
+        // Skip if not initialized yet
+        if (!this.app || !this.backgroundGroup) {
+            return;
+        }
+        
+        console.log("Window resize detected, updating scene scaling");
+        
+        // Update PIXI renderer size
+        this.app.renderer.resize(window.innerWidth, window.innerHeight);
+        
+        // Update scene scaling
+        this.applyBackgroundScaling();
+        
+        // Update parallax targets if they exist
+        if (this.parallaxTargets) {
+            // Reset targets to avoid jumps
+            for (const [id, target] of Object.entries(this.parallaxTargets)) {
+                if (target) {
+                    target.targetX = 0;
+                    target.targetY = 0;
+                    target.targetScrollY = 0;
+                }
+            }
+        }
     }
 }
 

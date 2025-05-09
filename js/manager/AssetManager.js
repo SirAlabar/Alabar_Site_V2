@@ -51,6 +51,7 @@ class AssetManager
                 },
                 dark: {
                     backgroundColor: '#191970',
+                    background: './assets/images/background/dark/background_night.webp',
                     mountain: './assets/images/background/dark/mountain_night.webp',
                     moon: './assets/images/background/dark/moon_night.webp',
                     castle: './assets/images/background/dark/castle_night.webp',
@@ -59,7 +60,8 @@ class AssetManager
                     field3: './assets/images/background/dark/field3_night.webp',
                     field4: './assets/images/background/dark/field4_night.webp',
                     field5: './assets/images/background/dark/field5_night.webp',
-                    field6: './assets/images/background/dark/field6_night.webp'
+                    field6: './assets/images/background/dark/field6_night.webp',
+                    field7: './assets/images/background/dark/field7_night.webp'
                 }
             }
         };

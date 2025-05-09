@@ -4,96 +4,19 @@
  */
 class Game 
 {
-    constructor(canvasContainer) 
+    constructor() 
     {
         console.log("Game constructor called");
         
-        // Store reference to container
-        this.canvasContainer = canvasContainer;
+        // Set up game properties
+        this.entities = [];
+        this.player = null;
+        this.isRunning = false;
         
-        // Make sure PIXI is defined
-        if (typeof PIXI === 'undefined') 
-        {
-            console.error("PIXI is not defined! Make sure Pixi.js is loaded.");
-            this.showErrorMessage("PIXI is not defined");
-            return;
-        }
-        
-        this.initialize();
+        // Game is waiting for groups to be set
+        this.initialized = false;
     }
     
-    async initialize() 
-    {
-        try 
-        {
-            // Initialize PIXI application
-            await this.initializePixiApp();
-            
-            // Set up game properties
-            this.entities = [];
-            this.player = null;
-            this.isRunning = false;
-            
-            // Initialize systems and managers
-            this.initializeSystems();
-            
-            // Start the game loop
-            this.startGameLoop();
-        } 
-        catch (error) 
-        {
-            console.error("Error initializing game:", error);
-            this.showErrorMessage(error.message);
-        }
-    }
-
-    // Creates the PIXI application
-    async initializePixiApp()
-    {
-        // Create PIXI application (v8 style)
-        this.app = new PIXI.Application();
-        
-        // Initialize it asynchronously
-        await this.app.init({
-            width: this.canvasContainer.clientWidth || window.innerWidth,
-            height: this.canvasContainer.clientHeight || window.innerHeight,
-            backgroundColor: 0x000000,
-            backgroundAlpha: 0,
-            antialias: true
-        });
-        
-        // Add the canvas to the container
-        this.canvasContainer.appendChild(this.app.canvas);
-        console.log("PIXI canvas created and appended to container");
-        
-        // Create render groups for better organization and performance
-        this.createRenderGroups();
-    }
-    
-    // Creates render groups to separate background and gameplay elements
-    createRenderGroups()
-    {
-        // Create a background group for parallax layers
-        this.backgroundGroup = new PIXI.Container();
-        this.backgroundGroup.name = "backgroundGroup";
-        
-        // Create a gameplay group for game entities (player, monsters, etc.)
-        this.gameplayGroup = new PIXI.Container();
-        this.gameplayGroup.name = "gameplayGroup";
-        
-        // Create a UI group for HUD elements
-        this.uiGroup = new PIXI.Container();
-        this.uiGroup.name = "uiGroup";
-        
-        // Add all groups to the stage in the correct order
-        this.app.stage.addChild(this.backgroundGroup);
-        this.app.stage.addChild(this.gameplayGroup);
-        this.app.stage.addChild(this.uiGroup);
-        
-        console.log("Render groups created for background, gameplay, and UI");
-    }
-    
-    // Initializes game systems and managers
     initializeSystems() 
     {
         // Connect to existing managers where possible
@@ -101,13 +24,6 @@ class Game
         {
             console.log("Connected to existing SceneManager");
             this.sceneManager = window.sceneManager;
-            
-            // Update SceneManager with the new render group
-            if (typeof this.sceneManager.setBackgroundGroup === 'function') {
-                this.sceneManager.setBackgroundGroup(this.backgroundGroup, this.app);
-            } else {
-                console.warn("SceneManager doesn't support setBackgroundGroup - needs updating");
-            }
         }
         
         if (window.assetManager) 
@@ -131,34 +47,48 @@ class Game
         // Add a simple debug graphic to confirm rendering is working
         this.addDebugGraphic();
     }
-    
-    // Adds debug graphics to verify rendering
+
+    setGameplayGroup(gameplayGroup, app, canvasContainer) 
+    {
+        this.gameplayGroup = gameplayGroup;
+        this.app = app;
+        this.canvasContainer = canvasContainer;
+        
+        // Now we can initialize game systems
+        this.initialized = true;
+        this.initializeSystems();
+        
+        // Start the game loop
+        this.startGameLoop();
+        
+        return this; // Para encadeamento de métodos
+    }
+
     addDebugGraphic() 
     {
-        // Add a transparent background to the gameplay area
+        // Adicionar um fundo com transparência
         const background = new PIXI.Graphics();
-        background.beginFill(0xFF0000, 0.15); // Red color with 15% transparency
+        background.beginFill(0xFF0000, 0.15); // Cor vermelha com 15% de transparência
         background.drawRect(0, 0, this.app.screen.width, this.app.screen.height);
         background.endFill();
         this.gameplayGroup.addChild(background);
         
-        // Add a grid pattern to show the gameplay boundaries
+        // Adicionar linhas de grade para mostrar os limites da área de jogo
         const graphics = new PIXI.Graphics();
         graphics.lineStyle(1, 0xFFFFFF, 0.3);
         
-        // Draw vertical lines
+        // Linhas verticais
         for (let x = 0; x < this.app.screen.width; x += 100) {
             graphics.moveTo(x, 0);
             graphics.lineTo(x, this.app.screen.height);
         }
         
-        // Draw horizontal lines
+        // Linhas horizontais
         for (let y = 0; y < this.app.screen.height; y += 100) {
             graphics.moveTo(0, y);
             graphics.lineTo(this.app.screen.width, y);
         }
         
-        // Add to gameplay group
         this.gameplayGroup.addChild(graphics);
         console.log("Debug graphics added to confirm rendering");
     }
