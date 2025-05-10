@@ -163,7 +163,24 @@ class LoadingScreen
             gameplayGroup,
             uiGroup
         };
-    }  
+    }
+
+    setupScrollBehavior() 
+    {
+        // Aguarde o SceneManager estar pronto
+        if (window.sceneManager && typeof window.sceneManager.adjustDocumentHeight === 'function') 
+        {
+            window.sceneManager.adjustDocumentHeight();
+        } 
+        else 
+        {
+            console.warn('SceneManager not available for scroll adjustment');
+            // Fallback básico
+            document.body.style.minHeight = '200vh';
+            document.body.style.overflowY = 'auto';
+        }
+    }
+
 
     async initSite() 
     {
@@ -204,7 +221,8 @@ class LoadingScreen
             window.cloudsManager = new CloudsManager(app, backgroundGroup);
             window.cloudsManager.init(currentTheme);
         }
-        
+
+        setTimeout(() => this.setupScrollBehavior(), 1000);
         console.log('Site initialization complete');
     }
 }

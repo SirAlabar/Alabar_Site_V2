@@ -602,15 +602,8 @@ applyBackgroundScaling() {
         }
     }
     
-    // Rest of your existing code...
-    // Set the CSS variables for responsive layout
-    const viewportHeightRatio = requiredHeight / window.innerHeight;
-    const viewportPercent = Math.max(viewportHeightRatio * 100, 250);
-    
-    document.documentElement.style.setProperty('--scene-height', `${viewportPercent}vh`);
-    document.body.style.height = `${viewportPercent}vh`;
-    document.body.style.minHeight = `${viewportPercent}vh`;
-}
+
+}   
 
     // Handle window resize events
     onResize(width, height) 
@@ -689,8 +682,7 @@ applyBackgroundScaling() {
     /**
      * Handle window resize events to update scaling
      */
-    handleResize() 
-    {
+    handleResize() {
         // Skip if not initialized yet
         if (!this.app || !this.backgroundGroup) {
             return;
@@ -703,6 +695,7 @@ applyBackgroundScaling() {
         
         // Update scene scaling
         this.applyBackgroundScaling();
+        
         
         // Update parallax targets if they exist
         if (this.parallaxTargets) {

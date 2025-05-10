@@ -5,6 +5,17 @@
     --bg-color-dark: #191970; /* Midnight blue for dark theme */
 }
 
+.scene {
+    position: relative;
+    width: 100%;
+    height: var(--scene-height);
+    margin: 0 auto;
+    overflow: visible; /* Mantenha isso */
+    overflow-x: hidden;
+    transform-style: preserve-3d;
+    background-color: #000;
+}
+
 /* Dark theme */
 body[data-theme="dark"] header {
     color: rgb(0, 183, 255);
