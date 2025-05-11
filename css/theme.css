@@ -17,8 +17,7 @@
     overflow: visible;
     overflow-x: hidden;
     transform-style: preserve-3d;
-    background-color: #000;
-    z-index: 1;
+    background-color: transparent;
 }
 
 /* Dark theme */

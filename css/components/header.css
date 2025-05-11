@@ -36,8 +36,8 @@ h1 {
     padding: 5px;
     border-radius: 50%;
     transition: background-color 0.3s;
-    width: 60px;
-    height: 60px;
+    width: 40px;
+    height: 40px;
 }
 
 .social-media:hover {
@@ -52,7 +52,7 @@ h1 {
     background-color: rgba(81, 81, 81, 0.2);
     border-radius: 10px;
     text-align: center;
-    font-size: 32px;
+    font-size: 32px !important;
     position: relative;
     border: 1px solid transparent;
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);

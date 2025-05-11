@@ -35,12 +35,9 @@ class SceneManager
         window.addEventListener('resize', this.handleResize.bind(this));
     }
     
-    /**
-     * Set the PIXI background group and app references
-     * This will be called by Game.js to connect SceneManager with PIXI
-     * @param {PIXI.Container} backgroundGroup - The PIXI container for background layers
-     * @param {PIXI.Application} app - The PIXI application instance
-     */
+
+     //Set the PIXI background group and app references
+     //This will be called by Game.js to connect SceneManager with PIXI
     setBackgroundGroup(backgroundGroup, app) 
     {
         this.backgroundGroup = backgroundGroup;
@@ -225,6 +222,27 @@ class SceneManager
         // Apply also to CSS for fallback
         document.documentElement.style.setProperty('--bg-color', theme === 'light' ? '#87CEEB' : '#191970');
         document.documentElement.style.setProperty('--bg-image', theme === 'dark' ? 'url(assets/images/background/dark/background_night.webp)' : 'none');
+        setTimeout(() => {
+            // Verificar se o fundo foi realmente aplicado
+            const bgContainer = this.layers['background'];
+            console.log("Estado do container de fundo:", {
+                visible: bgContainer.visible,
+                alpha: bgContainer.alpha,
+                children: bgContainer.children.length,
+                childrenVisible: bgContainer.children.map(c => c.visible),
+                childrenAlpha: bgContainer.children.map(c => c.alpha),
+                backgroundColor: theme === 'light' ? '#87CEEB' : '#191970'
+            });
+            
+            // Tentar forçar o container a ficar visível
+            bgContainer.visible = true;
+            bgContainer.alpha = 1;
+            bgContainer.children.forEach(child => {
+                child.visible = true;
+                child.alpha = 1;
+                child.zIndex = -999; // Forçar o mais baixo possível
+            });
+        }, 500);
     }
     // Add these helper methods to your SceneManager class
     setupBackgroundSprite(sprite) {
@@ -234,20 +252,30 @@ class SceneManager
         
         // Important: Set the anchor point for proper positioning
         sprite.anchor.set(0.5, 0);
-        sprite.position.set(this.app.screen.width);
+        sprite.position.set(this.app.screen.width / 2, 0); // CORRETO: Centro da tela, topo
     }
 
     createColorBackground(container, color) {
-        // Create a PIXI.Sprite instead of Graphics for consistent handling
+        console.log(`Criando fundo colorido com cor: #${color.toString(16)}`);
+        
         const colorTexture = PIXI.Texture.WHITE;
         const bgSprite = new PIXI.Sprite(colorTexture);
         
-        // Set the tint to apply the color
         bgSprite.tint = color;
         
-        // Use the same setup method as image sprites
-        this.setupBackgroundSprite(bgSprite);
+        // Cubra toda a área visualizável
+        bgSprite.width = this.app.screen.width * 1.2;  // 20% maior para garantir
+        bgSprite.height = this.app.screen.height * 3;
+        
+        // Posicionar no centro da tela
+        bgSprite.anchor.set(0.5, 0);
+        bgSprite.position.set(this.app.screen.width / 2, 0);
+        
+        // Garantir que este sprite fique atrás de tudo
+        bgSprite.zIndex = -9999;
+        
         container.addChild(bgSprite);
+        return bgSprite;
     }
      //Apply special visual effects to certain layers
     applySpecialEffects(theme)
@@ -604,7 +632,9 @@ class SceneManager
             if (sceneElement) {
                 sceneElement.style.height = maxLayerHeight + 'px';
             }
-            
+            if (this.app && this.app.renderer) {
+                this.app.renderer.resize(this.app.screen.width, maxLayerHeight);
+            }
             // 2. Posicionar game-container na metade inferior
             const gameContainer = document.getElementById('game-container');
             if (gameContainer) {
@@ -613,7 +643,12 @@ class SceneManager
                 gameContainer.style.top = halfHeight + 'px';
                 gameContainer.style.height = halfHeight + 'px';
             }
-            
+            const footer = document.querySelector('footer');
+            if (footer && gameContainer) {
+                // Posicionar footer após o game-container
+                const gameBottom = parseFloat(gameContainer.style.top) + parseFloat(gameContainer.style.height);
+                footer.style.marginTop = gameBottom + 'px';
+            }
             // 3. Ajustar altura do document para permitir scroll
             document.body.style.minHeight = (maxLayerHeight + 100) + 'px'; // +100 para espaço do footer
             
