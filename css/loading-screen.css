@@ -269,7 +269,9 @@
 
 /* Additional Utility Classes */
 .main-content {
-    opacity: 0;
+    opacity: 1;
+    position: relative;
+    min-height: 200vh;
     transition: opacity 1s ease;
 }
 

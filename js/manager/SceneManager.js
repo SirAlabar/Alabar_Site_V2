@@ -85,7 +85,7 @@ class SceneManager
             // Store reference
             this.layers[config.id] = container;
         });
-        
+        this.backgroundGroup.position.set(0, 0);
         console.log("PIXI scene created with layers:", Object.keys(this.layers));
     }
     
@@ -234,7 +234,7 @@ class SceneManager
         
         // Important: Set the anchor point for proper positioning
         sprite.anchor.set(0.5, 0);
-        sprite.position.set(this.app.screen.width / 2, 0);
+        sprite.position.set(this.app.screen.width);
     }
 
     createColorBackground(container, color) {
@@ -559,53 +559,68 @@ class SceneManager
     }
 
     // Apply scaling to maintain 2:1 ratio (height:width) for all devices
-applyBackgroundScaling() {
-    // Calculate required height based on current screen width (2:1 ratio)
-    const screenWidth = this.app.screen.width;
-    const requiredHeight = screenWidth * 2; // 2:1 ratio (height:width)
-    
-    // Adjust all sprites consistently
-    for (const [id, container] of Object.entries(this.layers)) {
-        for (let i = 0; i < container.children.length; i++) {
-            const child = container.children[i];
-            
-            if (child instanceof PIXI.Sprite) {
-                // Always set width to screen width
-                child.width = screenWidth;
+    applyBackgroundScaling() {
+        const screenWidth = this.app.screen.width;
+        
+        // Para rastrear a altura necessária para o documento
+        let maxLayerHeight = 0;
+        
+        // Calcular altura do conteúdo baseado nas texturas reais
+        for (const [id, container] of Object.entries(this.layers)) {
+            for (let i = 0; i < container.children.length; i++) {
+                const child = container.children[i];
                 
-                // For background layer, always enforce the 2:1 ratio
-                if (id === 'background') {
-                    child.height = requiredHeight;
-                } else {
-                    // For other layers, check the original aspect ratio
-                    let originalRatio = 2; // Default
+                if (child instanceof PIXI.Sprite) {
+                    // Calcular proporção original da imagem
+                    let originalRatio = 2; // Fallback
                     if (child.texture && child.texture.width && child.texture.height) {
                         originalRatio = child.texture.width / child.texture.height;
                     }
                     
-                    // Set height based on original ratio first
-                    child.height = screenWidth / originalRatio;
+                    // Usar contain
+                    let newWidth = screenWidth;
+                    let newHeight = screenWidth / originalRatio;
                     
-                    // If height is less than required, scale up to cover
-                    if (child.height < requiredHeight) {
-                        const scale = requiredHeight / child.height;
-                        child.width *= scale;
-                        child.height = requiredHeight;
-                    }
-                }
-                
-                // Center align all sprites horizontally
-                if (child.anchor.x === 0.5) {
+                    // Aplicar dimensões
+                    child.width = newWidth;
+                    child.height = newHeight;
+                    
+                    // Centralizar horizontalmente
+                    child.anchor.set(0.5, 0);
                     child.position.x = screenWidth / 2;
+                    
+                    // Rastrear altura máxima para ajustar
+                    if (newHeight > maxLayerHeight) {
+                        maxLayerHeight = newHeight;
+                    }
                 }
             }
         }
+        
+        // AQUI É A PARTE IMPORTANTE: Ajustar elementos DOM dinamicamente
+        if (maxLayerHeight > 0) {
+            // 1. Ajustar altura da scene para conter a imagem
+            const sceneElement = document.getElementById('main-scene');
+            if (sceneElement) {
+                sceneElement.style.height = maxLayerHeight + 'px';
+            }
+            
+            // 2. Posicionar game-container na metade inferior
+            const gameContainer = document.getElementById('game-container');
+            if (gameContainer) {
+                // Precisamente na metade
+                const halfHeight = maxLayerHeight / 2;
+                gameContainer.style.top = halfHeight + 'px';
+                gameContainer.style.height = halfHeight + 'px';
+            }
+            
+            // 3. Ajustar altura do document para permitir scroll
+            document.body.style.minHeight = (maxLayerHeight + 100) + 'px'; // +100 para espaço do footer
+            
+            console.log(`Layout ajustado dinamicamente: altura imagem=${maxLayerHeight}px, game-area começa em ${maxLayerHeight/2}px`);
+        }
     }
-    
-
-}   
-
-    // Handle window resize events
+        // Handle window resize events
     onResize(width, height) 
     {
         if (!this.app || !this.backgroundGroup) 
@@ -615,68 +630,17 @@ applyBackgroundScaling() {
         
         console.log(`Handling resize event: ${width}x${height}`);
         
-        // Update the renderer dimensions
+        // Atualizar dimensões do renderizador
         if (this.app.renderer) 
         {
             this.app.renderer.resize(width, height);
         }
         
-        // Resize layers with true "cover" behavior
-        for (const [id, container] of Object.entries(this.layers)) 
-        {
-            // Skip empty containers
-            if (container.children.length === 0) 
-            {
-                continue;
-            }
-            
-            // Resize all sprites and graphics
-            container.children.forEach(child => {
-                if (child instanceof PIXI.Sprite) 
-                {
-                    // Get original image aspect ratio if available
-                    let originalRatio = 2; // Default to 2:1 ratio
-                    if (child.texture && child.texture.width && child.texture.height) {
-                        originalRatio = child.texture.width / child.texture.height;
-                    }
-                    
-                    // Apply true "cover" behavior based on original aspect ratio
-                    // This ensures image fills the entire screen width and adjusts height
-                    // to maintain proper proportions
-                    const requiredHeight = width * 2; // 2:1 scene ratio
-                    
-                    child.width = width;
-                    child.height = width / originalRatio;
-                    
-                    // If sprite height is less than required scene height, 
-                    // scale up to cover entire height
-                    if (child.height < requiredHeight) {
-                        const scale = requiredHeight / child.height;
-                        child.width *= scale;
-                        child.height = requiredHeight;
-                    }
-                    
-                    // Center position horizontally
-                    if (child.anchor.x === 0.5) 
-                    {
-                        child.position.x = width / 2;
-                    }
-                } 
-                else if (child instanceof PIXI.Graphics) 
-                {
-                    // For background color graphics
-                    child.clear();
-                    child.beginFill(child.tint);
-                    child.drawRect(0, 0, width, Math.max(height * 3, width * 2));
-                    child.endFill();
-                }
-            });
-        }
-        
-        // Apply scaling to update document height based on new dimensions
+        // NOVA ABORDAGEM: Simplesmente chamar applyBackgroundScaling()
+        // que já contém a lógica correta de "contain" que implementamos
         this.applyBackgroundScaling();
         
-        console.log(`Scene resized to ${width}x${height}`);
+        console.log(`Scene resized to ${width}x${height} with contain behavior`);
     }
 
     /**

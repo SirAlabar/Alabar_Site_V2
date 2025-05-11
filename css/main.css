@@ -1,3 +1,42 @@
+/* CSS de depuração - adicione temporariamente ao seu arquivo CSS */
+.main-content {
+    border: 3px solid red;
+    padding: 5px;
+}
+
+.scene {
+    border: 3px solid blue;
+    margin: 5px;
+    padding: 5px;
+    background-color: rgba(0, 0, 255, 0.1);
+}
+
+#game-container {
+    border: 3px solid green;
+    margin: 5px;
+    padding: 5px;
+    background-color: rgba(0, 255, 0, 0.1);
+}
+
+header {
+    border: 3px solid purple;
+    margin: 5px;
+    background-color: rgba(128, 0, 128, 0.1);
+}
+
+canvas {
+    border: 3px solid orange;
+    margin: 5px;
+}
+
+footer {
+    border: 3px solid pink;
+    margin: 5px;
+    background-color: rgba(255, 192, 203, 0.1);
+}
+
+
+
 /* Global reset */
 * {
     margin: 0;
@@ -18,27 +57,16 @@ body {
     background-color: #000;
     position: relative;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: auto; 
 }
 
 /* Game container for PIXI.js */
 #game-container {
-    top: 0;
+    top: 60%;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 10;
-    pointer-events: none;
-    overflow: hidden;
-}
-
-/* Make game elements interactive */
-#game-container canvas {
-    display: block;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    pointer-events: auto;
+    height: 50%;
+    position: absolute;
 }
 
 /* UI Elements */
@@ -70,10 +98,11 @@ body {
 
 /* Header */
 .header {
-    width: 100vw;
+    width: 100%;
     z-index: 100;
     top: 0;
-    position: absolute;
+    left: 0;
+    position: fixed; 
 }
 
 /* Theme Toggle */
@@ -90,4 +119,15 @@ body {
 
 .theme-toggle:hover {
     background-color: rgba(255, 255, 255, 0.2);
+}
+
+footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100; 
+    background-color: rgba(0, 0, 0, 0.7); 
+    padding: 10px 0;
+    color: white;
 }

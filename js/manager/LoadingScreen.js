@@ -167,7 +167,6 @@ class LoadingScreen
 
     setupScrollBehavior() 
     {
-        // Aguarde o SceneManager estar pronto
         if (window.sceneManager && typeof window.sceneManager.adjustDocumentHeight === 'function') 
         {
             window.sceneManager.adjustDocumentHeight();
@@ -175,7 +174,6 @@ class LoadingScreen
         else 
         {
             console.warn('SceneManager not available for scroll adjustment');
-            // Fallback básico
             document.body.style.minHeight = '200vh';
             document.body.style.overflowY = 'auto';
         }
@@ -184,18 +182,50 @@ class LoadingScreen
 
     async initSite() 
     {
+        console.log("===== INÍCIO DE initSite() =====");
         const currentTheme = localStorage.getItem('theme') || 'light';
-        
+        console.log(`Tema atual: ${currentTheme}`);
+
+        const sceneElement = document.getElementById('main-scene');
         const gameContainer = document.getElementById('game-container');
+        //////////////////////
+        if (!sceneElement) {
+            console.error("ERROR: Elemento 'main-scene' não encontrado!");
+            return;
+        }
+        if (!gameContainer) {
+            console.error("ERROR: Elemento 'game-container' não encontrado!");
+            return;
+        }
+
+        console.log("Elementos DOM encontrados:", {
+            scene: {
+                id: sceneElement.id,
+                clientWidth: sceneElement.clientWidth,
+                clientHeight: sceneElement.clientHeight
+            },
+            gameContainer: {
+                id: gameContainer.id,
+                clientWidth: gameContainer.clientWidth,
+                clientHeight: gameContainer.clientHeight
+            }
+        });
+        //////////////////////////
+        console.log("Inicializando PIXI Application...");
         const app = new PIXI.Application();
         await app.init({
-            width: window.innerWidth,
-            height: window.innerHeight,
-            backgroundColor: 0x000000,
-            backgroundAlpha: 0,
+            background: 0x000000,      // Cor de fundo (será transparente)
+            backgroundAlpha: 0,        // Transparente
+            resizeTo: sceneElement,    // Redimensiona para o tamanho do scene
             antialias: true
         });
-        gameContainer.appendChild(app.canvas);
+        sceneElement.appendChild(app.canvas);
+        sceneElement.style.height = '200vh';
+        console.log("Canvas anexado ao elemento:", app.canvas.parentElement.id);
+        console.log("Dimensões do canvas:", { 
+            width: app.canvas.width, 
+            height: app.canvas.height 
+        });
         
         // Create render groups using the dedicated method
         const { backgroundGroup, gameplayGroup, uiGroup } = this.createRenderGroups(app);

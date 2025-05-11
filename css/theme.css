@@ -3,17 +3,22 @@
     /* Color variables only - images now handled by PIXI */
     --bg-color-light: #87CEEB; /* Sky blue for light theme */
     --bg-color-dark: #191970; /* Midnight blue for dark theme */
+    --scene-height: 200vh;
 }
 
 .scene {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;    
     width: 100%;
     height: var(--scene-height);
-    margin: 0 auto;
-    overflow: visible; /* Mantenha isso */
+    margin: 0;
+    padding: 0;
+    overflow: visible;
     overflow-x: hidden;
     transform-style: preserve-3d;
     background-color: #000;
+    z-index: 1;
 }
 
 /* Dark theme */
