@@ -631,6 +631,7 @@ class SceneManager
             const sceneElement = document.getElementById('main-scene');
             if (sceneElement) {
                 sceneElement.style.height = maxLayerHeight + 'px';
+                
             }
             if (this.app && this.app.renderer) {
                 this.app.renderer.resize(this.app.screen.width, maxLayerHeight);
@@ -644,13 +645,18 @@ class SceneManager
                 gameContainer.style.height = halfHeight + 'px';
             }
             const footer = document.querySelector('footer');
-            if (footer && gameContainer) {
-                // Posicionar footer após o game-container
-                const gameBottom = parseFloat(gameContainer.style.top) + parseFloat(gameContainer.style.height);
-                footer.style.marginTop = gameBottom + 'px';
+            if (footer && sceneElement) {
+                // Use o valor da altura calculada para a scene
+                const sceneBottom = maxLayerHeight;
+                if (window.innerWidth <= 768) {
+                    // Adicionar margem extra para telas pequenas
+                    footer.style.marginTop = (maxLayerHeight + 60) + 'px';
+                } else {
+                    // Margem normal para telas maiores
+                    footer.style.marginTop = maxLayerHeight + 'px';
+                }
             }
-            // 3. Ajustar altura do document para permitir scroll
-            document.body.style.minHeight = (maxLayerHeight + 100) + 'px'; // +100 para espaço do footer
+            document.body.style.minHeight = (maxLayerHeight) + 'px';
             
             console.log(`Layout ajustado dinamicamente: altura imagem=${maxLayerHeight}px, game-area começa em ${maxLayerHeight/2}px`);
         }
@@ -707,7 +713,26 @@ class SceneManager
                 }
             }
         }
+
+        const navbarCollapse = document.getElementById('navbarSupportedContent');
+        const navbarToggler = document.querySelector('.navbar-toggler');
+        
+        if (navbarCollapse && navbarToggler) {
+            // Se a tela for maior que 768px, força o menu a aparecer
+            if (window.innerWidth > 768) {
+                navbarCollapse.classList.add('show');
+                navbarToggler.setAttribute('aria-expanded', 'true');
+                console.log("Screen size > 768px, showing navbar");
+            } else {
+                // Opcional: se quiser esconder automaticamente em telas pequenas
+                // navbarCollapse.classList.remove('show');
+                // navbarToggler.setAttribute('aria-expanded', 'false');
+                console.log("Screen size <= 768px, navbar state unchanged");
+            }
+        }
     }
+
+    
 }
 
 // Function to initialize the SceneManager

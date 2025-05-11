@@ -20,6 +20,7 @@
     background-color: transparent;
 }
 
+
 /* Dark theme */
 body[data-theme="dark"] header {
     color: rgb(0, 183, 255);

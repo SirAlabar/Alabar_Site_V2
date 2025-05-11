@@ -35,50 +35,56 @@
             <header class="header fixed-top">
                 <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
                     <div class="container-fluid">
-                        <div class="row w-100 align-items-center">
-                            <div class="col-sm-12 col-md-2">
-                                <img src="./assets/images/Avatar_Profile_64px.gif" alt="alabar logo" class="header-logo">
-                            </div>
-                            <div class="col-sm-12 col-md-8">
-                                <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
-                                    <ul class="navbar-nav mb-2 mb-lg-0">
-                                        <li class="nav-item">
-                                            <a class="nav-link" aria-current="page" href="#">Home</a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="./pages/about.html">About</a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="./pages/history.html">History</a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="./pages/contacts.html">Contacts</a>
-                                        </li>
-                                        <li class="nav-item dropdown">
-                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                Projects
-                                            </a>
-                                            <ul class="dropdown-menu">
-                                                <li><a class="dropdown-item" href="#">Web</a></li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li><a class="dropdown-item" href="#">Mobile</a></li>
-                                                <li><a class="dropdown-item" href="#">Games</a></li>
-                                            </ul>
-                                        </li>
+                        <!-- Logo with smaller size -->
+                        <a class="navbar-brand me-0 me-lg-2" href="#">
+                            <img src="./assets/images/Avatar_Profile_64px.gif" alt="alabar logo" class="header-logo">
+                        </a>
+                    
+                        <!-- Mobile menu toggle button -->
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#navbarSupportedContent">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                    
+                        <!-- Menu content -->
+                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                            <!-- Nav links with Bootstrap spacing classes for md breakpoint -->
+                            <ul class="navbar-nav mx-auto p-0 gap-md-1 gap-lg-2">
+                                <li class="nav-item p-md-0 py-md-1">
+                                    <a class="nav-link p-md-1 p-lg-2" aria-current="page" href="#">Home</a>
+                                </li>
+                                <li class="nav-item p-md-0 py-md-1">
+                                    <a class="nav-link p-md-1 p-lg-2" href="./pages/about.html">About</a>
+                                </li>
+                                <li class="nav-item p-md-0 py-md-1">
+                                    <a class="nav-link p-md-1 p-lg-2" href="./pages/contacts.html">Contacts</a>
+                                </li>
+                                <li class="nav-item dropdown p-md-0 py-md-1">
+                                    <a class="nav-link dropdown-toggle p-md-1 p-lg-2" href="#" role="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                        Projects
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#">Web</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="#">Mobile</a></li>
+                                        <li><a class="dropdown-item" href="#">Games</a></li>
                                     </ul>
-                                </div>
-                            </div>
-                            <div class="col-sm-12 col-md-2 d-flex justify-content-end align-items-center">
-                                <a href="mailto:hugollmarta@hotmail.com" target="_blank">
+                                </li>
+                            </ul>
+                        
+                            <!-- Social icons with Bootstrap spacing -->
+                            <div class="d-flex gap-md-1 gap-lg-2 align-items-center">
+                                <a href="mailto:hugollmarta@hotmail.com" target="_blank" class="p-md-1">
                                     <img src="./assets/images/email_logo.png" alt="Email" class="social-media">
                                 </a>
-                                <a href="https://github.com/SirAlabar" target="_blank">
+                                <a href="https://github.com/SirAlabar" target="_blank" class="p-md-1">
                                     <img src="./assets/images/github_logo.png" alt="Github" class="social-media">
                                 </a>
-                                <a href="https://linkedin.com/" target="_blank">
+                                <a href="https://linkedin.com/" target="_blank" class="p-md-1">
                                     <img src="./assets/images/linkedin_logo.png" alt="LinkedIn" class="social-media">
                                 </a>
-                                <button id="theme-toggle" class="theme-toggle">🌓</button>
+                                <button id="theme-toggle" class="theme-toggle p-md-0">🌓</button>
                             </div>
                         </div>
                     </div>

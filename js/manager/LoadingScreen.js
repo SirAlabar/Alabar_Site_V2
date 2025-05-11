@@ -77,24 +77,23 @@ class LoadingScreen
         window.assetManager.loadAllAssets();
     }
     
+
     onLoadingComplete() 
     {
-        this.completed = true;
-        
-        // Add completion class for special effects
+        // Step 1: Add completion visual effects while keeping loading screen visible
         this.loadingScreen.classList.add('loading-complete');
         setTimeout(async () => {
+            // Step 2: Load scripts and initialize site behind the loading screen
             await this.loadScripts();
-            // Fade transitions
+            await this.initSite();
+            // Step 3: Begin the fade-out transition of the loading screen
             this.loadingScreen.classList.add('fade-out');
-            this.mainContent.style.opacity = '1';
-            
-            // Remove loading screen and initialize
-            setTimeout(async () => {
+            setTimeout(() => {
+                // Step 4: Completely remove loading screen and reveal the main content
                 this.loadingScreen.style.display = 'none';
-                await this.initSite();
-            }, 1000);
-        }, 1000);
+                this.mainContent.style.opacity = '1';
+            }, 150);
+        }, 100);
     }
     
     loadScripts() 
@@ -168,6 +167,7 @@ class LoadingScreen
     async initSite() 
     {
         console.log("===== INÍCIO DE initSite() =====");
+
         const currentTheme = localStorage.getItem('theme') || 'light';
         console.log(`Tema atual: ${currentTheme}`);
 
@@ -199,9 +199,9 @@ class LoadingScreen
         console.log("Inicializando PIXI Application...");
         const app = new PIXI.Application();
         await app.init({
-            background: 0x000000,      // Cor de fundo (será transparente)
-            backgroundAlpha: 0,        // Transparente
-            resizeTo: sceneElement,    // Redimensiona para o tamanho do scene
+            background: 0x000000,
+            backgroundAlpha: 0,
+            resizeTo: sceneElement,  
             antialias: true
         });
         sceneElement.appendChild(app.canvas);
@@ -236,6 +236,35 @@ class LoadingScreen
             window.cloudsManager = new CloudsManager(app, backgroundGroup);
             window.cloudsManager.init(currentTheme);
         }
+
+console.log("Verificando layout inicial...");
+
+// Verificar se estamos em uma tela grande com layout incorreto
+if (window.innerWidth > 768) {
+    console.log("Tela grande detectada, verificando layout");
+    
+    // Verificar se o layout está incorreto (navbar expandida mas não visível)
+    const navbarCollapse = document.getElementById('navbarSupportedContent');
+    const navbarToggler = document.querySelector('.navbar-toggler');
+    
+    if (navbarCollapse && !navbarCollapse.classList.contains('show')) {
+        console.log("Layout incorreto detectado em tela grande, forçando correção");
+        
+        // Forçar a classe show no navbar-collapse
+        navbarCollapse.classList.add('show');
+        
+        // Atualizar o estado do botão toggle, se existir
+        if (navbarToggler) {
+            navbarToggler.setAttribute('aria-expanded', 'true');
+        }
+        
+        // Disparar um resize para garantir que outros componentes se ajustem
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+            console.log("Evento de resize disparado para corrigir layout");
+        }, 100);
+    }
+}
 
         console.log('Site initialization complete');
     }
@@ -276,7 +305,7 @@ window.coreScripts = [
     // './js/entities/monsters/Monster.js',
     
     // // Utility Scripts
-    // './js/utils/MathUtils.js',
+    './js/utils/MathUtils.js',
     // './js/utils/PixelCollision.js',
     
     // // Configurations
