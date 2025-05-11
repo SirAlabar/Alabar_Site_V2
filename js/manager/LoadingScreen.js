@@ -165,21 +165,6 @@ class LoadingScreen
         };
     }
 
-    setupScrollBehavior() 
-    {
-        if (window.sceneManager && typeof window.sceneManager.adjustDocumentHeight === 'function') 
-        {
-            window.sceneManager.adjustDocumentHeight();
-        } 
-        else 
-        {
-            console.warn('SceneManager not available for scroll adjustment');
-            document.body.style.minHeight = '200vh';
-            document.body.style.overflowY = 'auto';
-        }
-    }
-
-
     async initSite() 
     {
         console.log("===== INÍCIO DE initSite() =====");
@@ -252,7 +237,6 @@ class LoadingScreen
             window.cloudsManager.init(currentTheme);
         }
 
-        setTimeout(() => this.setupScrollBehavior(), 1000);
         console.log('Site initialization complete');
     }
 }
