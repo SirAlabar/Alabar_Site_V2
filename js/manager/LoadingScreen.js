@@ -288,6 +288,7 @@ window.coreScripts = [
     // './js/components/SpriteComponent.js',
     // './js/components/InputComponent.js',
     './js/components/MovementComponent.js',
+    './js/components/SwordButtonComponent.js',
     // './js/components/ColliderComponent.js',
     './js/components/HealthComponent.js',
     // './js/components/AIComponent.js',
