@@ -66,6 +66,7 @@ class SceneManager
         // Clear existing layers if any
         this.backgroundGroup.removeChildren();
         this.layers = {};
+        this.backgroundGroup.sortableChildren = true;
         
         // Create each layer based on the configuration
         // We're creating empty containers first, textures will be applied later
@@ -135,14 +136,11 @@ class SceneManager
                 container.visible = false;
                 continue;
             }
-            
             // Clear existing sprites
             container.removeChildren();
             
             // Get the texture for this layer
-            console.log(`Loading texture for ${id} in theme ${theme}`);
             const texture = window.assetManager.getBackgroundTexture(theme, id);
-            console.log(`Texture found for ${id}:`, texture ? 'Yes' : 'No');
             
             if (texture) 
             {
@@ -163,7 +161,19 @@ class SceneManager
         
         // Apply special effects for certain layers
         this.applySpecialEffects(theme);
-        
+
+        // Update the cloud system if available
+        if (window.cloudsManager) {
+            if (theme === 'light') {
+                window.cloudsManager.init(theme);
+            } else {
+                window.cloudsManager.hideAllClouds();
+            }
+        }
+
+        // Update current theme
+        this.currentTheme = theme;
+        localStorage.setItem('theme', theme);
         // Update current theme
         this.currentTheme = theme;
         localStorage.setItem('theme', theme);
@@ -225,15 +235,6 @@ class SceneManager
         setTimeout(() => {
             // Verificar se o fundo foi realmente aplicado
             const bgContainer = this.layers['background'];
-            console.log("Estado do container de fundo:", {
-                visible: bgContainer.visible,
-                alpha: bgContainer.alpha,
-                children: bgContainer.children.length,
-                childrenVisible: bgContainer.children.map(c => c.visible),
-                childrenAlpha: bgContainer.children.map(c => c.alpha),
-                backgroundColor: theme === 'light' ? '#87CEEB' : '#191970'
-            });
-            
             // Tentar forçar o container a ficar visível
             bgContainer.visible = true;
             bgContainer.alpha = 1;
@@ -348,41 +349,45 @@ class SceneManager
     /**
      * Setup the theme toggle button
      */
-    setupThemeToggle()
-    {
-        // Create/check toggle button
-        let themeToggle = document.getElementById('theme-toggle');
+    setupThemeToggle() {
+        const themeToggleDesktop = document.getElementById('theme-toggle');
+        const themeToggleMobile = document.getElementById('theme-toggle-mobile');
         
-        if (!themeToggle) 
-        {
-            themeToggle = document.createElement('button');
-            themeToggle.id = 'theme-toggle';
-            themeToggle.className = 'theme-toggle';
-            themeToggle.textContent = this.currentTheme === 'light' ? '🌚' : '🌞';
-            
-            // Add to header if it exists, or to the body
-            const header = document.querySelector('header');
-            if (header) 
-            {
-                header.appendChild(themeToggle);
-            } 
-            else 
-            {
-                document.body.appendChild(themeToggle);
-            }
+        // Function to update button text
+        const updateToggleText = (theme) => {
+            const newText = theme === 'light' ? '🌚' : '🌞';
+            if (themeToggleDesktop) themeToggleDesktop.textContent = newText;
+            if (themeToggleMobile) themeToggleMobile.textContent = newText;
+        };
+        
+        // Set initial text based on current theme
+        updateToggleText(this.currentTheme);
+        
+        // Add click event to desktop button
+        if (themeToggleDesktop) {
+            themeToggleDesktop.addEventListener('click', () => {
+                this.toggleTheme();
+            });
         }
         
-        // Add click event
-        themeToggle.addEventListener('click', () => {
-            this.toggleTheme();
+        // Add click event to mobile button
+        if (themeToggleMobile) {
+            themeToggleMobile.addEventListener('click', () => {
+                this.toggleTheme();
+            });
+        }
+        
+        console.log("Theme toggle buttons configured:", {
+            desktop: !!themeToggleDesktop,
+            mobile: !!themeToggleMobile
         });
     }
+
     
     /**
      * Toggle between light and dark themes
      */
-    toggleTheme()
-    {
+    toggleTheme() {
         // Toggle theme
         const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
         console.log(`Toggling theme from ${this.currentTheme} to ${newTheme}`);
@@ -397,20 +402,20 @@ class SceneManager
             console.error("Error applying PIXI theme:", error);
         }
         
-        // Update the toggle button
-        const themeToggle = document.getElementById('theme-toggle');
-        if (themeToggle) 
-        {
-            themeToggle.textContent = newTheme === 'light' ? '🌚' : '🌞';
-        }
+        // Update the toggle buttons
+        const themeToggleDesktop = document.getElementById('theme-toggle');
+        const themeToggleMobile = document.getElementById('theme-toggle-mobile');
+        
+        const newText = newTheme === 'light' ? '🌚' : '🌞';
+        if (themeToggleDesktop) themeToggleDesktop.textContent = newText;
+        if (themeToggleMobile) themeToggleMobile.textContent = newText;
         
         // Apply theme to body for CSS styling
         document.body.setAttribute('data-theme', newTheme);
         console.log(`Body data-theme attribute updated to: ${newTheme}`);
         
         // If CloudsManager exists, refresh it
-        if (window.cloudsManager) 
-        {
+        if (window.cloudsManager) {
             console.log("Refreshing clouds for theme:", newTheme);
             try {
                 // If the clouds manager has init method for the theme, use it
@@ -426,7 +431,6 @@ class SceneManager
             }
         }
     }
-    
     /**
      * Initialize parallax effect
      */

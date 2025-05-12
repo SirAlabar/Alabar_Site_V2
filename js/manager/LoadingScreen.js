@@ -231,10 +231,17 @@ class LoadingScreen
             window.game.setGameplayGroup(gameplayGroup, app, gameContainer);
         }
         
-        if (window.CloudsManager && !window.cloudsManager) 
-        {
+        if (window.CloudsManager && !window.cloudsManager) {
+            console.log("Creating CloudsManager instance");
             window.cloudsManager = new CloudsManager(app, backgroundGroup);
+            console.log("Initializing CloudsManager with theme:", currentTheme);
             window.cloudsManager.init(currentTheme);
+            console.log("CloudsManager initialization completed");
+        } else {
+            console.error("CloudsManager not available:", { 
+                classExists: !!window.CloudsManager, 
+                instanceExists: !!window.cloudsManager 
+            });
         }
 
 console.log("Verificando layout inicial...");

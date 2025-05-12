@@ -66,8 +66,6 @@ h1 {
 /* Animação do colapso do menu */
 .navbar-collapse {
     transition: height 0.3s ease;
-    height: 0;
-    overflow: hidden;
     gap: 0;
 }
 
@@ -104,7 +102,7 @@ h1 {
     border-radius: 10px;
     padding: 8px;
     text-align: center;
-    width: auto;    
+    width: auto;
 }
 
 .dropdown-item {
@@ -114,7 +112,7 @@ h1 {
     transition: all 0.3s ease;
     border-radius: 8px;
     padding: 5px 15px;
-    margin: 2px 0;        
+    margin: 2px 0;      
 }
 
 .dropdown-item:hover {

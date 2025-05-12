@@ -1,0 +1,153 @@
+#clouds {
+    position: absolute;
+    width: 100%;
+    height: 55%;  
+    top: 0;
+    left: 0;
+    z-index: -9;
+    overflow: hidden;
+    pointer-events: none;
+    transition: opacity 0.5s ease-out;
+    opacity: 1;
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+}
+
+@keyframes moveCloud {
+    from {left: 0px;}
+    to {left: 20px;}
+}
+
+@keyframes moonGlow {
+    0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); }
+    50% { filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8)); }
+    100% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); }
+}
+
+@keyframes floatMoon {
+    0% { transform: translateY(0px) scale(var(--layer-scale)); }
+    50% { transform: translateY(-10px) scale(var(--layer-scale)); }
+    100% { transform: translateY(0px) scale(var(--layer-scale)); }
+}
+
+/* Cloud Animations */
+@keyframes cloudDriftLeftToRight {
+    0% { 
+        transform: scale(var(--base-scale)) translateX(-100%) translateY(0); 
+        opacity: 0;
+    }
+    10% { opacity: var(--final-opacity, 0.2); }
+    40% { opacity: var(--final-opacity, 0.8); }
+    80% { opacity: var(--final-opacity, 0.5); }
+    100% {
+        transform: translateX(100vw) translateY(0); 
+        opacity: 0;
+    }
+}
+
+@keyframes cloudDriftRightToLeft {
+    0% { 
+        transform: translateY(-10%) translateX(100vw); 
+        opacity: 0;
+    }
+    10% { opacity: var(--final-opacity, 0.2); }
+    40% { opacity: var(--final-opacity, 0.8); }
+    80% { opacity: var(--final-opacity, 0.5); }
+    100% { 
+        transform: translateY(-10%) translateX(-100%); 
+        opacity: 0; 
+    }
+}
+
+@keyframes cloudDriftDiagonalUp {
+    0% { 
+        transform: translateX(-100%) translateY(100px); 
+        opacity: 0;
+    }
+    10% { opacity: var(--final-opacity, 0.2); }
+    40% { opacity: var(--final-opacity, 0.8); }
+    80% { opacity: var(--final-opacity, 0.5); }
+    100% { 
+        transform: translateX(100vw) translateY(-100px); 
+        opacity: 0; 
+    }
+}
+
+@keyframes cloudDriftSlow {
+    0% { 
+        transform: translateX(-50px) translateY(0);
+        opacity: var(--final-opacity, 0.3);
+    }
+    50% { 
+        transform: translateX(50px) translateY(0);
+        opacity: var(--final-opacity, 0.8);
+    }
+    100% { 
+        transform: translateX(-50px) translateY(0);
+        opacity: var(--final-opacity, 0.5);
+    }
+}
+
+@keyframes cloudForm {
+    0% {
+        opacity: 0;
+        filter: blur(5px) brightness(1.2);
+        transform: scale(calc(var(--base-scale) * 0.8));
+    }
+    50% {
+        opacity: 0.5;
+        filter: blur(3px) brightness(1.1);
+    }
+    100% {
+        transform: scale(var(--base-scale));
+        filter: blur(0) brightness(1);
+    }
+}
+
+/* Cloud Animation Classes */
+.anim-combo-1 {
+    animation:
+        cloudForm 4s ease-in,
+        cloudDriftLeftToRight 60s linear;
+    animation-delay: var(--formation-delay, 0s), var(--drift-delay, 0s);
+}
+
+.anim-combo-2 {
+    animation:
+        cloudForm 6s ease-in,
+        cloudDriftRightToLeft 80s linear;
+    animation-delay: var(--formation-delay, 0s), var(--drift-delay, 0s);
+}
+
+.anim-combo-3 {
+    animation:
+        cloudForm 5s ease-in,
+        cloudDriftDiagonalUp 90s linear;
+    animation-delay: var(--formation-delay, 0s), var(--drift-delay, 0s);
+}
+
+.anim-combo-4 {
+    animation:
+        cloudForm 7s ease-in,
+        cloudDriftSlow 25s ease-in-out infinite;
+    animation-delay: var(--formation-delay, 0s), var(--drift-delay, 0s);
+}
+
+/* Various formation speed variations */
+.form-speed-1 { --formation-delay: 0s; animation-duration: 4s, 60s; }
+.form-speed-2 { --formation-delay: 1s; animation-duration: 5s, 70s; }
+.form-speed-3 { --formation-delay: 2s; animation-duration: 6s, 80s; }
+
+/* Various final opacity levels */
+.opacity-light { --final-opacity: 0.3; }
+.opacity-medium { --final-opacity: 0.5; }
+.opacity-full { --final-opacity: 0.7; }
