@@ -650,7 +650,7 @@ class SceneManager
                 const sceneBottom = maxLayerHeight;
                 if (window.innerWidth <= 768) {
                     // Adicionar margem extra para telas pequenas
-                    footer.style.marginTop = (maxLayerHeight + 60) + 'px';
+                    footer.style.marginTop = (maxLayerHeight + 50) + 'px';
                 } else {
                     // Margem normal para telas maiores
                     footer.style.marginTop = maxLayerHeight + 'px';

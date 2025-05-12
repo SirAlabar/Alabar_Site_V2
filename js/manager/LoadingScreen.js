@@ -305,7 +305,7 @@ window.coreScripts = [
     // './js/entities/monsters/Monster.js',
     
     // // Utility Scripts
-    './js/utils/MathUtils.js',
+    // './js/utils/MathUtils.js',
     // './js/utils/PixelCollision.js',
     
     // // Configurations

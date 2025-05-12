@@ -6,16 +6,18 @@
   
 .navbar {
     margin-right: 0;
-    padding: 0;
-    background-color: rgba(33, 37, 41, 0.2) !important;
+    min-height: unset;
+    padding-top: 0.15rem;
+    padding-bottom: 0.15rem;
+    background-color: rgba(33, 37, 41, 0.2);
     backdrop-filter: blur(2px);
-    padding: 0.25rem 0.5rem !important;
+    padding: 0.25rem 0.5rem;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .header-logo {
-    width: 50px !important;
-    height: 50px !important;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     box-shadow: 10px 10px 15px rgb(0, 0, 0);
 }
@@ -27,7 +29,7 @@ h1 {
     font-style: italic;
     font-variation-settings: "MORF" 15, "SHLN" 50;    
     color: rgb(255, 0, 0);
-    font-size: 50px;
+    font-size: 45px;
     margin: 0;
 }
 
@@ -38,8 +40,8 @@ h1 {
     padding: 5px;
     border-radius: 50%;
     transition: background-color 0.3s;
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
 }
 
 .social-media:hover {
@@ -66,6 +68,7 @@ h1 {
     transition: height 0.3s ease;
     height: 0;
     overflow: hidden;
+    gap: 0;
 }
 
 .navbar-collapse.show {
@@ -74,7 +77,7 @@ h1 {
 
 .nav-link {
     font-family: "Honk", serif;
-    color: rgba(255, 255, 255, 0.9) !important;
+    color: rgba(255, 255, 255, 0.9);
     transition: all 0.3s ease;
     margin: 0 10px;
     background-color: rgba(81, 81, 81, 0.2);
@@ -88,7 +91,7 @@ h1 {
 
 .nav-link:hover {
     background-color: rgba(81, 81, 81, 0.3);
-    color: white !important;
+    color: white;
     border: 1px solid rgba(255, 255, 255, 0.5);
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.3),
                 inset 0 0 10px rgba(255, 255, 255, 0.2);
@@ -134,23 +137,23 @@ h6 {
 
 @media (max-width: 768px) {
   .navbar {
-    padding: 0.25rem 0.5rem !important;
+    padding: 0.25rem 0.5rem;
   }
     .container-fluid {
     padding: 0 5px;
   }
 .scene {
-    margin-top: 60px !important;
+    margin-top: 50px !important;
   }
   footer {
     margin-top: var(--scene-height);
 }
   .header-logo {
-    width: 40px !important;
-    height: 40px !important;
+    width: 40px;
+    height: 40px;
   }
   .navbar-collapse {
-    display: flex !important;
+    display: flex;
     flex-wrap: wrap;
     text-align: center;
     justify-content: center;
@@ -161,21 +164,21 @@ h6 {
     font-size: 0.8rem;
   }
   .navbar-nav {
-    display: flex !important;
-    flex-direction: row !important;
+    display: flex;
+    flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
     margin: 0.5rem 0;
   }
   
   .nav-item {
-    margin: 2px !important;
+    margin: 2px;
   }
   
   .nav-link {
-    font-size: 16px !important;
-    padding: 3px 6px !important;
-    margin: 2px 3px !important;
+    font-size: 16px;
+    padding: 3px 6px;
+    margin: 2px 3px;
   }
 
   .dropdown-item {
@@ -194,41 +197,41 @@ h6 {
   }
 
 .theme-toggle {
-    font-size: 20px !important;
+    font-size: 20px;
   }
 }
-/* 
-// Solução específica para o intervalo 769px-992px 
+
+
+/* Solução específica para o intervalo 769px-992px */
 @media (min-width: 769px) and (max-width: 992px) {
-     Reduzir drasticamente o tamanho dos containers de nav-item 
-    .nav-link {
+  /* Reduzir drasticamente o tamanho dos containers de nav-item */
+  .nav-link {
+    font-size: 27px;
+    padding-left: 8px;
+    padding-right: 8px;
+    margin: 2px;
+  }
 
-        padding-left: 8px !important;
-        padding-right: 8px !important;
+  /* Forçar display flex em linha para todos os elementos */
+  .navbar-nav {
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
 
-        margin: 2px !important;
-        background-color: rgba(81, 81, 81, 0.3) !important;
-        border-radius: 4px !important;
-    }
-    
-
-    .navbar-nav {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: center !important;
-
-        margin-top: 0 !important;
-        margin-bottom: 0 !important;
-    }
-    
-
-    .nav-item {
-        margin: 1px !important;
-    }
+.dropdown-item {
+    font-size: 25px;
+    border-radius: 8px;
+    padding: 5px 15px;
+    margin: 2px 0;        
+}
+  /* Reduzir todos os espaçamentos */
+  .nav-item {
+    margin: 1px;
+  }
+  
 
 
-    .theme-toggle {
-        font-size: 18px !important;
-        padding: 0 !important;
-    }
-} */ */
+
+}
