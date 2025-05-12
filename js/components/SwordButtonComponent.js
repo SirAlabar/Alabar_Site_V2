@@ -240,10 +240,10 @@ class SwordButtonComponent {
                             setTimeout(() => {
                                 swordGroup.classList.remove('attacking-step3');
                                 isAnimating = false;
-                            }, 300);
-                        }, 300);
-                    }, 300);
-                }, 100);
+                            }, 75);
+                        }, 75);
+                    }, 75);
+                }, 75);
             } else {
                 // CSS transition will handle closing
                 isAnimating = false;
