@@ -140,14 +140,17 @@ class LoadingScreen
         // Create a background group for parallax layers
         const backgroundGroup = new PIXI.Container();
         backgroundGroup.name = "backgroundGroup";
+        backgroundGroup.zIndex = 0;
         
         // Create a gameplay group for game entities (player, monsters, etc.)
         const gameplayGroup = new PIXI.Container();
         gameplayGroup.name = "gameplayGroup";
-        
+        gameplayGroup.zIndex = 15;
+
         // Create a UI group for HUD elements
         const uiGroup = new PIXI.Container();
         uiGroup.name = "uiGroup";
+        uiGroup.zIndex = 999;
         
         // Add all groups to the stage in the correct order
         app.stage.addChild(backgroundGroup);
@@ -155,7 +158,7 @@ class LoadingScreen
         app.stage.addChild(uiGroup);
         
         console.log("Render groups created for background, gameplay, and UI");
-        
+        app.stage.sortChildren();
         // Return the created groups for use by initSite
         return {
             backgroundGroup,
@@ -243,6 +246,21 @@ class LoadingScreen
                 instanceExists: !!window.cloudsManager 
             });
         }
+        if (window.CursorEffectComponent) {
+            console.log("Criando CursorEffectComponent");
+            window.cursorEffect = new CursorEffectComponent(window.game, app, uiGroup, {
+                // Opções personalizadas, se necessário
+                particlesCount: 3,
+                lightIntensity: 0.4,
+                // Certifique-se de que os caminhos para as imagens estão corretos
+                cursorImageLight: './assets/cursors/sword-light.png',
+                cursorImageDark: './assets/cursors/sword-dark.png'
+            });
+            console.log("CursorEffectComponent inicializado");
+        } else {
+            console.error("CursorEffectComponent não disponível");
+        }
+            
 
 console.log("Verificando layout inicial...");
 
@@ -289,6 +307,7 @@ window.coreScripts = [
     // './js/components/InputComponent.js',
     './js/components/MovementComponent.js',
     './js/components/SwordButtonComponent.js',
+    './js/components/CursorEffectsComponent.js',
     // './js/components/ColliderComponent.js',
     './js/components/HealthComponent.js',
     // './js/components/AIComponent.js',
