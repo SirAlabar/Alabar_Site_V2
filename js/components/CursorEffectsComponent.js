@@ -1,288 +1,286 @@
 /**
  * CursorEffectComponent.js
  * 
- * Componente para efeitos de cursor usando PIXI.js, integrando com o uiGroup existente
- * Inclui partículas geométricas, cursor personalizado por tema, e iluminação no modo escuro
+ * Component for cursor effects using PIXI.js, integrating with the existing uiGroup
+ * Includes geometric particles in light theme and blood drops in dark theme
  */
 
 class CursorEffectComponent {
   constructor(game, app, uiGroup, options = {}) {
-    // Referências ao sistema
+    // System references
     this.game = game;
     this.app = app;
     this.uiGroup = uiGroup;
     
-    // Verificar se temos as dependências necessárias
+    // Check if we have the necessary dependencies
     if (!this.app || !this.uiGroup) {
-      console.error("CursorEffectComponent: app e uiGroup são obrigatórios");
+      console.error("CursorEffectComponent: app and uiGroup are required");
       return;
     }
     
-    // Configurações padrão
+    // Default settings
     this.config = {
       particlesEnabled: true,
-      lightEnabled: true,
-      cursorSize: 32,  // Tamanho do cursor em pixels
-      particlesCount: 3, // Quantidade de partículas
-      particlesLifespan: 60, // Duração em frames
-      lightSize: 350,   // Tamanho do efeito de luz
-      lightIntensity: 0.4, // Intensidade da luz (0-1)
-      cursorImageLight: 'assets/cursors/sword-light.png', // Cursor no tema claro
-      cursorImageDark: 'assets/cursors/sword-dark.png',   // Cursor no tema escuro
+      cursorSize: 32,          // Cursor size in pixels
+      particlesCount: 2,       // Number of particles
+      particlesLifespan: 60,   // Duration in frames
       ...options
     };
 
-    // Estado interno
+    // Internal state
     this.currentTheme = 'light';
     this.isInitialized = false;
     this.particles = [];
     this.cursorPos = { x: 0, y: 0 };
     this.lastPos = { x: 0, y: 0 };
     this.particleContainer = null;
-    this.lightContainer = null;
     this.cursorSprite = null;
-    this.lightSprite = null;
     
     // Textures
     this.cursorLightTexture = null;
     this.cursorDarkTexture = null;
-    this.lightTexture = null;
     
-    // Formas das partículas
+    // Particle shapes
     this.particleShapes = ['circle', 'square', 'triangle', 'diamond', 'star'];
     
-    // Cores para as partículas por tema
+    // Particle colors by theme
     this.particleColors = {
       light: [
-        0xFF5252, // vermelho
-        0xFF7B25, // laranja
-        0xFFC107, // amarelo
-        0x4CAF50, // verde
-        0x2196F3, // azul
-        0x9C27B0, // roxo
-        0xE91E63  // rosa
+        0xFF5252, // red
+        0xFF7B25, // orange
+        0xFFC107, // yellow
+        0x4CAF50, // green
+        0x2196F3, // blue
+        0x9C27B0, // purple
+        0xE91E63  // pink
       ],
       dark: [
-        0xFF9800, // laranja
-        0xFFC107, // amarelo
-        0xFFEB3B, // amarelo claro
-        0x8BC34A, // verde claro
-        0x4FC3F7, // azul claro
-        0xE040FB, // roxo claro
-        0xF48FB1  // rosa claro
+        0xFF0000, // dark blood red
+        0xCC0000, // medium blood red
+        0xAA0000, // light blood red
+        0x880000, // dark red
+        0x990000, // medium dark red
+        0xBB0000  // medium red
       ]
     };
     
-    // Inicializar
+    // Add properties for blood effect
+    this.bloodDrops = [];
+    this.lastBloodTime = 0;
+    this.bloodDropRate = 100; // ms between drops
+    
+    // Initialize
     this.init();
   }
 
   /**
-   * Inicializa o componente
+   * Initialize the component
    */
   init() {
     if (this.isInitialized) return;
     
-    // Detectar tema inicial
+    // Detect initial theme
     this.detectTheme();
     
-    // Configurar containers PIXI
+    // Configure PIXI containers
     this.setupContainers();
     
-    // Carregar texturas
+    // Apply cursor hiding IMMEDIATELY - don't wait for texture loading
+    this.hideDefaultCursor();
+    
+    // Load textures
     this.loadTextures().then(() => {
-      // Criar cursor sprite
+      // Create cursor sprite
       this.createCursorSprite();
       
-      // Criar efeito de luz
-      this.createLightEffect();
-      
-      // Esconder cursor padrão
-      document.body.style.cursor = 'none';
-      
-      console.log("CursorEffectComponent: texturas carregadas e sprites criados");
+      console.log("CursorEffectComponent: textures loaded and sprites created");
     });
     
-    // Configurar observador para mudanças de tema
+    // Configure observer for theme changes
     this.observeThemeChanges();
     
-    // Adicionar event listeners
+    // Add event listeners
     this.bindEvents();
     
     this.isInitialized = true;
     console.log("CursorEffectComponent initialized");
+
+    setTimeout(() => this.debugContainers(), 1000);
+  }
+  
+  /**
+   * Hide default cursor using multiple methods to ensure it's hidden
+   */
+  hideDefaultCursor() {
+    // Method 1: Apply to html & body directly
+    document.documentElement.style.cursor = 'none';
+    document.body.style.cursor = 'none';
+    
+    // Method 2: Apply to canvas
+    if (this.app && this.app.view) {
+      this.app.view.style.cursor = 'none';
+    }
+    
+    // Method 3: Create a global stylesheet with !important
+    try {
+      const styleElement = document.createElement('style');
+      styleElement.id = 'cursor-hider-stylesheet';
+      styleElement.textContent = `
+        * {
+          cursor: none !important;
+        }
+        
+        a, button, input, select, textarea, [role="button"], [type="button"], [type="submit"] {
+          cursor: none !important;
+        }
+        
+        .navbar, .navbar-toggler, .nav-link, .social-media, .theme-toggle {
+          cursor: none !important;
+        }
+      `;
+      document.head.appendChild(styleElement);
+      
+      // Method 4: Add event listener to force cursor hiding on any element hover
+      this.forceHideCursor = (e) => {
+        if (e.target && e.target.style) {
+          e.target.style.cursor = 'none';
+        }
+      };
+      
+      document.addEventListener('mouseover', this.forceHideCursor, true);
+      
+      console.log("Applied cursor hiding methods");
+    } catch (error) {
+      console.error("Error applying cursor styles:", error);
+    }
   }
 
   /**
-   * Configura os containers PIXI para partículas e efeitos de luz
+   * Set up PIXI containers for particles
    */
   setupContainers() {
-    // Container para partículas
+    // Container for particles
     this.particleContainer = new PIXI.Container();
     this.particleContainer.name = "cursorParticles";
     this.particleContainer.sortableChildren = true;
     this.uiGroup.addChild(this.particleContainer);
     
-    // Container para efeito de luz
-    this.lightContainer = new PIXI.Container();
-    this.lightContainer.name = "cursorLight";
-    this.lightContainer.visible = this.currentTheme === 'dark';
-    this.uiGroup.addChild(this.lightContainer);
-    
-    // Garantir que o uiGroup esteja à frente
+    // Ensure uiGroup is in front
     this.uiGroup.zIndex = 1000;
     
-    // Se o container pai tem sortableChildren, forçar ordenação
+    // If parent container has sortableChildren, force sorting
     if (this.uiGroup.parent && this.uiGroup.parent.sortableChildren) {
       this.uiGroup.parent.sortChildren();
     }
   }
 
   /**
-   * Carrega texturas para o cursor e efeito de luz
+   * Load textures for cursor
    */
   async loadTextures() {
     try {
-      // Carregar texturas para cursores
-      this.cursorLightTexture = await PIXI.Assets.load(this.config.cursorImageLight);
-      this.cursorDarkTexture = await PIXI.Assets.load(this.config.cursorImageDark);
-      
-      // Criar textura para o efeito de luz
-      this.createLightTexture();
-      
-      return true;
+      // Get textures from AssetManager
+      if (window.assetManager && window.assetManager.textures) {
+        this.cursorLightTexture = window.assetManager.textures['cursor_light'];
+        this.cursorDarkTexture = window.assetManager.textures['cursor_dark'];
+          
+        // Check if textures were loaded
+        if (!this.cursorLightTexture || !this.cursorDarkTexture) {
+          console.warn("CursorEffectComponent: cursor textures not found in AssetManager");
+          
+          // Fallback para carregamento direto apenas se necessário
+          // Tentando usar imagens padrão
+          try {
+            if (!this.cursorLightTexture) {
+              this.cursorLightTexture = await PIXI.Assets.load('assets/images/cursor_light.png');
+            }
+            if (!this.cursorDarkTexture) {
+              this.cursorDarkTexture = await PIXI.Assets.load('assets/images/cursor_night.png');
+            }
+          } catch (loadError) {
+            console.error("Erro no fallback: ", loadError);
+          }
+        }
+          
+        return true;
+      } else {
+        // Fallback to direct method if AssetManager is not available
+        console.warn("AssetManager não disponível, tentando carregar diretamente");
+        try {
+          this.cursorLightTexture = await PIXI.Assets.load('assets/images/cursor_light.png');
+          this.cursorDarkTexture = await PIXI.Assets.load('assets/images/cursor_night.png');
+          return true;
+        } catch (directLoadError) {
+          console.error("Erro no carregamento direto: ", directLoadError);
+          return false;
+        }
+      }
     } catch (error) {
-      console.error("CursorEffectComponent: erro ao carregar texturas", error);
+      console.error("CursorEffectComponent: error loading textures", error);
       return false;
     }
   }
 
   /**
-   * Cria a textura para o efeito de luz pixelada
-   */
-  // Modifique a função createLightTexture() para um efeito mais visível
-  createLightTexture() {
-      // Criar um canvas temporário para gerar a textura
-      const size = 256; // Aumentar o tamanho
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      
-      canvas.width = size;
-      canvas.height = size;
-      
-      // Desenhar gradiente radial com cores mais intensas
-      const gradient = context.createRadialGradient(
-        size/2, size/2, 0,
-        size/2, size/2, size/2
-      );
-      
-      gradient.addColorStop(0, 'rgba(255, 255, 220, 1.0)');    // Centro mais brilhante
-      gradient.addColorStop(0.2, 'rgba(255, 230, 150, 0.8)');  // Meio mais visível
-      gradient.addColorStop(0.7, 'rgba(255, 200, 100, 0.3)');
-      gradient.addColorStop(1, 'rgba(100, 50, 0, 0)');
-      
-      context.fillStyle = gradient;
-      context.fillRect(0, 0, size, size);
-      
-      // Aplicar efeito pixelado
-      const pixelSize = 4;
-      const pixelatedCanvas = document.createElement('canvas');
-      const pixelatedContext = pixelatedCanvas.getContext('2d');
-      
-      pixelatedCanvas.width = size;
-      pixelatedCanvas.height = size;
-      
-      // Reduzir e ampliar para criar o efeito pixelado
-      pixelatedContext.drawImage(canvas, 0, 0, size/pixelSize, size/pixelSize);
-      pixelatedContext.imageSmoothingEnabled = false;
-      pixelatedContext.drawImage(
-        pixelatedCanvas, 
-        0, 0, size/pixelSize, size/pixelSize, 
-        0, 0, size, size
-      );
-      
-      // Criar textura PIXI a partir do canvas
-      this.lightTexture = PIXI.Texture.from(pixelatedCanvas);
-  }
-
-  /**
-   * Cria o sprite do cursor
+   * Create cursor sprite
    */
   createCursorSprite() {
-    // Determinar qual textura usar
+    // Determine which texture to use
     const texture = this.currentTheme === 'dark' 
       ? this.cursorDarkTexture 
       : this.cursorLightTexture;
     
-    // Criar sprite se não existir
+    // Create sprite if it doesn't exist
     if (!this.cursorSprite) {
       this.cursorSprite = new PIXI.Sprite(texture);
-      this.cursorSprite.anchor.set(0.5);
+      
+      // Change anchor point to align the active point of the cursor with position
+      // Adjust these values as needed based on your cursor image
+      this.cursorSprite.anchor.set(0.1, 0.1); 
+      
       this.cursorSprite.width = this.config.cursorSize;
       this.cursorSprite.height = this.config.cursorSize;
       this.cursorSprite.zIndex = 10;
       this.uiGroup.addChild(this.cursorSprite);
     } else {
-      // Atualizar textura existente
+      // Update existing texture
       this.cursorSprite.texture = texture;
     }
   }
 
   /**
-   * Cria o sprite para o efeito de luz
-   */
-  createLightEffect() {
-      if (!this.lightTexture) return;
-      
-      // Criar sprite se não existir
-      if (!this.lightSprite) {
-        this.lightSprite = new PIXI.Sprite(this.lightTexture);
-        this.lightSprite.anchor.set(0.5);
-        this.lightSprite.width = this.config.lightSize * 2; // Dobrar o tamanho 
-        this.lightSprite.height = this.config.lightSize * 2;
-        this.lightSprite.alpha = Math.min(1.0, this.config.lightIntensity * 1.5); // Aumentar intensidade
-        this.lightSprite.blendMode = PIXI.BLEND_MODES.ADD; // Mudar para ADD em vez de SCREEN
-        this.lightContainer.addChild(this.lightSprite);
-        
-        // Garantir que o container de luz esteja visível no tema escuro
-        this.lightContainer.visible = this.currentTheme === 'dark';
-        console.log("Light effect created with visibility:", this.lightContainer.visible);
-      }
-  }
-
-  /**
-   * Detecta o tema atual
+   * Detect current theme
    */
   detectTheme() {
-    // Verificar atributo data-theme no body
+    // Check data-theme attribute on body
     const bodyTheme = document.body.getAttribute('data-theme');
     if (bodyTheme === 'dark' || bodyTheme === 'light') {
       this.currentTheme = bodyTheme;
       return;
     }
     
-    // Verificar localStorage
+    // Check localStorage
     const localTheme = localStorage.getItem('theme');
     if (localTheme === 'dark' || localTheme === 'light') {
       this.currentTheme = localTheme;
       return;
     }
     
-    // Verificar prefers-color-scheme
+    // Check prefers-color-scheme
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       this.currentTheme = 'dark';
       return;
     }
     
-    // Padrão: tema claro
+    // Default: light theme
     this.currentTheme = 'light';
   }
 
   /**
-   * Configura observador para mudanças de tema
+   * Configure observer for theme changes
    */
   observeThemeChanges() {
-    // Observar mudanças no atributo data-theme do body
+    // Observe changes to body's data-theme attribute
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.attributeName === 'data-theme') {
@@ -296,7 +294,7 @@ class CursorEffectComponent {
     
     observer.observe(document.body, { attributes: true });
     
-    // Verificar localStorage periodicamente
+    // Check localStorage periodically
     setInterval(() => {
       const localTheme = localStorage.getItem('theme');
       if (localTheme && localTheme !== this.currentTheme) {
@@ -306,19 +304,14 @@ class CursorEffectComponent {
   }
 
   /**
-   * Manipula mudanças de tema
+   * Handle theme changes
    */
   onThemeChange(newTheme) {
     if (newTheme === this.currentTheme) return;
     
     this.currentTheme = newTheme;
     
-    // Atualizar visibilidade do efeito de luz
-    if (this.lightContainer) {
-      this.lightContainer.visible = this.currentTheme === 'dark';
-    }
-    
-    // Atualizar textura do cursor
+    // Update cursor texture
     if (this.cursorSprite) {
       this.cursorSprite.texture = this.currentTheme === 'dark' 
         ? this.cursorDarkTexture 
@@ -329,21 +322,21 @@ class CursorEffectComponent {
   }
 
   /**
-   * Adiciona listeners de eventos
+   * Add event listeners
    */
   bindEvents() {
-    // Usar o système de eventos do PIXI
+    // Use PIXI event system
     this.app.view.addEventListener('pointermove', this.onPointerMove.bind(this));
     
-    // Adicionando ao ticker do PIXI para atualização a cada frame
+    // Add to PIXI ticker for frame updates
     this.app.ticker.add(this.update, this);
   }
 
   /**
-   * Manipulador para movimento do mouse/pointer
+   * Handler for mouse/pointer movement
    */
   onPointerMove(e) {
-    // Converter coordenadas do DOM para coordenadas PIXI
+    // Convert DOM coordinates to PIXI coordinates
     const rect = this.app.view.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -351,14 +344,14 @@ class CursorEffectComponent {
     this.cursorPos.x = x;
     this.cursorPos.y = y;
     
-    // Calcular distância movida
+    // Calculate distance moved
     const dx = this.cursorPos.x - this.lastPos.x;
     const dy = this.cursorPos.y - this.lastPos.y;
     const distance = Math.sqrt(dx*dx + dy*dy);
     
-    // Se movimento significativo, adicionar partículas
+    // If significant movement, add particles
     if (distance > 1.5 && this.config.particlesEnabled) {
-      // Calcular quantidade de partículas com base na velocidade
+      // Calculate particle count based on velocity
       const particleCount = Math.min(
         this.config.particlesCount,
         Math.floor(distance / 5) + 1
@@ -372,69 +365,122 @@ class CursorEffectComponent {
       }
     }
     
-    // Atualizar posição anterior
+    // Update previous position
     this.lastPos.x = this.cursorPos.x;
     this.lastPos.y = this.cursorPos.y;
   }
 
   /**
-   * Adiciona uma nova partícula
+   * Add a new particle
    */
   addParticle(x, y) {
-    // Selecionar forma aleatória
-    const shape = this.particleShapes[Math.floor(Math.random() * this.particleShapes.length)];
-    
-    // Selecionar cor aleatória com base no tema
-    const colors = this.particleColors[this.currentTheme];
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    
-    // Criar gráfico para a partícula
-    const graphics = new PIXI.Graphics();
-    
-    // Configurar a partícula
-    const particle = {
-      graphics,
-      shape,
-      color,
-      x,
-      y,
-      size: 4 + Math.random() * 4,
-      velocity: {
-        x: (Math.random() < 0.5 ? -1 : 1) * (Math.random() / 10),
-        y: -0.4 + Math.random() * -1,
-      },
-      rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: (Math.random() - 0.5) * 0.1,
-      life: this.config.particlesLifespan,
-      initialLife: this.config.particlesLifespan,
-    };
-    
-    // Adicionar ao container e à lista
-    this.particleContainer.addChild(graphics);
-    this.particles.push(particle);
-    
-    // Desenhar a forma inicial
-    this.drawParticleShape(particle, particle.size, 0.8);
+    if (this.currentTheme === 'dark') {
+      this.addBloodDrop(x, y);
+    } else {
+      // Original code for geometric particles in light theme
+      const shape = this.particleShapes[Math.floor(Math.random() * this.particleShapes.length)];
+      
+      // Select random color based on theme
+      const colors = this.particleColors[this.currentTheme];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      
+      // Create graphic for particle
+      const graphics = new PIXI.Graphics();
+      
+      // Configure the particle
+      const particle = {
+        graphics,
+        shape,
+        color,
+        x,
+        y,
+        size: 2 + Math.random() * 2,
+        velocity: {
+          x: (Math.random() < 0.5 ? -1 : 1) * (Math.random() / 10),
+          y: -0.4 + Math.random() * -1,
+        },
+        rotation: Math.random() * Math.PI * 2,
+        rotationSpeed: (Math.random() - 0.5) * 0.1,
+        life: this.config.particlesLifespan,
+        initialLife: this.config.particlesLifespan,
+      };
+      
+      // Add to container and list
+      this.particleContainer.addChild(graphics);
+      this.particles.push(particle);
+      
+      // Draw initial shape
+      this.drawParticleShape(particle, particle.size, 0.8);
+    }
   }
 
   /**
-   * Desenha a forma da partícula
+   * Add a new blood drop (dark theme)
+   */
+  addBloodDrop(x, y) {
+    const now = Date.now();
+    if (now - this.lastBloodTime < this.bloodDropRate) return;
+    this.lastBloodTime = now;
+    
+    // Select random red color
+    const colors = this.particleColors.dark;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    
+    // Create graphic for blood drop
+    const graphics = new PIXI.Graphics();
+    
+    // Varied size for blood drops
+    const size = 2 + Math.random() * 3;
+    
+    // Create blood drop with different physics to simulate dripping
+    const bloodDrop = {
+      graphics,
+      x,
+      y,
+      color,
+      size,
+      // Heavier physics for blood drops
+      velocity: {
+        x: (Math.random() - 0.5) * 0.5, // Less horizontal movement
+        y: 0.5 + Math.random() * 1.5,   // Downward movement (dripping)
+      },
+      // Drop elongation
+      elongation: 1 + Math.random() * 2,
+      // Longer lifetime for drops
+      life: this.config.particlesLifespan * 1.5,
+      initialLife: this.config.particlesLifespan * 1.5,
+      // Blood trail
+      trail: Math.random() > 0.7,
+      trailDrops: [],
+      splatter: false // Will be true when drop hits the "ground"
+    };
+    
+    // Draw initial drop
+    this.drawBloodDrop(bloodDrop);
+    
+    // Add to container and list
+    this.particleContainer.addChild(graphics);
+    this.bloodDrops.push(bloodDrop);
+  }
+
+  /**
+   * Draw the particle shape
    */
   drawParticleShape(particle, size, alpha) {
     const g = particle.graphics;
     g.clear();
     
-    // Configurar estilo
+    // Configure style
     g.alpha = alpha;
     
-    // Desenhar a forma
+    // Draw shape
     switch (particle.shape) {
       case 'circle':
         g.beginFill(particle.color, alpha);
         g.drawCircle(0, 0, size);
         g.endFill();
         
-        // Adicionar borda
+        // Add border
         g.lineStyle(1, 0xFFFFFF, alpha * 0.3);
         g.drawCircle(0, 0, size);
         break;
@@ -490,48 +536,95 @@ class CursorEffectComponent {
         break;
     }
     
-    // Posicionar e rotacionar
+    // Position and rotate
     g.x = particle.x;
     g.y = particle.y;
     g.rotation = particle.rotation;
   }
 
   /**
-   * Atualiza o componente a cada frame
-   * @param {number} deltaTime - Tempo do frame
+   * Draw blood drop
+   */
+  drawBloodDrop(drop) {
+    const g = drop.graphics;
+    g.clear();
+    
+    // Alpha based on life
+    const lifeRatio = drop.life / drop.initialLife;
+    const alpha = Math.min(1, lifeRatio * 1.5);
+    
+    // Draw a blood drop (elongated circle or splatter)
+    if (!drop.splatter) {
+      // Normal dripping drop
+      g.beginFill(drop.color, alpha);
+      
+      // Draw elongated drop
+      const elongation = drop.velocity.y * 0.5;
+      g.drawEllipse(0, 0, drop.size, drop.size * (1 + elongation));
+      
+      // Add highlight for wet effect
+      g.beginFill(0xFF5555, alpha * 0.3);
+      g.drawEllipse(-drop.size * 0.3, -drop.size * 0.3, drop.size * 0.4, drop.size * 0.4);
+      
+      g.endFill();
+    } else {
+      // Draw splatter (when drop hits the "ground")
+      g.beginFill(drop.color, alpha * 0.8);
+      
+      // Irregular splatter shape
+      const splatterSize = drop.size * (1.5 + Math.random());
+      g.moveTo(0, 0);
+      
+      // Create irregular shape for splatter
+      const points = 5 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < points; i++) {
+        const angle = (Math.PI * 2 / points) * i;
+        const radius = splatterSize * (0.5 + Math.random() * 0.8);
+        g.lineTo(
+          Math.cos(angle) * radius,
+          Math.sin(angle) * radius
+        );
+      }
+      
+      g.closePath();
+      g.endFill();
+    }
+    
+    // Position
+    g.x = drop.x;
+    g.y = drop.y;
+  }
+
+  /**
+   * Update component each frame
+   * @param {number} deltaTime - Frame time
    */
   update(deltaTime) {
-    // Atualizar posição do cursor
+    // Update cursor position
     if (this.cursorSprite) {
       this.cursorSprite.x = this.cursorPos.x;
       this.cursorSprite.y = this.cursorPos.y;
     }
     
-    // Atualizar posição do efeito de luz
-    if (this.lightSprite && this.currentTheme === 'dark' && this.config.lightEnabled) {
-      this.lightSprite.x = this.cursorPos.x;
-      this.lightSprite.y = this.cursorPos.y;
-    }
-    
-    // Atualizar todas as partículas
+    // Update all particles
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       
-      // Atualizar posição
+      // Update position
       p.x += p.velocity.x;
       p.y += p.velocity.y;
       
-      // Adicionar aleatoriedade ao movimento
+      // Add randomness to movement
       p.velocity.x += ((Math.random() < 0.5 ? -1 : 1) * 2) / 75;
       p.velocity.y -= Math.random() / 600;
       
-      // Atualizar rotação
+      // Update rotation
       p.rotation += p.rotationSpeed;
       
-      // Reduzir vida
+      // Reduce life
       p.life--;
       
-      // Calcular escala e opacidade baseado na vida
+      // Calculate scale and opacity based on life
       const lifeProgress = 1 - (p.life / p.initialLife);
       const scale = 0.2 + lifeProgress * 0.8;
       const size = p.size * scale;
@@ -541,41 +634,88 @@ class CursorEffectComponent {
           ? p.life / (p.initialLife * 0.3) // Fade out
           : 0.8); // Normal
       
-      // Redesenhar partícula
+      // Redraw particle
       this.drawParticleShape(p, size, opacity);
       
-      // Remover partícula morta
+      // Remove dead particle
       if (p.life <= 0) {
         this.particleContainer.removeChild(p.graphics);
         this.particles.splice(i, 1);
       }
     }
+    
+    // Update blood drops (dark theme)
+    for (let i = this.bloodDrops.length - 1; i >= 0; i--) {
+      const drop = this.bloodDrops[i];
+      
+      // Update position
+      drop.x += drop.velocity.x;
+      drop.y += drop.velocity.y;
+      
+      // Elongate drop as it falls faster
+      drop.elongation = 1 + drop.velocity.y * 0.3;
+      
+      // Increase velocity (gravity acceleration)
+      drop.velocity.y += 0.05;
+      
+      // Add a bit of random horizontal movement
+      drop.velocity.x += (Math.random() - 0.5) * 0.02;
+      
+      // Create occasional trails
+      if (drop.trail && Math.random() > 0.9 && drop.life > 20) {
+        const trailDrop = {
+          x: drop.x,
+          y: drop.y,
+          size: drop.size * 0.4,
+          color: drop.color,
+          alpha: 0.7,
+          life: 20
+        };
+        drop.trailDrops.push(trailDrop);
+      }
+      
+      // Update trails
+      for (let j = drop.trailDrops.length - 1; j >= 0; j--) {
+        const trail = drop.trailDrops[j];
+        trail.life--;
+        trail.alpha = trail.life / 20;
+        if (trail.life <= 0) {
+          drop.trailDrops.splice(j, 1);
+        }
+      }
+      
+      // Check if drop hit the "virtual ground"
+      if (!drop.splatter && drop.y > this.app.screen.height - Math.random() * 100) {
+        drop.splatter = true;
+        drop.velocity.x = 0;
+        drop.velocity.y = 0;
+        drop.life = Math.min(drop.life, 30); // Limit life after splatter
+      }
+      
+      // Reduce life
+      drop.life--;
+      
+      // Redraw drop
+      this.drawBloodDrop(drop);
+      
+      // Remove dead drop
+      if (drop.life <= 0) {
+        this.particleContainer.removeChild(drop.graphics);
+        this.bloodDrops.splice(i, 1);
+      }
+    }
   }
 
   /**
-   * Atualiza configurações do componente
+   * Update component config
    */
   updateConfig(newConfig) {
     this.config = { ...this.config, ...newConfig };
     
-    // Atualizar tamanho do cursor
+    // Update cursor size
     if (this.cursorSprite) {
       this.cursorSprite.width = this.config.cursorSize;
       this.cursorSprite.height = this.config.cursorSize;
-    }
-    
-    // Atualizar efeito de luz
-    if (this.lightSprite) {
-      this.lightSprite.width = this.config.lightSize;
-      this.lightSprite.height = this.config.lightSize;
-      this.lightSprite.alpha = this.config.lightIntensity;
-    }
-    
-    // Recarregar texturas se os caminhos mudaram
-    if (newConfig.cursorImageLight || newConfig.cursorImageDark) {
-      this.loadTextures().then(() => {
-        this.createCursorSprite();
-      });
     }
     
     console.log("CursorEffectComponent config updated", this.config);
@@ -583,7 +723,7 @@ class CursorEffectComponent {
   }
 
   /**
-   * Define o tema manualmente
+   * Set theme manually
    */
   setTheme(theme) {
     if (theme === 'light' || theme === 'dark') {
@@ -593,25 +733,25 @@ class CursorEffectComponent {
   }
 
   /**
-   * Retorna o tema atual
+   * Return current theme
    */
   getTheme() {
     return this.currentTheme;
   }
 
   /**
-   * Limpa recursos
+   * Clean up resources
    */
   destroy() {
     if (!this.isInitialized) return;
     
-    // Remover do ticker
+    // Remove from ticker
     this.app.ticker.remove(this.update, this);
     
-    // Remover event listeners
+    // Remove event listeners
     this.app.view.removeEventListener('pointermove', this.onPointerMove);
     
-    // Limpar partículas
+    // Clean up particles
     for (const p of this.particles) {
       if (p.graphics && p.graphics.parent) {
         p.graphics.parent.removeChild(p.graphics);
@@ -619,28 +759,46 @@ class CursorEffectComponent {
     }
     this.particles = [];
     
-    // Remover sprites e containers
+    // Clean up blood drops
+    for (const drop of this.bloodDrops) {
+      if (drop.graphics && drop.graphics.parent) {
+        drop.graphics.parent.removeChild(drop.graphics);
+      }
+    }
+    this.bloodDrops = [];
+    
+    // Remove sprites and containers
     if (this.particleContainer && this.particleContainer.parent) {
       this.particleContainer.parent.removeChild(this.particleContainer);
-    }
-    
-    if (this.lightContainer && this.lightContainer.parent) {
-      this.lightContainer.parent.removeChild(this.lightContainer);
     }
     
     if (this.cursorSprite && this.cursorSprite.parent) {
       this.cursorSprite.parent.removeChild(this.cursorSprite);
     }
     
-    // Restaurar cursor padrão
-    document.body.style.cursor = 'default';
+    // Restore default cursor
+    document.documentElement.style.cursor = '';
+    document.body.style.cursor = '';
+    
+    // Remove cursor hiding stylesheet if it exists
+    const styleElement = document.getElementById('cursor-hider-stylesheet');
+    if (styleElement && styleElement.parentNode) {
+      styleElement.parentNode.removeChild(styleElement);
+    }
+    
+    // Remove the mouseover event listener if added
+    document.removeEventListener('mouseover', this.forceHideCursor);
     
     this.isInitialized = false;
     console.log("CursorEffectComponent destroyed");
   }
 }
 
-// Exportar para uso global ou como módulo
+
+
+
+
+// Export for global use or as module
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = CursorEffectComponent;
 } else {

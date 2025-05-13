@@ -151,6 +151,10 @@ class LoadingScreen
         const uiGroup = new PIXI.Container();
         uiGroup.name = "uiGroup";
         uiGroup.zIndex = 999;
+
+        uiGroup.interactive = true;
+        uiGroup.interactiveChildren = true;
+        uiGroup.hitArea = new PIXI.Rectangle(0, 0, app.screen.width, app.screen.height);
         
         // Add all groups to the stage in the correct order
         app.stage.addChild(backgroundGroup);
@@ -158,6 +162,7 @@ class LoadingScreen
         app.stage.addChild(uiGroup);
         
         console.log("Render groups created for background, gameplay, and UI");
+        app.stage.sortableChildren = true;
         app.stage.sortChildren();
         // Return the created groups for use by initSite
         return {
@@ -255,8 +260,8 @@ class LoadingScreen
                 particlesCount: 3,
                 lightIntensity: 0.4,
                 // Certifique-se de que os caminhos para as imagens estão corretos
-                cursorImageLight: './assets/cursors/sword-light.png',
-                cursorImageDark: './assets/cursors/sword-dark.png'
+                cursorImageLight: './assets/images/cursor_light.png',
+                cursorImageDark: 'assets/images/cursor_night.png'
             });
             console.log("CursorEffectComponent inicializado");
         } else {

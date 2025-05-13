@@ -103,23 +103,37 @@ class CloudsManager
             return;
         }
         
-        // Get cloud textures from AssetManager
+        // REPLACE THIS PART with the new code:
         try {
-            const texture = window.assetManager.getBackgroundTexture('light', 'clouds');
-            if (texture) {
-                // Use the texture directly
-                this.cloudsTextures.push(texture);
+            // Try to use the spritesheet first
+            const cloudsSheet = window.assetManager.getBackgroundTexture('light', 'clouds_spritesheet');
+            if (cloudsSheet && cloudsSheet.animations) {
+                console.log("Using clouds spritesheet animations");
+                // Use the frames from the spritesheet
+                for (const animName in cloudsSheet.animations) {
+                    // Add all frames to the textures list
+                    this.cloudsTextures.push(...cloudsSheet.animations[animName]);
+                }
                 
-                if (this.debug) {
-                    console.log("Cloud texture details:", {
-                        width: texture.width,
-                        height: texture.height,
-                        valid: texture.valid,
-                        baseTexture: !!texture.baseTexture
-                    });
+                if (this.debug && this.cloudsTextures.length > 0) {
+                    console.log(`Loaded ${this.cloudsTextures.length} cloud textures from spritesheet`);
                 }
             } else {
-                console.warn("Cloud texture not found, using fallback");
+                // Fallback to the original single texture
+                console.log("Using single cloud texture (fallback)");
+                const singleTexture = window.assetManager.getBackgroundTexture('light', 'clouds');
+                if (singleTexture) {
+                    this.cloudsTextures.push(singleTexture);
+                    
+                    if (this.debug) {
+                        console.log("Cloud texture loaded as fallback");
+                    }
+                }
+            }
+            
+            // If still no textures, create the fallbacks
+            if (this.cloudsTextures.length === 0) {
+                console.warn("No cloud textures found, using fallback");
                 this.createFallbackTextures();
             }
         } catch (error) {

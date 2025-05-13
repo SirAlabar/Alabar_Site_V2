@@ -12,28 +12,34 @@ class AssetManager
         // Asset paths configuration
         this.assetPaths = {
             player: {
-                idle: './assets/images/player/Little_Leo_Idle.webp',
-                idle_shadow: './assets/images/player/Little_Leo_Idle_Shadow.webp',
-                walking: './assets/images/player/Little_Leo.webp',
-                attacking: './assets/images/player/Sword_attack_full.webp',
-                attacking_shadow: './assets/images/player/Sword_attack_full_shadow.webp',
-                hurt: './assets/images/player/Sword_Hurt_full.webp',
-                hurt_shadow: './assets/images/player/Sword_Hurt1_shadow.webp',
-                walking_shadow: './assets/images/player/Sword_Walk1_shadow.webp'
+                spritesheet: './assets/images/player/Little_Leo64px.webp',
+                data: './assets/images/player/Little_Leo64px.json'
             },
             monsters: {
-                slime: {
-                    idle: './assets/images/monsters/Slime1/Slime1_Idle_full.png',
-                    idle_shadow: './assets/images/monsters/Slime1/Slime1_Idle_shadow.png',
-                    walking: './assets/images/monsters/Slime1/Slime1_Walk.png',
-                    walking_shadow: './assets/images/monsters/Slime1/Slime1_Walk_shadow.png',
-                    attacking: './assets/images/monsters/Slime1/Slime1_Attack_full.png',
-                    attacking_shadow: './assets/images/monsters/Slime1/Slime1_Attack_shadow.png',
-                    hurt: './assets/images/monsters/Slime1/Slime1_Hurt_full.png',
-                    hurt_shadow: './assets/images/monsters/Slime1/Slime1_Hurt_shadow.png',
-                    dying: './assets/images/monsters/Slime1/Slime1_Death_full.png',
-                    dying_shadow: './assets/images/monsters/Slime1/Slime1_Death_shadow.png'
+                slime2: {
+                    spritesheet: './assets/images/monsters/Slime2/Slime2.webp',
+                    data: './assets/images/monsters/Slime2/Slime2.json'
+                },
+                slime3: {
+                    spritesheet: './assets/images/monsters/Slime3/Slime3.webp',
+                    data: './assets/images/monsters/Slime3/Slime3.json'
+                },
+                vampire1: {
+                    spritesheet: './assets/images/monsters/Vampires1/Vampire1.webp',
+                    data: './assets/images/monsters/Vampires1/Vampire1.json'
+                },
+                vampire2: {
+                    spritesheet: './assets/images/monsters/Vampires2/Vampire2.webp',
+                    data: './assets/images/monsters/Vampires2/Vampire2.json'
+                },
+                vampire3: {
+                    spritesheet: './assets/images/monsters/Vampires3/Vampire3.webp',
+                    data: './assets/images/monsters/Vampires3/Vampire3.json'
                 }
+            },
+            clouds_spritesheet: {
+                texture: './assets/images/background/light/clouds.webp',
+                data: './assets/images/background/light/clouds.json'
             },
             backgrounds: {
                 light: {
@@ -62,6 +68,12 @@ class AssetManager
                     field5: './assets/images/background/dark/field5_night.webp',
                     field6: './assets/images/background/dark/field6_night.webp',
                     field7: './assets/images/background/dark/field7_night.webp'
+                }
+            },
+            ui: {
+                cursors: {
+                    light: './assets/images/cursor_light.png',
+                    dark: './assets/images/cursor_night.png'
                 }
             }
         };
@@ -143,6 +155,10 @@ class AssetManager
         // Background bundles
         const bgBundles = this.createBackgroundBundles();
         manifest.bundles.push(...bgBundles);
+
+        // UI bundle
+        const uiBundle = this.createUiBundle();
+        manifest.bundles.push(uiBundle);
         
         return manifest;
     }
@@ -152,16 +168,11 @@ class AssetManager
     {
         const playerBundle = {
             name: 'player',
-            assets: []
+            assets: [{
+                alias: 'player_spritesheet',
+                src: this.assetPaths.player.data
+            }]
         };
-        
-        for (const [key, src] of Object.entries(this.assetPaths.player)) 
-        {
-            playerBundle.assets.push({
-                alias: `player_${key}`,
-                src
-            });
-        }
         
         return playerBundle;
     }
@@ -174,15 +185,12 @@ class AssetManager
             assets: []
         };
         
-        for (const [monsterType, animations] of Object.entries(this.assetPaths.monsters))
+        for (const [monsterType, resources] of Object.entries(this.assetPaths.monsters)) 
         {
-            for (const [key, src] of Object.entries(animations)) 
-            {
-                monstersBundle.assets.push({
-                    alias: `${monsterType}_${key}`,
-                    src
-                });
-            }
+            monstersBundle.assets.push({
+                alias: `${monsterType}_spritesheet`,
+                src: resources.data
+            });
         }
         
         return monstersBundle;
@@ -210,17 +218,47 @@ class AssetManager
             {
                 if (key !== 'backgroundColor') 
                 {
-                    themeBundle.assets.push({
-                        alias: `${theme}_${key}`,
-                        src
-                    });
+                    if (typeof src === 'object' && src.data && src.texture) 
+                    {
+                        themeBundle.assets.push({
+                            alias: `${theme}_${key}`,
+                            src: src.data
+                        });
+                    } 
+                    else 
+                    {
+                        themeBundle.assets.push({
+                            alias: `${theme}_${key}`,
+                            src
+                        });
+                    }
                 }
             }
-            
             bgBundles.push(themeBundle);
         }
-        
         return bgBundles;
+    }
+
+    // Create UI assets bundles
+    createUiBundle() {
+        const uiBundle = {
+            name: 'ui',
+            assets: []
+        };
+        
+        // Add cursor
+        if (this.assetPaths.ui && this.assetPaths.ui.cursors) 
+        {
+            for (const [key, src] of Object.entries(this.assetPaths.ui.cursors)) 
+            {
+                uiBundle.assets.push({
+                    alias: `cursor_${key}`,
+                    src
+                });
+            }
+        }
+        
+        return uiBundle;
     }
     
     // Process resources after loading
@@ -238,23 +276,26 @@ class AssetManager
         {
             this.processBackgroundResources(bundleName, resources);
         }
+        else if (bundleName === 'ui') 
+        {
+            this.processUiResources(resources);
+        }
     }
     
     // Process player resources
     processPlayerResources(resources) 
     {
-        for (const [alias, texture] of Object.entries(resources)) 
-        {
-            this.textures[alias] = texture;
-        }
+        this.textures['player'] = resources.player_spritesheet;
     }
+
     
     // Process monster resources
     processMonsterResources(resources) 
     {
-        for (const [alias, texture] of Object.entries(resources)) 
+        for (const [alias, spritesheet] of Object.entries(resources)) 
         {
-            this.textures[alias] = texture;
+            const monsterType = alias.split('_')[0];
+            this.textures[monsterType] = spritesheet;
         }
     }
     
@@ -271,6 +312,14 @@ class AssetManager
                 const layerName = parts[1];
                 this.backgrounds[theme][layerName] = texture;
             }
+        }
+    }
+
+    processUiResources(resources) 
+    {
+        for (const [alias, texture] of Object.entries(resources)) 
+        {
+            this.textures[alias] = texture;
         }
     }
     
