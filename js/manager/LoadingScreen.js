@@ -255,13 +255,8 @@ class LoadingScreen
         }
         if (window.CursorEffectComponent) {
             console.log("Criando CursorEffectComponent");
-            window.cursorEffect = new CursorEffectComponent(window.game, app, uiGroup, {
-                // Opções personalizadas, se necessário
+            window.cursorEffect = new CursorEffectComponent(null, app, uiGroup, {
                 particlesCount: 3,
-                lightIntensity: 0.4,
-                // Certifique-se de que os caminhos para as imagens estão corretos
-                cursorImageLight: './assets/images/cursor_light.png',
-                cursorImageDark: 'assets/images/cursor_night.png'
             });
             console.log("CursorEffectComponent inicializado");
         } else {
