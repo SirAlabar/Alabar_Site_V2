@@ -205,7 +205,9 @@ class LoadingScreen
             background: 0x000000,
             backgroundAlpha: 0,
             resizeTo: sceneElement,  
-            antialias: true
+            antialias: true,
+            useBackBuffer: true,
+            clearBeforeRender: true
         });
         sceneElement.appendChild(app.canvas);
         sceneElement.style.height = '200vh';
