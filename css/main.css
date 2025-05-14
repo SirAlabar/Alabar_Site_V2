@@ -2,6 +2,7 @@
 .main-content {
     border: 3px solid red;
     /* padding: 5px; */
+    cursor: url('assets/images/cursor_light.png') 5 5, auto !important;
 }
 
 .scene {
@@ -13,21 +14,26 @@
 
 #game-container {
     border: 3px solid green;
+    /* margin: 5px; */
+    /* padding: 5px; */
     background-color: rgba(0, 255, 0, 0.1);
 }
 
 header {
     border: 3px solid purple;
+    /* margin: 5px; */
     background-color: rgba(128, 0, 128, 0.1);
 }
 
 canvas {
     border: 3px solid orange;
-    margin: 5px;
+    /* margin: 5px; */
+      pointer-events: auto;
 }
 
 footer {
     border: 3px solid pink;
+    /* margin: 5px; */
     background-color: rgba(255, 192, 203, 0.1);
 }
 
@@ -54,6 +60,11 @@ body {
     position: relative;
     overflow-x: hidden;
     overflow-y: hidden;
+    cursor: url('assets/images/cursor_light.png') 5 5, auto !important;
+}
+
+body[data-theme="dark"] {
+  cursor: url('assets/images/cursor_night.png') 5 5, auto !important;
 }
 
 /* Game container for PIXI.js */
@@ -126,4 +137,5 @@ footer {
     background-color: rgba(0, 0, 0, 0.7); 
     /* padding: 10px 0; */
     color: white;
+        pointer-events: none;
 }

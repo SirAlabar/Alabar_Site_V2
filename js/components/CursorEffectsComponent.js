@@ -35,6 +35,7 @@ class CursorEffectComponent {
     this.lastPos = { x: 0, y: 0 };
     this.particleContainer = null;
     this.cursorSprite = null;
+    this.cursorInCanvas = false; // Flag para rastrear se o cursor está dentro do canvas
     
     // Textures
     this.cursorLightTexture = null;
@@ -86,12 +87,17 @@ class CursorEffectComponent {
     this.setupContainers();
     
     // Apply cursor hiding IMMEDIATELY - don't wait for texture loading
-    this.hideDefaultCursor();
+    // this.hideDefaultCursor(); // Removido pois agora o cursor só é escondido no canvas
     
     // Load textures
     this.loadTextures().then(() => {
       // Create cursor sprite
       this.createCursorSprite();
+      
+      // Inicialmente oculto até entrar no canvas
+      if (this.cursorSprite) {
+        this.cursorSprite.visible = false;
+      }
       
       console.log("CursorEffectComponent: textures loaded and sprites created");
     });
@@ -104,8 +110,6 @@ class CursorEffectComponent {
     
     this.isInitialized = true;
     console.log("CursorEffectComponent initialized");
-
-    setTimeout(() => this.debugContainers(), 1000);
   }
   
   /**
@@ -325,7 +329,9 @@ class CursorEffectComponent {
    * Add event listeners
    */
   bindEvents() {
-    // Use PIXI event system
+    // Monitora eventos do cursor no canvas
+    this.app.view.addEventListener('pointerenter', this.onCanvasEnter.bind(this));
+    this.app.view.addEventListener('pointerleave', this.onCanvasLeave.bind(this));
     this.app.view.addEventListener('pointermove', this.onPointerMove.bind(this));
     
     // Add to PIXI ticker for frame updates
@@ -333,9 +339,42 @@ class CursorEffectComponent {
   }
 
   /**
+   * Quando o cursor entra no canvas
+   */
+  onCanvasEnter() {
+    this.cursorInCanvas = true;
+    
+    // Esconde o cursor padrão apenas dentro do canvas
+    this.app.view.style.cursor = 'none';
+    
+    // Mostra o cursor PIXI
+    if (this.cursorSprite) {
+      this.cursorSprite.visible = true;
+    }
+  }
+
+  /**
+   * Quando o cursor sai do canvas
+   */
+  onCanvasLeave() {
+    this.cursorInCanvas = false;
+    
+    // Restaura o cursor CSS quando sai do canvas
+    this.app.view.style.cursor = '';
+    
+    // Esconde o cursor PIXI
+    if (this.cursorSprite) {
+      this.cursorSprite.visible = false;
+    }
+  }
+
+  /**
    * Handler for mouse/pointer movement
    */
   onPointerMove(e) {
+    // Não processa se estiver fora do canvas
+    if (!this.cursorInCanvas) return;
+    
     // Convert DOM coordinates to PIXI coordinates
     const rect = this.app.view.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -750,6 +789,11 @@ class CursorEffectComponent {
     
     // Remove event listeners
     this.app.view.removeEventListener('pointermove', this.onPointerMove);
+    this.app.view.removeEventListener('pointerenter', this.onCanvasEnter);
+    this.app.view.removeEventListener('pointerleave', this.onCanvasLeave);
+    
+    // Restaura o cursor padrão no canvas
+    this.app.view.style.cursor = '';
     
     // Clean up particles
     for (const p of this.particles) {
@@ -776,10 +820,6 @@ class CursorEffectComponent {
       this.cursorSprite.parent.removeChild(this.cursorSprite);
     }
     
-    // Restore default cursor
-    document.documentElement.style.cursor = '';
-    document.body.style.cursor = '';
-    
     // Remove cursor hiding stylesheet if it exists
     const styleElement = document.getElementById('cursor-hider-stylesheet');
     if (styleElement && styleElement.parentNode) {
@@ -793,10 +833,6 @@ class CursorEffectComponent {
     console.log("CursorEffectComponent destroyed");
   }
 }
-
-
-
-
 
 // Export for global use or as module
 if (typeof module !== 'undefined' && module.exports) {
