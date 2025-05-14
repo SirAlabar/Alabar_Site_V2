@@ -73,7 +73,7 @@ class SceneManager
         this.layerConfig.forEach(config => {
             const container = new PIXI.Container();
             container.name = config.id;
-            
+            container.zIndex = config.zIndex;
             // Store the speed for parallax effect
             container.parallaxSpeed = config.speed;
             
