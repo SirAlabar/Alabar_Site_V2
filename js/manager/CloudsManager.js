@@ -1,802 +1,798 @@
 /**
- * CloudsManager - Versão com Spritesheet JSON e Debugger
+ * CloudsManager.js
+ * Versão otimizada com correções finais e console.logs para depuração
  */
-class CloudsManager {
-    constructor(app, backgroundGroup) {
+class CloudsManager 
+{
+    constructor(app, backgroundGroup) 
+    {
+        console.log("CloudsManager: Inicializando gerenciador de nuvens");
         this.app = app;
         this.backgroundGroup = backgroundGroup;
         
+        // Cloud settings - aumentando duração para movimento ainda mais lento
         this.config = {
-            minClouds: 8,
-            maxClouds: 15,
-            leftToRightDuration: 60,
-            rightToLeftDuration: 80,
-            diagonalDuration: 90,
-            floatDuration: 25
+            minClouds: 5,                // Aumentado para criar um visual mais completo
+            maxClouds: 8,                // Aumentado mas mantido razoável
+            leftToRightDuration: 600,    // Duração MUITO maior para movimento muito mais lento (aumentado 2.5x)
+            rightToLeftDuration: 750,    // Duração MUITO maior para movimento muito mais lento (aumentado 2.5x)
+            diagonalDuration: 900,       // Duração MUITO maior para movimento muito mais lento (aumentado 2.5x)
+            floatDuration: 400           // Duração MUITO maior para movimento muito mais lento (aumentado 3x)
         };
+        
+        console.log("CloudsManager: Configurações de duração:", 
+            JSON.stringify(this.config, null, 2));
         
         this.cloudTextures = [];
         this.cloudSprites = [];
         this.cloudsContainer = null;
-        this.spritesheet = null;
         
-        // Debug habilitado por padrão para desenvolvimento
-        this.debug = true;
+        // Limitar a 60 FPS para animação consistente
+        this.app.ticker.maxFPS = 60;
+        console.log("CloudsManager: maxFPS configurado para:", this.app.ticker.maxFPS);
+        
+        // Flag para prevenir resets excessivos
+        this.lastResetTime = {};
+        
+        // Contador de frames para logging espaçado (evitar spam no console)
+        this.frameCounter = 0;
     }
     
     /**
-     * Inicializar sistema de nuvens
+     * Initialize clouds system
      */
-    async init(theme) {
-        // Pular criação de nuvens no tema escuro
-        if (theme === 'dark') {
-            console.log("Tema escuro, pulando criação de nuvens");
+    async init(theme) 
+    {
+        console.log("CloudsManager: Inicializando com tema:", theme);
+        
+        // Skip cloud creation in dark theme
+        if (theme === 'dark') 
+        {
+            console.log("CloudsManager: Tema escuro, pulando criação de nuvens");
             this.hideAllClouds();
             return;
         }
         
-        console.log("Inicializando CloudsManager com spritesheet...");
+        console.log("CloudsManager: Inicializando CloudsManager com spritesheet...");
         
-        // Carregar spritesheet
-        await this.loadCloudSpritesheet();
+        // Load cloud textures from spritesheet
+        await this.loadCloudTextures();
+        console.log("CloudsManager: Número de texturas carregadas:", this.cloudTextures.length);
         
-        // Criar container
-        this.createCloudContainer();
+        // Get existing cloud container from SceneManager
+        this.getCloudsContainer();
         
-        // Criar nuvens
+        // Create clouds
         this.createClouds();
         
-        // Iniciar animações
+        // Initialize animations
         this.setupCloudAnimations();
         
-        // Iniciar modo debug se habilitado
-        if (this.debug) {
-            this.debugClouds();
-        }
-        
-        console.log("CloudsManager inicializado com spritesheet");
+        console.log("CloudsManager: Inicialização completa");
     }
     
     /**
-     * Carregar spritesheet corretamente
+     * Get clouds container from scene
      */
-    async loadCloudSpritesheet() {
-        this.cloudTextures = [];
+    getCloudsContainer() 
+    {
+        console.log("CloudsManager: Buscando container de nuvens");
         
-        // Try to get processed spritesheet frames
-        if (window.assetManager?.spritesheets?.['clouds_spritesheet']) {
-            const spritesheet = window.assetManager.spritesheets['clouds_spritesheet'];
-            
-            // Extract individual frames
-            if (spritesheet.textures) {
-                this.cloudTextures = Object.values(spritesheet.textures);
-                console.log(`Loaded ${this.cloudTextures.length} cloud frames from spritesheet`);
-                return;
-            }
-        }
-        
-        // Try helper method from AssetManager
-        if (window.assetManager?.getSpriteFrames) {
-            const frames = window.assetManager.getSpriteFrames('clouds_spritesheet');
-            if (frames?.length > 0) {
-                this.cloudTextures = frames;
-                return;
-            }
-        }
-        
-        // Fallback to single texture
-        if (window.assetManager) {
-            const cloudTexture = window.assetManager.getBackgroundTexture('light', 'clouds');
-            if (cloudTexture) {
-                this.cloudTextures.push(cloudTexture);
-                
-                // Create additional frames if texture is large enough
-                if (cloudTexture.width > 200 && cloudTexture.height > 200) {
-                    this.createFramesFromTexture(cloudTexture);
+        // Look for 'clouds' container in the backgroundGroup
+        if (this.backgroundGroup && this.backgroundGroup.children) 
+        {
+            for (let i = 0; i < this.backgroundGroup.children.length; i++) 
+            {
+                const child = this.backgroundGroup.children[i];
+                if (child.name === 'clouds') 
+                {
+                    this.cloudsContainer = child;
+                    console.log("CloudsManager: Container de nuvens existente encontrado");
+                    return;
                 }
             }
         }
         
-        // Create fallback if no textures available
-        if (this.cloudTextures.length === 0) {
-            this.createFallbackCloudTextures();
-        }
-    }
-    
-    /**
-     * Criar frames de uma textura grande
-     */
-    createFramesFromTexture(texture) {
-        // Dividir a textura em regiões para criar variedade
-        const regions = [
-            // Região superior esquerda
-            { x: 0, y: 0, width: texture.width / 2, height: texture.height / 2 },
-            // Região superior direita
-            { x: texture.width / 2, y: 0, width: texture.width / 2, height: texture.height / 2 },
-            // Região inferior esquerda
-            { x: 0, y: texture.height / 2, width: texture.width / 2, height: texture.height / 2 },
-            // Região inferior direita
-            { x: texture.width / 2, y: texture.height / 2, width: texture.width / 2, height: texture.height / 2 },
-            // Centro
-            { x: texture.width / 4, y: texture.height / 4, width: texture.width / 2, height: texture.height / 2 }
-        ];
-        
-        // Criar texturas para cada região
-        for (const region of regions) {
-            const frame = new PIXI.Rectangle(
-                region.x, 
-                region.y, 
-                region.width, 
-                region.height
-            );
-            
-            // Criar textura recortada
-            const frameTexture = new PIXI.Texture(
-                texture.baseTexture,
-                frame
-            );
-            
-            this.cloudTextures.push(frameTexture);
-        }
-        
-        console.log(`${regions.length} frames adicionais criados da textura principal`);
-    }
-    
-    /**
-     * Criar texturas de fallback
-     */
-    createFallbackCloudTextures() {
-        // Criar nuvens com Graphics
-        for (let i = 0; i < 4; i++) {
-            // Tamanhos diferentes para cada nuvem
-            const sizes = [
-                { width: 100, height: 60 },
-                { width: 150, height: 80 },
-                { width: 80, height: 50 },
-                { width: 120, height: 70 }
-            ];
-            
-            const size = sizes[i % sizes.length];
-            
-            // Criar gráfico de nuvem
-            const graphics = new PIXI.Graphics();
-            graphics.beginFill(0xFFFFFF, 0.8);
-            
-            // Diferentes formas de nuvem
-            if (i % 3 === 0) {
-                // Nuvem com círculos
-                const radius = size.height / 2;
-                graphics.drawCircle(0, 0, radius);
-                graphics.drawCircle(radius * 0.8, -radius * 0.3, radius * 0.7);
-                graphics.drawCircle(-radius * 0.8, -radius * 0.2, radius * 0.6);
-                graphics.drawCircle(radius * 0.3, radius * 0.4, radius * 0.6);
-                graphics.drawCircle(-radius * 0.4, radius * 0.3, radius * 0.5);
-            } else if (i % 3 === 1) {
-                // Nuvem com retângulo arredondado
-                graphics.drawRoundedRect(
-                    -size.width / 2, 
-                    -size.height / 2, 
-                    size.width, 
-                    size.height, 
-                    size.height / 2
-                );
-                
-                // Adicionar alguns detalhes
-                graphics.drawCircle(
-                    -size.width / 4, 
-                    -size.height / 3, 
-                    size.height / 3
-                );
-                graphics.drawCircle(
-                    size.width / 4, 
-                    -size.height / 4, 
-                    size.height / 3
-                );
-            } else {
-                // Nuvem com elipses
-                graphics.drawEllipse(0, 0, size.width / 2, size.height / 2);
-                graphics.drawEllipse(
-                    size.width / 3, 
-                    -size.height / 4, 
-                    size.width / 4, 
-                    size.height / 3
-                );
-                graphics.drawEllipse(
-                    -size.width / 3, 
-                    -size.height / 5, 
-                    size.width / 4, 
-                    size.height / 3
-                );
-            }
-            
-            graphics.endFill();
-            
-            // Gerar textura
-            try {
-                const texture = this.app.renderer.generateTexture(graphics);
-                this.cloudTextures.push(texture);
-            } catch (error) {
-                console.error("Erro ao gerar textura de nuvem:", error);
-            }
-        }
-        
-        console.log(`${this.cloudTextures.length} texturas de nuvem fallback criadas`);
-    }
-    
-    /**
-     * Criar container para as nuvens
-     */
-    createCloudContainer() {
-        // Criar container
-        this.cloudsContainer = new PIXI.Container();
-        this.cloudsContainer.name = "clouds";
-        this.cloudsContainer.zIndex = 9999; // Z-index muito alto para debug
-        
-        // Adicionar diretamente ao stage para garantir visibilidade
-        this.app.stage.addChild(this.cloudsContainer);
-        
-        // Adicionar fundo colorido em modo debug
-        if (this.debug) {
-            const debugBackground = new PIXI.Graphics();
-            debugBackground.beginFill(0xFF00FF, 0.1); // Rosa transparente
-            debugBackground.drawRect(0, 0, this.app.screen.width, this.app.screen.height * 0.4);
-            debugBackground.endFill();
-            debugBackground.name = "debug-background";
-            
-            this.cloudsContainer.addChild(debugBackground);
-            
-            // Adicionar texto de debug
-            const debugText = new PIXI.Text("CLOUDS CONTAINER DEBUG", {
-                fontFamily: "Arial",
-                fontSize: 24,
-                fill: 0xFF0000,
-                stroke: 0x000000,
-                strokeThickness: 4
-            });
-            debugText.x = this.app.screen.width / 2 - 180;
-            debugText.y = 20;
-            debugText.name = "debug-text";
-            
-            this.cloudsContainer.addChild(debugText);
-        }
-        
-        console.log("Container de nuvens criado no stage");
-    }
-    
-    /**
-     * Criar nuvens
-     */
-    createClouds() {
-        // Limpar nuvens existentes
-        this.cloudsContainer.removeChildren();
-        this.cloudSprites = [];
-        
-        // Se estiver em modo debug, adicionar fundo novamente
-        if (this.debug) {
-            const debugBackground = new PIXI.Graphics();
-            debugBackground.beginFill(0xFF00FF, 0.1); // Rosa transparente
-            debugBackground.drawRect(0, 0, this.app.screen.width, this.app.screen.height * 0.4);
-            debugBackground.endFill();
-            debugBackground.name = "debug-background";
-            
-            this.cloudsContainer.addChild(debugBackground);
-            
-            // Adicionar texto de debug
-            const debugText = new PIXI.Text("CLOUDS CONTAINER DEBUG", {
-                fontFamily: "Arial",
-                fontSize: 24,
-                fill: 0xFF0000,
-                stroke: 0x000000,
-                strokeThickness: 4
-            });
-            debugText.x = this.app.screen.width / 2 - 180;
-            debugText.y = 20;
-            debugText.name = "debug-text";
-            
-            this.cloudsContainer.addChild(debugText);
-        }
-        
-        if (this.cloudTextures.length === 0) {
-            console.error("Nenhuma textura disponível para criar nuvens");
+        // If no container exists, check if window.sceneManager exists and has the layer
+        if (window.sceneManager && window.sceneManager.layers && window.sceneManager.layers['clouds']) 
+        {
+            this.cloudsContainer = window.sceneManager.layers['clouds'];
+            console.log("CloudsManager: Usando container de nuvens do SceneManager global");
             return;
         }
         
-        // Número de nuvens
-        const cloudsCount = this.config.minClouds + 
-            Math.floor(Math.random() * (this.config.maxClouds - this.config.minClouds + 1));
-        
-        console.log(`Criando ${cloudsCount} nuvens animadas`);
-        
-        // Tipos de animação
-        const animationTypes = ['leftToRight', 'rightToLeft', 'diagonal', 'float'];
-        
-        for (let i = 0; i < cloudsCount; i++) {
-            // Escolher tipo de animação
-            const animType = animationTypes[i % animationTypes.length];
+        // If we still don't have a container, create one as a fallback
+        if (!this.cloudsContainer) 
+        {
+            console.warn("CloudsManager: Nenhum container existente encontrado, criando um como fallback");
+            this.cloudsContainer = new PIXI.Container();
+            this.cloudsContainer.name = "clouds";
+            this.cloudsContainer.zIndex = -9; // Match SceneManager's config
             
-            // Criar sprite
-            const cloud = this.createCloudSprite(i, animType);
-            
-            // Adicionar ao container
-            this.cloudsContainer.addChild(cloud);
-            this.cloudSprites.push(cloud);
-            
-            // Adicionar debug visual se necessário
-            if (this.debug) {
-                this.addDebugVisuals(cloud, i);
+            if (this.backgroundGroup) 
+            {
+                this.backgroundGroup.addChild(this.cloudsContainer);
+            } 
+            else 
+            {
+                this.app.stage.addChild(this.cloudsContainer);
             }
         }
-        
-        console.log(`${this.cloudSprites.length} nuvens criadas com animações`);
     }
     
     /**
-     * Criar sprite de nuvem com animação específica
+     * Load cloud textures from the spritesheet - CORRECTLY
      */
-    createCloudSprite(index, animationType) {
-        // Escolher textura aleatória
+    async loadCloudTextures() 
+    {
+        this.cloudTextures = [];
+        
+        console.log("CloudsManager: Carregando texturas de nuvens do spritesheet...");
+        
+        // CORRECTED METHOD: Check if we have spritesheet with proper textures
+        if (window.assetManager?.spritesheets?.['clouds_spritesheet']) 
+        {
+            const spritesheet = window.assetManager.spritesheets['clouds_spritesheet'];
+            console.log("CloudsManager: Spritesheet de nuvens encontrado");
+            
+            // Try to get frame textures directly - this is the correct approach
+            if (spritesheet.textures) 
+            {
+                console.log("CloudsManager: Texturas disponíveis no spritesheet");
+                
+                // Get all the cloud textures by their frame names
+                for (let i = 0; i <= 11; i++) 
+                {
+                    const frameKey = `cloud-${i}.png`;
+                    if (spritesheet.textures[frameKey]) 
+                    {
+                        this.cloudTextures.push(spritesheet.textures[frameKey]);
+                    }
+                }
+                
+                if (this.cloudTextures.length > 0) 
+                {
+                    console.log(`CloudsManager: Carregados com sucesso ${this.cloudTextures.length} frames individuais de nuvens`);
+                    return;
+                }
+                
+                // Fallback to grabbing all textures if we couldn't find by frame name
+                this.cloudTextures = Object.values(spritesheet.textures);
+                if (this.cloudTextures.length > 0) 
+                {
+                    console.log(`CloudsManager: Carregadas ${this.cloudTextures.length} texturas de nuvens do spritesheet`);
+                    return;
+                }
+            }
+            
+            // Try to get from animations collection
+            if (spritesheet.animations && spritesheet.animations.cloud) 
+            {
+                console.log("CloudsManager: Tentando carregar frames da coleção de animações");
+                const cloudFrames = spritesheet.animations.cloud
+                    .map(frameName => {
+                        const texture = spritesheet.textures[frameName];
+                        if (!texture) {
+                            console.warn(`CloudsManager: Não foi possível encontrar textura para o frame: ${frameName}`);
+                        }
+                        return texture;
+                    })
+                    .filter(texture => texture);
+                
+                if (cloudFrames.length > 0) 
+                {
+                    this.cloudTextures = cloudFrames;
+                    console.log(`CloudsManager: Carregados ${cloudFrames.length} frames de nuvem da coleção de animação`);
+                    return;
+                }
+            }
+        }
+        
+        // Fallback to single texture if no frames found
+        console.log("CloudsManager: Usando método fallback para textura de nuvem");
+        if (window.assetManager) 
+        {
+            const cloudTexture = window.assetManager.getBackgroundTexture('light', 'clouds');
+            if (cloudTexture) 
+            {
+                this.cloudTextures.push(cloudTexture);
+                console.log("CloudsManager: Usando textura única de nuvem");
+                return;
+            }
+        }
+        
+        console.warn("CloudsManager: Nenhuma textura de nuvem encontrada no AssetManager");
+    }
+    
+    /**
+     * Create clouds
+     */
+    createClouds() 
+    {
+        console.log("CloudsManager: Iniciando criação de nuvens");
+        
+        if (!this.cloudsContainer) 
+        {
+            console.error("CloudsManager: Nenhum container de nuvens disponível");
+            return;
+        }
+        
+        // Clear existing clouds
+        this.cloudsContainer.removeChildren();
+        this.cloudSprites = [];
+        
+        if (this.cloudTextures.length === 0) 
+        {
+            console.error("CloudsManager: Nenhuma textura disponível para criar nuvens");
+            return;
+        }
+        
+        // Get safe screen dimensions
+        const safeScreenWidth = Math.max(this.app.screen.width || 800, 800);
+        const safeScreenHeight = Math.max((this.app.screen.height * 0.4) || 300, 300);
+        
+        console.log(`CloudsManager: Dimensões da tela para nuvens: ${safeScreenWidth}x${safeScreenHeight}`);
+        
+        // Number of clouds to create - keep it reasonable
+        const cloudsCount = Math.min(
+            this.config.minClouds + Math.floor(Math.random() * (this.config.maxClouds - this.config.minClouds + 1)),
+            15  // Hard maximum to prevent excessive cloud creation
+        );
+        
+        console.log(`CloudsManager: Criando ${cloudsCount} nuvens animadas`);
+        
+        // Animation types
+        const animationTypes = ['leftToRight', 'rightToLeft', 'diagonal', 'float'];
+        
+        for (let i = 0; i < cloudsCount; i++) 
+        {
+            // Choose animation type
+            const animType = animationTypes[i % animationTypes.length];
+            
+            // Create sprite
+            const cloud = this.createCloudSprite(i, animType, safeScreenWidth, safeScreenHeight);
+            console.log(`CloudsManager: Nuvem ${i} criada com tipo de animação: ${animType}`);
+            
+            // Add initial random elapsedTime to avoid all clouds fading in/out together
+            cloud.elapsedTime = Math.random() * cloud.duration * 0.5;
+            
+            // Add to container
+            this.cloudsContainer.addChild(cloud);
+            this.cloudSprites.push(cloud);
+        }
+        
+        console.log(`CloudsManager: ${this.cloudSprites.length} nuvens criadas com animações`);
+    }
+    
+    /**
+     * Create cloud sprite with specific animation type
+     */
+    createCloudSprite(index, animationType, screenWidth, screenHeight) 
+    {
+        // Choose random texture
         const textureIndex = Math.floor(Math.random() * this.cloudTextures.length);
         const texture = this.cloudTextures[textureIndex];
         
-        // Criar sprite
+        // Create sprite
         const cloud = new PIXI.Sprite(texture);
         cloud.name = `cloud-${index}`;
         
-        // Configurar âncora
+        // Set anchor to center
         cloud.anchor.set(0.5, 0.5);
         
-        // Opacidade - mais opaca para melhor visibilidade
-        const opacityOptions = [0.7, 0.8, 0.9];
-        cloud.alpha = opacityOptions[index % opacityOptions.length];
-        cloud.originalAlpha = cloud.alpha; // Guardar para animações
+        // Set opacity - more opaque for better visibility
+        // Expanded opacity options
+        const opacityOptions = [0.2, 0.3, 0.5, 0.8, 0.9];
+        const opacityIndex = Math.floor(Math.random() * opacityOptions.length);
+        cloud.alpha = opacityOptions[opacityIndex];
+        cloud.originalAlpha = cloud.alpha; // Store for animations
         
-        // Aplicar escala
-        const baseScale = 0.6 + Math.random() * 0.5;
+        // Scale randomly - with safe limits - adicionar mais variabilidade
+        const baseScale = Math.max(0.5 + Math.random() * 0.8, 0.2);
         cloud.scale.set(baseScale);
         
-        // Dimensões seguras da tela
-        const screenWidth = this.app.screen.width || 800;
-        const screenHeight = (this.app.screen.height * 0.4) || 300;
+        // Initialize reset tracking to prevent loops
+        this.lastResetTime[cloud.name] = 0;
         
-        // Em modo debug, distribuir nuvens uniformemente pela tela
-        if (this.debug) {
-            // Distribuir em grade 4x2
-            const cols = 4;
-            const rows = 2;
-            const col = index % cols;
-            const row = Math.floor(index / cols) % rows;
-            
-            // Posicionar em grid
-            cloud.x = (col + 0.5) * (screenWidth / cols);
-            cloud.y = (row + 0.5) * (screenHeight / rows);
-        } else {
-            // Configurar animação
-            cloud.animationType = animationType;
-            cloud.elapsedTime = 0;
-            
-            // Configurar velocidades e posições baseadas no tipo
-            switch(animationType) {
-                case 'leftToRight':
-                    cloud.x = -100;
-                    cloud.y = Math.random() * screenHeight * 0.7;
-                    cloud.vx = 0.3 + Math.random() * 0.3;
-                    cloud.vy = 0;
-                    cloud.duration = this.config.leftToRightDuration * 60;
-                    break;
-                    
-                case 'rightToLeft':
-                    cloud.x = screenWidth + 100;
-                    cloud.y = screenHeight * 0.2 + Math.random() * (screenHeight * 0.5);
-                    cloud.vx = -0.3 - Math.random() * 0.3;
-                    cloud.vy = 0;
-                    cloud.duration = this.config.rightToLeftDuration * 60;
-                    break;
-                    
-                case 'diagonal':
-                    cloud.x = -100;
-                    cloud.y = screenHeight - Math.random() * 100;
-                    cloud.vx = 0.2 + Math.random() * 0.2;
-                    cloud.vy = -0.1 - Math.random() * 0.1;
-                    cloud.duration = this.config.diagonalDuration * 60;
-                    break;
-                    
-                case 'float':
-                    cloud.x = screenWidth * Math.random();
-                    cloud.y = screenHeight * 0.4 * Math.random();
-                    cloud.vx = 0.05 * (Math.random() * 2 - 1);
-                    cloud.floatPhase = Math.random() * Math.PI * 2;
-                    cloud.floatSpeed = 0.01 + Math.random() * 0.02;
-                    cloud.floatAmplitude = 10 + Math.random() * 10;
-                    cloud.duration = this.config.floatDuration * 60;
-                    // Inicializar lastXOffset para float
-                    cloud.lastXOffset = 0;
-                    break;
-            }
-        }
+        // Configure animation properties
+        cloud.animationType = animationType;
+        cloud.elapsedTime = 0;
+        
+        // Place cloud based on animation type
+        this.positionCloudByType(cloud, animationType, screenWidth, screenHeight);
         
         return cloud;
     }
     
     /**
-     * Adicionar visuais de debug a uma nuvem
+     * Position cloud by animation type - separate function for clarity
      */
-    addDebugVisuals(cloud, index) {
-        // Adicionar borda de debug
-        const border = new PIXI.Graphics();
-        border.name = "debug-border";
+    // Reduza extremamente a velocidade das nuvens
+    positionCloudByType(cloud, animationType, screenWidth, screenHeight) 
+    {
+        // Default width and height in case texture is not loaded yet
+        const defaultWidth = 100;
+        const defaultHeight = 50;
         
-        // Cor baseada no tipo de animação
-        let color;
-        switch (cloud.animationType) {
-            case 'leftToRight': color = 0xFF0000; break; // Vermelho
-            case 'rightToLeft': color = 0x00FF00; break; // Verde
-            case 'diagonal': color = 0x0000FF; break;    // Azul
-            case 'float': color = 0xFFFF00; break;       // Amarelo
-            default: color = 0xFF00FF; break;            // Magenta
+        // Calculate sprite dimensions - with fallbacks
+        const cloudWidth = (cloud.texture && cloud.texture.valid) ? 
+            cloud.width : defaultWidth;
+        const cloudHeight = (cloud.texture && cloud.texture.valid) ? 
+            cloud.height : defaultHeight;
+            
+        // Set starting position and velocity based on animation type
+        try {
+            switch(animationType) 
+            {
+                case 'leftToRight':
+                    cloud.x = -cloudWidth;
+                    cloud.y = Math.random() * screenHeight * 0.7;
+                    cloud.vx = 0.005 + Math.random() * 0.005;  // REDUZIDO 10x
+                    cloud.vy = 0;
+                    cloud.duration = this.config.leftToRightDuration * 60;
+                    console.log(`CloudsManager: Nuvem ${cloud.name} L->R, vx=${cloud.vx}, duração=${cloud.duration}`);
+                    break;
+                    
+                case 'rightToLeft':
+                    cloud.x = screenWidth + cloudWidth;
+                    cloud.y = Math.random() * screenHeight * 0.7;
+                    cloud.vx = -0.005 - Math.random() * 0.005;  // REDUZIDO 10x
+                    cloud.vy = 0;
+                    cloud.duration = this.config.rightToLeftDuration * 60;
+                    console.log(`CloudsManager: Nuvem ${cloud.name} R->L, vx=${cloud.vx}, duração=${cloud.duration}`);
+                    break;
+                    
+                case 'diagonal':
+                    cloud.x = -cloudWidth;
+                    cloud.y = screenHeight - Math.random() * 100;
+                    cloud.vx = 0.003 + Math.random() * 0.003;  // REDUZIDO 10x
+                    cloud.vy = -0.001 - Math.random() * 0.001;  // REDUZIDO 10x
+                    cloud.duration = this.config.diagonalDuration * 60;
+                    console.log(`CloudsManager: Nuvem ${cloud.name} diagonal, vx=${cloud.vx}, vy=${cloud.vy}, duração=${cloud.duration}`);
+                    break;
+                    
+                case 'float':
+                    cloud.x = screenWidth * Math.random();
+                    cloud.y = screenHeight * 0.4 * Math.random();
+                    cloud.vx = 0.001 * (Math.random() * 2 - 1);  // REDUZIDO 10x
+                    if (Math.abs(cloud.vx) < 0.0005) cloud.vx = 0.0005; // REDUZIDO 10x
+                    cloud.floatPhase = Math.random() * Math.PI * 2;
+                    cloud.floatSpeed = 0.0001 + Math.random() * 0.0002;  // REDUZIDO 10x
+                    cloud.floatAmplitude = 0.3 + Math.random() * 0.3;  // REDUZIDO 10x
+                    cloud.duration = this.config.floatDuration * 60;
+                    cloud.lastXOffset = 0;
+                    console.log(`CloudsManager: Nuvem ${cloud.name} flutuante, vx=${cloud.vx}, amp=${cloud.floatAmplitude}, velocidade=${cloud.floatSpeed}, duração=${cloud.duration}`);
+                    break;
+                    
+                default:
+                    // Fallback - just place randomly on screen
+                    cloud.x = Math.random() * screenWidth;
+                    cloud.y = Math.random() * screenHeight;
+                    cloud.vx = 0;
+                    cloud.vy = 0;
+                    break;
+            }
+        } catch(e) {
+            console.error("CloudsManager: Erro ao posicionar nuvem:", e);
+            // Safe fallback
+            cloud.x = Math.random() * screenWidth;
+            cloud.y = Math.random() * screenHeight;
         }
         
-        // Desenhar borda
-        border.lineStyle(4, color, 0.8);
-        border.drawRect(-cloud.width/2, -cloud.height/2, cloud.width, cloud.height);
-        
-        // Adicionar texto com índice
-        const text = new PIXI.Text(`Cloud ${index}`, {
-            fontFamily: "Arial",
-            fontSize: 16,
-            fill: 0x000000,
-            stroke: 0xFFFFFF,
-            strokeThickness: 3
-        });
-        text.name = "debug-text";
-        text.anchor.set(0.5);
-        text.y = -cloud.height/2 - 20;
-        
-        // Adicionar elementos visuais à nuvem
-        cloud.addChild(border);
-        cloud.addChild(text);
+        // Validate positions to catch NaN early
+        if (isNaN(cloud.x) || isNaN(cloud.y)) {
+            console.warn(`CloudsManager: Posição da nuvem inválida durante a criação, usando posição segura`);
+            cloud.x = screenWidth / 2;
+            cloud.y = screenHeight / 2;
+        }
     }
     
     /**
-     * Ativar/desativar modo debug - chamado externamente com debugClouds()
+     * Set up cloud animations
      */
-    debugClouds() {
-        console.log("======= CLOUDS DEBUG START =======");
+    setupCloudAnimations() 
+    {
+        console.log("CloudsManager: Configurando animações de nuvens");
         
-        // Diagnóstico do container de nuvens
-        console.log("CLOUDS CONTAINER:", {
-            exists: !!this.cloudsContainer,
-            name: this.cloudsContainer?.name,
-            visible: this.cloudsContainer?.visible,
-            alpha: this.cloudsContainer?.alpha,
-            position: { 
-                x: this.cloudsContainer?.position.x, 
-                y: this.cloudsContainer?.position.y 
-            },
-            zIndex: this.cloudsContainer?.zIndex,
-            childrenCount: this.cloudsContainer?.children.length || 0
-        });
-        
-        // Diagnóstico das nuvens
-        console.log("CLOUD SPRITES:", {
-            count: this.cloudSprites.length,
-            sprites: this.cloudSprites.map((cloud, index) => {
-                return {
-                    index,
-                    type: cloud.animationType,
-                    position: { x: cloud.x, y: cloud.y },
-                    alpha: cloud.alpha,
-                    visible: cloud.visible,
-                    scale: { x: cloud.scale.x, y: cloud.scale.y },
-                    texture: cloud.texture ? {
-                        width: cloud.texture.width,
-                        height: cloud.texture.height,
-                        valid: cloud.texture.valid
-                    } : "No texture"
-                };
-            }).slice(0, 3) // Mostrar apenas as 3 primeiras para não lotar o console
-        });
-        
-        // Toggle debug mode visual
-        this._debugMode = !this._debugMode;
-        
-        if (this._debugMode) {
-            console.log("DEBUG MODE ENABLED - Adding visual markers");
-            
-            // Forçar visibilidade do container
-            this.cloudsContainer.alpha = 1;
-            this.cloudsContainer.zIndex = 9999;
-            
-            // Adicionar um fundo de debug se não existir
-            let debugBackground = this.cloudsContainer.getChildByName("debug-background");
-            if (!debugBackground) {
-                debugBackground = new PIXI.Graphics();
-                debugBackground.name = "debug-background";
-                this.cloudsContainer.addChildAt(debugBackground, 0);
-            }
-            
-            // Desenhar um fundo mais visível
-            debugBackground.clear();
-            debugBackground.beginFill(0xFF00FF, 0.2);
-            debugBackground.drawRect(0, 0, this.app.screen.width, this.app.screen.height * 0.4);
-            debugBackground.endFill();
-            
-            // Adicionar texto de debug
-            let debugText = this.cloudsContainer.getChildByName("debug-text");
-            if (!debugText) {
-                debugText = new PIXI.Text("CLOUDS CONTAINER DEBUG", {
-                    fontFamily: "Arial",
-                    fontSize: 24,
-                    fill: 0xFF0000,
-                    stroke: 0x000000,
-                    strokeThickness: 4
-                });
-                debugText.name = "debug-text";
-                this.cloudsContainer.addChild(debugText);
-            }
-            
-            debugText.x = this.app.screen.width / 2 - 180;
-            debugText.y = 20;
-            
-            // Forçar todas as nuvens a serem visíveis
-            this.cloudSprites.forEach((cloud, index) => {
-                // Tornar completamente visível
-                cloud.alpha = 1;
-                
-                // Posicionar em grid para melhor visualização
-                const cols = 4;
-                const rows = 2;
-                const col = index % cols;
-                const row = Math.floor(index / cols) % rows;
-                
-                // Salvar posição original se ainda não foi salva
-                if (!cloud._originalDebugValues) {
-                    cloud._originalDebugValues = {
-                        x: cloud.x,
-                        y: cloud.y,
-                        alpha: cloud.alpha
-                    };
-                }
-                
-                // Posicionar em grid
-                cloud.x = (col + 0.5) * (this.app.screen.width / cols);
-                cloud.y = (row + 0.5) * ((this.app.screen.height * 0.4) / rows);
-                
-                // Adicionar borda se não existir
-                if (!cloud.getChildByName("debug-border")) {
-                    this.addDebugVisuals(cloud, index);
-                }
-            });
-            
-            // Auto-desativar após 10 segundos
-            setTimeout(() => {
-                if (this._debugMode) {
-                    this.debugClouds();
-                }
-            }, 10000);
-        } else {
-            console.log("DEBUG MODE DISABLED - Removing visual markers");
-            
-            // Restaurar z-index normal
-            this.cloudsContainer.zIndex = 500;
-            
-            // Remover elementos de debug
-            const debugBackground = this.cloudsContainer.getChildByName("debug-background");
-            const debugText = this.cloudsContainer.getChildByName("debug-text");
-            
-            if (debugBackground) this.cloudsContainer.removeChild(debugBackground);
-            if (debugText) this.cloudsContainer.removeChild(debugText);
-            
-            // Restaurar nuvens para posições normais
-            this.cloudSprites.forEach(cloud => {
-                // Restaurar valores originais
-                if (cloud._originalDebugValues) {
-                    cloud.x = cloud._originalDebugValues.x;
-                    cloud.y = cloud._originalDebugValues.y;
-                    cloud.alpha = cloud._originalDebugValues.alpha;
-                    delete cloud._originalDebugValues;
-                }
-                
-                // Remover bordas de debug
-                const border = cloud.getChildByName("debug-border");
-                const text = cloud.getChildByName("debug-text");
-                
-                if (border) cloud.removeChild(border);
-                if (text) cloud.removeChild(text);
-            });
-            
-            // Recriar as nuvens para posições normais
-            this.createClouds();
-        }
-        
-        console.log("======= CLOUDS DEBUG END =======");
-        
-        return "Debug mode " + (this._debugMode ? "enabled" : "disabled");
-    }
-    
-    /**
-     * Configurar animações das nuvens
-     */
-    setupCloudAnimations() {
-        // Ticker para animar as nuvens
+        // Ticker function to animate clouds
         this.tickerFunction = (delta) => {
-            // Skip animation in debug mode with fixed positions
-            if (this._debugMode) return;
-            
             if (!this.cloudsContainer || !this.cloudsContainer.parent) return;
             
-            const screenWidth = this.app.screen.width || 800;
-            const screenHeight = (this.app.screen.height * 0.4) || 300;
+            // Define safe screen dimensions
+            const screenWidth = Math.max(this.app.screen.width || 800, 800);
+            const screenHeight = Math.max((this.app.screen.height * 0.4) || 300, 300);
             
-            for (let i = 0; i < this.cloudSprites.length; i++) {
+            // Garantir que o delta seja um número
+            let deltaValue = 1;
+            if (typeof delta === 'number') {
+                deltaValue = delta;
+            } else if (delta && typeof delta.deltaTime === 'number') {
+                // Algumas versões do PIXI enviam um objeto com propriedade deltaTime
+                deltaValue = delta.deltaTime;
+            } else if (delta && typeof delta === 'object') {
+                console.warn("CloudsManager: Delta é um objeto:", JSON.stringify(delta));
+                // Tentar extrair um número de alguma propriedade
+                for (const key in delta) {
+                    if (typeof delta[key] === 'number') {
+                        deltaValue = delta[key];
+                        console.log(`CloudsManager: Usando delta[${key}] = ${deltaValue}`);
+                        break;
+                    }
+                }
+            }
+            
+            // Normalizar o delta para 60fps para animação consistente
+            const targetFps = 60;
+            const currentFps = typeof this.app.ticker.FPS === 'number' ? this.app.ticker.FPS : 60;
+            
+            // Usar valor constante muito pequeno para desacelerar animação
+            const normalizedDelta = 0.05; // Valor fixo pequeno para movimentação muito lenta
+            
+            // Limitar o delta a um valor seguro
+            const safeDelta = normalizedDelta;
+            
+            // Log animation metrics a cada 100 frames para não sobrecarregar o console
+            this.frameCounter++;
+            if (this.frameCounter % 100 === 0) {
+                console.log(`CloudsManager: Metrics - deltaOriginal: ${typeof delta === 'object' ? 'objeto' : delta}, deltaValue: ${deltaValue}, safeDelta: ${safeDelta}, FPS: ${currentFps}`);
+            }
+            
+            for (let i = 0; i < this.cloudSprites.length; i++) 
+            {
                 const cloud = this.cloudSprites[i];
                 if (!cloud || !cloud.parent) continue;
                 
-                cloud.elapsedTime += delta;
+                cloud.elapsedTime += safeDelta;
                 
-                // Animação baseada no tipo
-                switch (cloud.animationType) {
-                    case 'leftToRight':
-                    case 'rightToLeft':
-                    case 'diagonal':
-                        // Movimento linear
-                        cloud.x += cloud.vx * delta;
-                        cloud.y += (cloud.vy || 0) * delta;
-                        
-                        // Ajuste de alpha para fade in/out
-                        const progress = (cloud.elapsedTime % cloud.duration) / cloud.duration;
-                        if (progress < 0.1) {
-                            // Fade in
-                            cloud.alpha = cloud.originalAlpha * (progress * 10);
-                        } else if (progress > 0.8) {
-                            // Fade out
-                            cloud.alpha = cloud.originalAlpha * ((1 - progress) * 5);
-                        } else {
-                            // Visibilidade normal
-                            cloud.alpha = cloud.originalAlpha;
-                        }
-                        break;
-                        
-                    case 'float':
-                        // Movimento sinusoidal
-                        cloud.floatPhase += cloud.floatSpeed * delta;
-                        const xOffset = Math.sin(cloud.floatPhase) * cloud.floatAmplitude;
-                        
-                        // Calcular diferença do último offset
-                        const offsetDiff = xOffset - (cloud.lastXOffset || 0);
-                        
-                        // Aplicar movimento
-                        cloud.x += (cloud.vx || 0) + offsetDiff;
-                        cloud.lastXOffset = xOffset;
-                        break;
+                // Log para a primeira nuvem apenas a cada 100 frames (para evitar spam no console)
+                const shouldLogThisCloud = i === 0 && this.frameCounter % 100 === 0;
+                
+                // Animation based on type with validation
+                try {
+                    switch (cloud.animationType) 
+                    {
+                        case 'leftToRight':
+                        case 'rightToLeft':
+                        case 'diagonal':
+                            // Ensure vx is not NaN
+                            if (isNaN(cloud.vx)) {
+                                cloud.vx = cloud.animationType === 'rightToLeft' ? -0.04 : 0.04;
+                            }
+                            if (isNaN(cloud.vy)) cloud.vy = 0;
+                            
+                            // Posição anterior para logging
+                            const prevX = cloud.x;
+                            const prevY = cloud.y;
+                            
+                            // Linear movement - verificar se o valor é NaN antes de aplicar
+                            if (!isNaN(cloud.vx) && !isNaN(safeDelta)) {
+                                cloud.x += cloud.vx * safeDelta;
+                            } else {
+                                console.warn(`CloudsManager: Detectado NaN - cloud.vx: ${cloud.vx}, safeDelta: ${safeDelta}`);
+                            }
+                            
+                            if (!isNaN(cloud.vy) && !isNaN(safeDelta)) {
+                                cloud.y += (cloud.vy || 0) * safeDelta;
+                            }
+                            
+                            if (shouldLogThisCloud) {
+                                console.log(`CloudsManager: Nuvem ${i} (${cloud.animationType}) - movimento: (${prevX.toFixed(2)},${prevY.toFixed(2)}) -> (${cloud.x.toFixed(2)},${cloud.y.toFixed(2)}), delta: ${safeDelta.toFixed(3)}, velocidade: ${cloud.vx.toFixed(4)}`);
+                            }
+                            
+                            // Alpha fade in/out with safety checks
+                            const duration = cloud.duration || (this.config.leftToRightDuration * 60);
+                            const progress = (cloud.elapsedTime % duration) / duration;
+                            
+                            if (progress < 0.1) 
+                            {
+                                // Fade in
+                                cloud.alpha = (cloud.originalAlpha || 0.7) * (progress * 10);
+                            } 
+                            else if (progress > 0.8) 
+                            {
+                                // Fade out
+                                cloud.alpha = (cloud.originalAlpha || 0.7) * ((1 - progress) * 5);
+                            } 
+                            else 
+                            {
+                                // Normal visibility
+                                cloud.alpha = cloud.originalAlpha || 0.7;
+                            }
+                            break;
+                            
+                        case 'float':
+                            // Ensure all values are valid - usar os mesmos valores que no positionCloudByType
+                            if (isNaN(cloud.floatPhase)) cloud.floatPhase = 0;
+                            if (isNaN(cloud.floatSpeed)) cloud.floatSpeed = 0.001;  // Corresponde ao valor em positionCloudByType
+                            if (isNaN(cloud.floatAmplitude)) cloud.floatAmplitude = 3;  // Corresponde ao valor em positionCloudByType
+                            if (isNaN(cloud.lastXOffset)) cloud.lastXOffset = 0;
+                            if (isNaN(cloud.vx)) cloud.vx = 0.01;  // Corresponde ao valor em positionCloudByType
+                            
+                            // Posição anterior para logging
+                            const prevFloatX = cloud.x;
+                            
+                            // Verificações de segurança antes de aplicar movimentos
+                            if (isNaN(cloud.x)) {
+                                console.warn(`CloudsManager: Nuvem ${i} com posição X NaN, restaurando`);
+                                cloud.x = screenWidth / 2;
+                            }
+                            
+                            // Sinusoidal movement with safety
+                            const oldPhase = cloud.floatPhase;
+                            
+                            // Verificar se os valores são números válidos antes de calcular
+                            if (!isNaN(cloud.floatSpeed) && !isNaN(safeDelta)) {
+                                cloud.floatPhase += cloud.floatSpeed * safeDelta;
+                            } else {
+                                console.warn(`CloudsManager: Detectado NaN - cloud.floatSpeed: ${cloud.floatSpeed}, safeDelta: ${safeDelta}`);
+                            }
+                            
+                            // Verificar se temos valores válidos para cálculo de seno
+                            let xOffset = 0;
+                            if (!isNaN(cloud.floatPhase) && !isNaN(cloud.floatAmplitude)) {
+                                xOffset = Math.sin(cloud.floatPhase) * cloud.floatAmplitude;
+                            } else {
+                                console.warn(`CloudsManager: Detectado NaN em fase ou amplitude - phase: ${cloud.floatPhase}, amplitude: ${cloud.floatAmplitude}`);
+                            }
+                            
+                            // Calculate difference from last offset
+                            let offsetDiff = 0;
+                            if (!isNaN(cloud.lastXOffset)) {
+                                offsetDiff = xOffset - cloud.lastXOffset;
+                            } else {
+                                cloud.lastXOffset = 0;
+                            }
+                            
+                            // Apply movement com verificação de segurança 
+                            if (!isNaN(cloud.vx) && !isNaN(safeDelta) && !isNaN(offsetDiff)) {
+                                cloud.x += (cloud.vx * safeDelta) + offsetDiff;
+                            } else {
+                                console.warn(`CloudsManager: Movimento float inválido - vx: ${cloud.vx}, delta: ${safeDelta}, offsetDiff: ${offsetDiff}`);
+                            }
+                            
+                            cloud.lastXOffset = xOffset;
+                            
+                            if (shouldLogThisCloud) {
+                                console.log(`CloudsManager: Nuvem ${i} (float) - x: ${prevFloatX.toFixed(2)} -> ${cloud.x.toFixed(2)}, fase: ${oldPhase.toFixed(3)} -> ${cloud.floatPhase.toFixed(3)}, velocidade: ${cloud.vx.toFixed(4)}, offsetDiff: ${offsetDiff.toFixed(4)}`);
+                            }
+                            break;
+                    }
+                } catch(e) {
+                    console.error("CloudsManager: Erro ao animar nuvem:", e);
                 }
                 
-                // Reposicionar nuvens que saem da tela
-                const cloudWidth = cloud.width || 100;
-                const cloudHeight = cloud.height || 100;
-                
-                if (cloud.x < -cloudWidth || 
-                    cloud.x > screenWidth + cloudWidth ||
-                    cloud.y < -cloudHeight || 
-                    cloud.y > screenHeight + cloudHeight) {
-                    
-                    this.resetCloudPosition(cloud);
+                // Validate position after animation
+                if (isNaN(cloud.x) || isNaN(cloud.y))
+                {
+                    console.warn(`CloudsManager: Posição da nuvem ${i} se tornou NaN após animação`);
+                    cloud.x = Math.random() * screenWidth;
+                    cloud.y = Math.random() * screenHeight;
                 }
+                
+                // Reposition clouds that go off-screen
+                this.checkCloudBounds(cloud, screenWidth, screenHeight);
             }
         };
         
-        // Adicionar ticker
-        if (this.app && this.app.ticker) {
+        // Add ticker
+        if (this.app && this.app.ticker) 
+        {
             this.app.ticker.add(this.tickerFunction);
-            console.log("Animações de nuvens iniciadas");
+            console.log("CloudsManager: Animações de nuvens iniciadas com timing delta normalizado");
         }
     }
     
     /**
-     * Reposicionar nuvem
+     * Check if cloud is out of bounds and reset position if needed
+     * FIXED to prevent infinite loops
      */
-    resetCloudPosition(cloud) {
-        const screenWidth = this.app.screen.width || 800;
-        const screenHeight = (this.app.screen.height * 0.4) || 300;
+    checkCloudBounds(cloud, screenWidth, screenHeight) 
+    {
+        if (!cloud) return;
         
-        // Reposicionar baseado no tipo de animação
-        switch(cloud.animationType) {
-            case 'leftToRight':
-                // Reiniciar da esquerda
-                cloud.x = -cloud.width;
-                cloud.y = Math.random() * screenHeight * 0.7;
-                break;
-                
-            case 'rightToLeft':
-                // Reiniciar da direita
-                cloud.x = screenWidth + cloud.width;
-                cloud.y = Math.random() * screenHeight * 0.7;
-                break;
-                
-            case 'diagonal':
-                // Reiniciar da esquerda/baixo
-                cloud.x = -cloud.width;
-                cloud.y = screenHeight - Math.random() * 100;
-                break;
-                
-            case 'float':
-                // Para float, apenas mover para o lado oposto
-                if (cloud.x < 0) {
-                    cloud.x = screenWidth + cloud.width/2;
-                } else if (cloud.x > screenWidth) {
-                    cloud.x = -cloud.width/2;
-                } else {
-                    // Se não saiu pelos lados, pode ter saído vertical
-                    if (cloud.y < 0) {
-                        cloud.y = screenHeight * 0.4 * Math.random();
-                    } else {
-                        cloud.y = screenHeight * 0.4 * Math.random();
+        // Default dimensions if not available
+        const defaultWidth = 100;
+        const defaultHeight = 50;
+        
+        // Calculate dimensions with fallbacks
+        const width = cloud.width ? cloud.width * cloud.scale.x : defaultWidth;
+        const height = cloud.height ? cloud.height * cloud.scale.y : defaultHeight;
+        
+        // Handle NaN positions
+        if (isNaN(cloud.x) || isNaN(cloud.y)) {
+            cloud.x = Math.random() * screenWidth;
+            cloud.y = Math.random() * screenHeight;
+            return;
+        }
+        
+        // Check if cloud is out of bounds
+        const isOutOfBounds = 
+            cloud.x < -width || 
+            cloud.x > screenWidth + width ||
+            cloud.y < -height || 
+            cloud.y > screenHeight + height;
+        
+        if (isOutOfBounds) {
+            // IMPORTANT: Prevent reset loops by limiting how often a cloud can be reset
+            const now = Date.now();
+            const lastReset = this.lastResetTime[cloud.name] || 0;
+            
+            // Only reset if it's been at least 3 seconds since last reset
+            if (now - lastReset > 3000) {
+                console.log(`CloudsManager: Nuvem ${cloud.name} fora dos limites (${cloud.x.toFixed(0)},${cloud.y.toFixed(0)}), reposicionando`);
+                this.resetCloudPosition(cloud, screenWidth, screenHeight);
+                this.lastResetTime[cloud.name] = now;
+            }
+        }
+    }
+    
+    /**
+     * Reset cloud position when it goes off-screen
+     */
+    resetCloudPosition(cloud, screenWidth, screenHeight) 
+    {
+        console.log(`CloudsManager: Reposicionando nuvem ${cloud.name} - tipo: ${cloud.animationType}, posição atual: (${cloud.x.toFixed(0)},${cloud.y.toFixed(0)})`);
+        
+        // Reset position based on animation type
+        try {
+            switch(cloud.animationType) 
+            {
+                case 'leftToRight':
+                    if (cloud.x > screenWidth) {
+                        // Only reset if it moved off the right side
+                        cloud.x = -cloud.width;
+                        cloud.y = Math.random() * screenHeight * 0.7;
+                        console.log(`CloudsManager: Nuvem ${cloud.name} L->R reposicionada para (${cloud.x.toFixed(0)},${cloud.y.toFixed(0)})`);
                     }
-                }
-                
-                // Resetar fase de float
-                cloud.lastXOffset = 0;
-                break;
+                    break;
+                    
+                case 'rightToLeft':
+                    if (cloud.x < -cloud.width) {
+                        // Only reset if it moved off the left side
+                        cloud.x = screenWidth + cloud.width;
+                        cloud.y = Math.random() * screenHeight * 0.7;
+                        console.log(`CloudsManager: Nuvem ${cloud.name} R->L reposicionada para (${cloud.x.toFixed(0)},${cloud.y.toFixed(0)})`);
+                    }
+                    break;
+                    
+                case 'diagonal':
+                    if (cloud.x > screenWidth || cloud.y < -cloud.height) {
+                        // Only reset if it moved off the top-right
+                        cloud.x = -cloud.width;
+                        cloud.y = screenHeight - Math.random() * 100;
+                        console.log(`CloudsManager: Nuvem ${cloud.name} diagonal reposicionada para (${cloud.x.toFixed(0)},${cloud.y.toFixed(0)})`);
+                    }
+                    break;
+                    
+                case 'float':
+                    // For float, just move to the opposite side
+                    if (cloud.x < -cloud.width) {
+                        cloud.x = screenWidth + cloud.width/2;
+                    } else if (cloud.x > screenWidth + cloud.width) {
+                        cloud.x = -cloud.width/2;
+                    }
+                    
+                    // If it went out vertically, just reset Y
+                    if (cloud.y < -cloud.height || cloud.y > screenHeight + cloud.height) {
+                        cloud.y = Math.random() * screenHeight * 0.7;
+                    }
+                    
+                    console.log(`CloudsManager: Nuvem ${cloud.name} flutuante reposicionada para (${cloud.x.toFixed(0)},${cloud.y.toFixed(0)})`);
+                    
+                    // Reset float phase
+                    cloud.lastXOffset = 0;
+                    break;
+                    
+                default:
+                    // Fallback to random position if animation type unknown
+                    cloud.x = Math.random() * screenWidth;
+                    cloud.y = Math.random() * screenHeight;
+                    break;
+            }
+        } catch(e) {
+            console.error("CloudsManager: Erro ao reposicionar nuvem:", e);
+            // Safe fallback
+            cloud.x = Math.random() * screenWidth;
+            cloud.y = Math.random() * screenHeight;
         }
         
-        // Resetar alpha para animação
-        cloud.alpha = 0; // Começar invisível para fade in
+        // Reset alpha for fade-in
+        cloud.alpha = 0;
+        
+        // Validate position after reset
+        if (isNaN(cloud.x) || isNaN(cloud.y)) {
+            console.warn(`CloudsManager: Posição inválida após reset, usando valores seguros`);
+            cloud.x = Math.random() * screenWidth;
+            cloud.y = Math.random() * screenHeight;
+        }
     }
     
     /**
-     * Ocultar todas as nuvens
+     * Hide all clouds (used for dark theme)
      */
-    hideAllClouds() {
-        if (this.cloudsContainer) {
+    hideAllClouds() 
+    {
+        console.log("CloudsManager: Ocultando todas as nuvens");
+        
+        // Get clouds container if not already set
+        if (!this.cloudsContainer) {
+            this.getCloudsContainer();
+        }
+        
+        if (this.cloudsContainer) 
+        {
             this.cloudsContainer.visible = false;
-            console.log("Nuvens ocultadas para tema escuro");
+            console.log("CloudsManager: Nuvens ocultadas para tema escuro");
         }
     }
     
     /**
-     * Atualizar para tema
+     * Update for theme change
      */
-    updateTheme(theme) {
-        if (theme === 'dark') {
+    updateTheme(theme) 
+    {
+        console.log(`CloudsManager: Atualizando para tema: ${theme}`);
+        
+        if (theme === 'dark') 
+        {
             this.hideAllClouds();
-        } else if (this.cloudsContainer) {
-            this.cloudsContainer.visible = true;
-        } else {
-            this.init(theme);
+        } 
+        else 
+        {
+            if (this.cloudsContainer) 
+            {
+                this.cloudsContainer.visible = true;
+                // Refresh clouds
+                this.createClouds();
+            } 
+            else 
+            {
+                this.init(theme);
+            }
         }
     }
     
     /**
-     * Lidar com redimensionamento
+     * Handle resize events
      */
-    onResize() {
-        // Atualizar nuvens se o container existe
-        if (this.cloudsContainer && this.cloudsContainer.parent) {
+    onResize() 
+    {
+        console.log("CloudsManager: Evento de redimensionamento detectado");
+        
+        // Recreate clouds on resize
+        if (this.cloudsContainer && this.cloudsContainer.parent) 
+        {
             this.createClouds();
-            console.log("Nuvens recriadas após redimensionamento");
+            console.log("CloudsManager: Nuvens recriadas após redimensionamento");
         }
     }
     
     /**
-     * Limpar recursos
+     * Clean up resources
      */
-    destroy() {
-        // Remover ticker
-        if (this.app && this.app.ticker && this.tickerFunction) {
+    destroy() 
+    {
+        console.log("CloudsManager: Destruindo e limpando recursos");
+        
+        // Remove ticker
+        if (this.app && this.app.ticker && this.tickerFunction) 
+        {
             this.app.ticker.remove(this.tickerFunction);
         }
         
-        // Remover container
-        if (this.cloudsContainer && this.cloudsContainer.parent) {
-            this.cloudsContainer.parent.removeChild(this.cloudsContainer);
+        // Clear sprites but don't remove the container since it's managed by SceneManager
+        if (this.cloudsContainer) {
+            this.cloudsContainer.removeChildren();
         }
         
-        // Limpar referências
+        // Clear references
         this.cloudSprites = [];
         this.cloudTextures = [];
-        this.spritesheet = null;
+        this.lastResetTime = {};
+        
+        console.log("CloudsManager: Recursos limpos com sucesso");
     }
 }
 
-// Disponibilizar globalmente
+// Make CloudsManager globally available
 window.CloudsManager = CloudsManager;
-console.log("CloudsManager.js carregado com spritesheet support e debugger");
