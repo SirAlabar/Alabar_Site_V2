@@ -1,3 +1,7 @@
+/**
+ * AssetManager - Handles loading and managing game assets
+ * Uses PixiJS Assets API for efficient resource loading
+ */
 class AssetManager 
 {
 	constructor() 
@@ -46,7 +50,7 @@ class AssetManager
 				light: {
 					backgroundColor: '#87CEEB',
 					mountain: './assets/images/background/light/mountain.webp',
-					clouds: './assets/images/background/light/clouds.webp',
+					// clouds: './assets/images/background/light/clouds.webp',
 					castle: './assets/images/background/light/castle.webp',
 					field1: './assets/images/background/light/field1.webp',
 					field2: './assets/images/background/light/field2.webp',
@@ -80,6 +84,9 @@ class AssetManager
 		};
 	}
 	
+	/**
+	 * Start loading all assets
+	 */
 	loadAllAssets() 
 	{
 		if (this.isLoading) return;
@@ -88,18 +95,23 @@ class AssetManager
 		this.initAssets()
 			.then(() => this.loadAssets())
 			.catch(error => {
+				console.error("Error loading assets:", error);
 				this.isLoading = false;
 			});
 	}
 	
-	// Initialize PIXI Assets with manifest
+	/**
+	 * Initialize PIXI Assets with manifest
+	 */
 	async initAssets() 
 	{
 		const manifest = this.createManifest();
 		await PIXI.Assets.init({manifest});
 	}
 	
-	// Load all assets in bundles
+	/**
+	 * Load all assets in bundles
+	 */
 	async loadAssets() 
 	{
 		try {
@@ -135,11 +147,14 @@ class AssetManager
 		} 
 		catch (error)
 		{
+			console.error("Error in loadAssets:", error);
 			throw error;
 		}
 	}
 	
-	// Create a manifest structure for PIXI.Assets
+	/**
+	 * Create a manifest structure for PIXI.Assets
+	 */
 	createManifest() 
 	{
 		const manifest = {
@@ -162,14 +177,16 @@ class AssetManager
 		const uiBundle = this.createUiBundle();
 		manifest.bundles.push(uiBundle);
 
-		// bundle of spritesheets
+		// Bundle of spritesheets
 		const spritesheetsBundle = this.createSpritesheetsBundle();
 		manifest.bundles.push(spritesheetsBundle);
 		
 		return manifest;
 	}
 	
-	// Create player assets bundle
+	/**
+	 * Create player assets bundle
+	 */
 	createPlayerBundle() 
 	{
 		const playerBundle = {
@@ -183,7 +200,9 @@ class AssetManager
 		return playerBundle;
 	}
 	
-	// Create monsters assets bundle
+	/**
+	 * Create monsters assets bundle
+	 */
 	createMonstersBundle() 
 	{
 		const monstersBundle = {
@@ -202,7 +221,9 @@ class AssetManager
 		return monstersBundle;
 	}
 	
-	// Create background assets bundles
+	/**
+	 * Create background assets bundles
+	 */
 	createBackgroundBundles() 
 	{
 		const bgBundles = [];
@@ -245,7 +266,9 @@ class AssetManager
 		return bgBundles;
 	}
 
-	// Create UI assets bundles
+	/**
+	 * Create UI assets bundle
+	 */
 	createUiBundle() {
 		const uiBundle = {
 			name: 'ui',
@@ -267,16 +290,25 @@ class AssetManager
 		return uiBundle;
 	}
 
-	// Create bundle for spritesheets
-	createSpritesheetsBundle() 
-	{
+	/**
+	 * Create bundle for spritesheets
+	 */
+	createSpritesheetsBundle() {
+		console.log("Creating spritesheets bundle");
+		console.log("Clouds paths:", this.assetPaths.clouds_spritesheet);
+		
 		const spritesheetsBundle = {
 			name: 'spritesheets',
 			assets: []
 		};
 		
-		// Adicionar clouds_spritesheet
+		// Add clouds spritesheet
 		if (this.assetPaths.clouds_spritesheet) {
+			console.log("Adding clouds to bundle:", {
+				data: this.assetPaths.clouds_spritesheet.data,
+				texture: this.assetPaths.clouds_spritesheet.texture
+			});
+			
 			spritesheetsBundle.assets.push({
 				alias: 'clouds_spritesheet_json',
 				src: this.assetPaths.clouds_spritesheet.data
@@ -286,12 +318,16 @@ class AssetManager
 				alias: 'clouds_spritesheet_texture',
 				src: this.assetPaths.clouds_spritesheet.texture
 			});
+		} else {
+			console.error("clouds_spritesheet not found in assetPaths!");
 		}
 		
 		return spritesheetsBundle;
 	}
 	
-	// Process resources after loading
+	/**
+	 * Process resources after loading
+	 */
 	processLoadedResources(bundleName, resources) 
 	{
 		if (bundleName === 'player') 
@@ -310,16 +346,27 @@ class AssetManager
 		{
 			this.processUiResources(resources);
 		}
+		else if (bundleName === 'spritesheets') 
+		{
+			console.log("Processing spritesheets bundle resources:", Object.keys(resources));
+			for (const [alias, resource] of Object.entries(resources)) {
+				console.log(`Adding resource ${alias} to textures`);
+				this.textures[alias] = resource;
+			}
+		}
 	}
 	
-	// Process player resources
+	/**
+	 * Process player resources
+	 */
 	processPlayerResources(resources) 
 	{
 		this.textures['player'] = resources.player_spritesheet;
 	}
 
-	
-	// Process monster resources
+	/**
+	 * Process monster resources
+	 */
 	processMonsterResources(resources) 
 	{
 		for (const [alias, spritesheet] of Object.entries(resources)) 
@@ -329,7 +376,9 @@ class AssetManager
 		}
 	}
 	
-	// Process background resources
+	/**
+	 * Process background resources
+	 */
 	processBackgroundResources(bundleName, resources) 
 	{
 		const theme = bundleName.substring(3); // Remove 'bg_' prefix
@@ -345,6 +394,9 @@ class AssetManager
 		}
 	}
 
+	/**
+	 * Process UI resources
+	 */
 	processUiResources(resources) 
 	{
 		for (const [alias, texture] of Object.entries(resources)) 
@@ -353,75 +405,80 @@ class AssetManager
 		}
 	}
 
+	/**
+	 * Process spritesheets with modern PixiJS 8.x approach
+	 * Using direct loading for simplicity
+	 */
 	async processSpritesheets() {
 		try {
-			console.log("Processing all spritesheets...");
-	
-			// Potential spritesheets to process
-			const spritesheetConfigs = [
+			console.log("=== STARTING SPRITESHEET PROCESSING ===");
+			console.log("Available spritesheets before processing:", Object.keys(this.spritesheets));
+
+			// Define spritesheets to load directly from their JSON files
+			const spritesheetsToLoad = [
 				// Clouds spritesheet
 				{
-					jsonKey: 'clouds_spritesheet_json',
-					textureKey: 'clouds_spritesheet_texture',
-					outputKey: 'clouds_spritesheet'
+					name: 'clouds_spritesheet',
+					path: this.assetPaths.clouds_spritesheet.data
 				},
 				// Player spritesheet
 				{
-					jsonKey: 'player_spritesheet',
-					textureKey: null, // JSON has embedded texture info
-					outputKey: 'player_spritesheet'
+					name: 'player_spritesheet',
+					path: this.assetPaths.player.data
 				}
 			];
-	
-			// Process all monsters spritesheets
-			for (const [monsterType, _] of Object.entries(this.assetPaths.monsters)) {
-				spritesheetConfigs.push({
-					jsonKey: `${monsterType}_spritesheet`,
-					textureKey: null, // JSON has embedded texture info
-					outputKey: `${monsterType}_spritesheet`
+
+			// Add monster spritesheets
+			for (const [monsterType, info] of Object.entries(this.assetPaths.monsters)) {
+				spritesheetsToLoad.push({
+					name: `${monsterType}_spritesheet`,
+					path: info.data
 				});
 			}
-	
-			// Process each spritesheet
-			for (const config of spritesheetConfigs) {
-				// If we have JSON data
-				if (this.textures[config.jsonKey]) {
-					const jsonData = this.textures[config.jsonKey];
-					let baseTexture;
-	
-					// If separate texture is provided, use it
-					if (config.textureKey && this.textures[config.textureKey]) {
-						baseTexture = this.textures[config.textureKey];
-					}
-	
-					// Create and parse the spritesheet
-					try {
-						const spritesheet = new PIXI.Spritesheet(
-							baseTexture || jsonData.meta?.image,
-							jsonData
-						);
-	
-						await new Promise((resolve) => {
-							spritesheet.parse(() => {
-								// Store the processed spritesheet
-								this.spritesheets[config.outputKey] = spritesheet;
-								// Also add to textures for compatibility
-								this.textures[config.outputKey] = spritesheet;
-								resolve();
-							});
-						});
-	
-						console.log(`Spritesheet ${config.outputKey} processed with ${Object.keys(spritesheet.textures || {}).length} frames`);
-					} catch (err) {
-						console.warn(`Failed to process spritesheet ${config.outputKey}:`, err);
-					}
+
+			console.log(`Processing ${spritesheetsToLoad.length} spritesheets...`);
+
+			// Simply load each spritesheet directly
+			for (const sheet of spritesheetsToLoad) {
+				// Skip if already loaded
+				if (this.spritesheets[sheet.name]) {
+					console.log(`- Spritesheet ${sheet.name} already loaded, skipping`);
+					continue;
+				}
+
+				console.log(`- Loading ${sheet.name} from ${sheet.path}`);
+				
+				try {
+					// Direct loading is the simplest approach
+					// PixiJS will handle parsing the JSON and extracting frames automatically
+					const spritesheet = await PIXI.Assets.load(sheet.path);
+					
+					// Store the result
+					this.spritesheets[sheet.name] = spritesheet;
+					
+					// Log success
+					const frameCount = spritesheet.textures ? Object.keys(spritesheet.textures).length : 0;
+					console.log(`- Successfully loaded ${sheet.name} with ${frameCount} frames`);
+				} catch (error) {
+					console.error(`- Failed to load ${sheet.name}:`, error);
 				}
 			}
+			
+			console.log("\n=== FINAL SPRITESHEET PROCESSING SUMMARY ===");
+			console.log("Processed spritesheets:", Object.keys(this.spritesheets));
+			for (const [key, sheet] of Object.entries(this.spritesheets)) {
+				const frameCount = sheet.textures ? Object.keys(sheet.textures).length : 0;
+				console.log(`- ${key}: ${frameCount} frames`);
+			}
+			
 		} catch (error) {
-			console.error("Error processing spritesheets:", error);
+			console.error("GLOBAL ERROR in spritesheet processing:", error);
 		}
 	}
-	// Update progress and notify
+
+	/**
+	 * Update loading progress and notify
+	 */
 	updateProgress(value) 
 	{
 		const progress = Math.min(Math.round(value), 100);
@@ -431,8 +488,9 @@ class AssetManager
 		}
 	}
 	
-
-	// Get a background texture for a specific theme and layer
+	/**
+	 * Get a background texture for a specific theme and layer
+	 */
 	getBackgroundTexture(theme, layer) 
 	{
 		if (this.backgrounds[theme] && this.backgrounds[theme][layer]) 
@@ -443,7 +501,9 @@ class AssetManager
 		return null;
 	}
 	
-	// Get all background textures for a specific theme
+	/**
+	 * Get all background textures for a specific theme
+	 */
 	getBackgroundTextures(theme) 
 	{
 		if (this.backgrounds[theme]) 
@@ -454,23 +514,32 @@ class AssetManager
 		return {};
 	}
 	
+	/**
+	 * Get a spritesheet by name
+	 */
 	getSpritesheet(name) {
-        if (this.spritesheets[name]) {
-            return this.spritesheets[name];
-        }
-        console.warn(`Spritesheet not found: ${name}`);
-        return null;
-    }
+		if (this.spritesheets[name]) {
+			return this.spritesheets[name];
+		}
+		console.warn(`Spritesheet not found: ${name}`);
+		return null;
+	}
 	
+	/**
+	 * Get all frames from a spritesheet
+	 */
 	getSpriteFrames(spritesheetName) {
-        const spritesheet = this.getSpritesheet(spritesheetName);
-        if (spritesheet && spritesheet.textures) {
-            return Object.values(spritesheet.textures);
-        }
-        console.warn(`No frames found for spritesheet: ${spritesheetName}`);
-        return [];
-    }
-	 //Get background color or texture for a theme
+		const spritesheet = this.getSpritesheet(spritesheetName);
+		if (spritesheet && spritesheet.textures) {
+			return Object.values(spritesheet.textures);
+		}
+		console.warn(`No frames found for spritesheet: ${spritesheetName}`);
+		return [];
+	}
+
+	/**
+	 * Get background color or texture for a theme
+	 */
 	getBackgroundInfo(theme) 
 	{
 		const result = {
@@ -495,7 +564,7 @@ class AssetManager
 				// Try to load the background texture
 				try 
 				{
-					// The night background image path (adjust if your structure differs)
+					// The night background image path
 					const backgroundPath = './assets/images/background/dark/background_night.webp';
 					result.texture = PIXI.Texture.from(backgroundPath);
 				} 
@@ -511,7 +580,9 @@ class AssetManager
 		return result;
 	}
 	
-	 //Convert hex color string to number for PIXI
+	/**
+	 * Convert hex color string to number for PIXI
+	 */
 	hexToNumber(hex) 
 	{
 		// Remove # if present

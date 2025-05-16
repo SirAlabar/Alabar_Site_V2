@@ -241,17 +241,23 @@ class LoadingScreen
             window.game.setGameplayGroup(gameplayGroup, app, gameContainer);
         }
         
-        if (window.CloudsManager && !window.cloudsManager) {
+        if (window.CloudsManager && !window.cloudsManager && window.assetManager.getSpritesheet('clouds_spritesheet')) {
             console.log("Creating CloudsManager instance");
             window.cloudsManager = new CloudsManager(app, backgroundGroup);
             console.log("Initializing CloudsManager with theme:", currentTheme);
             window.cloudsManager.init(currentTheme);
             console.log("CloudsManager initialization completed");
         } else {
-            console.error("CloudsManager not available:", { 
-                classExists: !!window.CloudsManager, 
-                instanceExists: !!window.cloudsManager 
-            });
+            console.log("Deferring CloudsManager initialization until spritesheet is ready");
+            // Set up a retry mechanism
+            const checkForSpritesheet = setInterval(() => {
+                if (window.assetManager.getSpritesheet('clouds_spritesheet')) {
+                    clearInterval(checkForSpritesheet);
+                    window.cloudsManager = new CloudsManager(app, backgroundGroup);
+                    window.cloudsManager.init(currentTheme);
+                    console.log("CloudsManager initialization completed (delayed)");
+                }
+            }, 500); // Check every 500ms
         }
         if (window.CursorEffectComponent) {
             console.log("Criando CursorEffectComponent");
