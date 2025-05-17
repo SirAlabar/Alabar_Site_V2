@@ -21,12 +21,12 @@ class CloudsManager {
         
         // Cloud settings
         this.config = {
-            minClouds: 4,
-            maxClouds: 11,
+            minClouds: 3,
+            maxClouds: 10,
             minDistance: 20,
-            containerHeight: window.innerHeight * 0.55, // 55% of screen height
+            containerHeight: this.getSceneHeight(),
             minScale: 0.5,
-            maxScale: 5,
+            maxScale: 3,
             spritesheetName: 'clouds_spritesheet'
         };
         
@@ -62,10 +62,58 @@ class CloudsManager {
         this.initInProgress = false;
         this.isDestroyed = false;
         
+
+        this.debugMode = true; // Definido como true para mostrar a área
+        this.debugColor = 0xAA33FF; // Cor roxa semitransparente
+        this.debugAlpha = 0.2; // Transparência do fundo de debug
+        this.debugGraphics = null; // Elemento gráfico para visualização
         // Current theme
         this.currentTheme = document.body.getAttribute('data-theme') || 'light';
     }
+    createDebugVisualization() {
+    // Remove qualquer gráfico de debug anterior
+    if (this.debugGraphics) {
+        this.cloudsContainer.removeChild(this.debugGraphics);
+        this.debugGraphics.destroy();
+    }
     
+    // Cria um novo objeto gráfico para debug
+    this.debugGraphics = new PIXI.Graphics();
+    
+    // Define as dimensões
+    const debugWidth = window.innerWidth;
+    const debugHeight = this.config.containerHeight;
+    
+    // Desenha o retângulo de fundo de debug
+    this.debugGraphics.beginFill(this.debugColor, this.debugAlpha);
+    this.debugGraphics.drawRect(0, 0, debugWidth, debugHeight);
+    this.debugGraphics.endFill();
+    
+    // Adiciona texto para exibir as dimensões
+    const text = new PIXI.Text(
+        `Contêiner de Nuvens: ${Math.round(debugWidth)}x${Math.round(debugHeight)}px (55% da altura da tela)`,
+        {
+            fontFamily: 'Arial',
+            fontSize: 16,
+            fill: 0xFFFFFF,
+            align: 'center',
+            stroke: 0x000000,
+            strokeThickness: 4
+        }
+    );
+    
+    // Centraliza o texto
+    text.anchor.set(0.5);
+    text.position.set(debugWidth / 2, debugHeight / 2);
+    
+    // Adiciona o texto ao gráfico de debug
+    this.debugGraphics.addChild(text);
+    
+    // Adiciona o gráfico de debug ao contêiner de nuvens
+    this.cloudsContainer.addChild(this.debugGraphics);
+    
+    console.log(`CloudsManager Debug: Área do contêiner: ${debugWidth}x${debugHeight}px`);
+}
     /**
      * Initialize the clouds manager
      */
@@ -120,7 +168,9 @@ class CloudsManager {
         } else {
             console.log('CloudsManager: Dark theme detected, not creating clouds');
         }
-        
+         if (this.debugMode) {
+                this.createDebugVisualization();
+            }
         // Set up theme change listener
         this.setupThemeListeners();
         
@@ -134,37 +184,67 @@ class CloudsManager {
     /**
      * Set up theme change listeners
      */
-    setupThemeListeners() {
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeToggleMobile = document.getElementById('theme-toggle-mobile');
+setupThemeListeners() {
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleMobile = document.getElementById('theme-toggle-mobile');
+    
+    // Adiciona ouvinte para o SceneManager se disponível
+    if (window.sceneManager) {
+        // Monitorar o SceneManager diretamente
+        const originalToggleTheme = window.sceneManager.toggleTheme;
         
-        const handleThemeToggle = () => {
-            // Allow a short delay for the theme to update
-            setTimeout(() => {
-                // Get the latest theme
-                const newTheme = document.body.getAttribute('data-theme') || 'light';
+        // Substituir a função toggleTheme para notificar o CloudsManager
+        window.sceneManager.toggleTheme = () => {
+            // Chama a função original
+            originalToggleTheme.call(window.sceneManager);
+            
+            // Obtém o novo tema após a troca
+            const newTheme = document.body.getAttribute('data-theme') || 'light';
+            
+            // Atualiza o CloudsManager com o novo tema
+            if (newTheme !== this.currentTheme) {
+                console.log(`CloudsManager: Tema alterado pelo SceneManager para ${newTheme}`);
+                this.currentTheme = newTheme;
                 
-                if (newTheme !== this.currentTheme) {
-                    this.currentTheme = newTheme;
-                    console.log(`CloudsManager: Theme changed to ${newTheme}`);
-                    
-                    if (newTheme === 'light') {
-                        this.refreshClouds();
-                    } else {
-                        this.hideAllClouds();
-                    }
+                if (newTheme === 'light') {
+                    this.refreshClouds();
+                } else {
+                    this.hideAllClouds();
                 }
-            }, 100);
+            }
         };
         
-        if (themeToggle) {
-            themeToggle.addEventListener('click', handleThemeToggle);
-        }
-        
-        if (themeToggleMobile) {
-            themeToggleMobile.addEventListener('click', handleThemeToggle);
-        }
+        console.log("CloudsManager: Monitorando alterações de tema no SceneManager");
     }
+    
+    // Também monitorar os botões de toggle diretamente
+    const handleThemeToggle = () => {
+        // Permite um pequeno atraso para o tema atualizar
+        setTimeout(() => {
+            // Obtém o tema mais recente
+            const newTheme = document.body.getAttribute('data-theme') || 'light';
+            
+            if (newTheme !== this.currentTheme) {
+                this.currentTheme = newTheme;
+                console.log(`CloudsManager: Tema alterado para ${newTheme}`);
+                
+                if (newTheme === 'light') {
+                    this.refreshClouds();
+                } else {
+                    this.hideAllClouds();
+                }
+            }
+        }, 100);
+    };
+    
+    if (themeToggle) {
+        themeToggle.addEventListener('click', handleThemeToggle);
+    }
+    
+    if (themeToggleMobile) {
+        themeToggleMobile.addEventListener('click', handleThemeToggle);
+    }
+}
 
     /**
      * Hide all clouds - used when switching to dark theme
@@ -327,7 +407,9 @@ class CloudsManager {
         for (let i = 0; i < cloudCount && !this.isDestroyed; i++) {
             this.createSingleCloud(screenWidth, screenHeight, usedPositions);
         }
-        
+          if (this.debugMode) {
+             this.createDebugVisualization();
+         }
         // Ensure the lifecycle is running
         this.startCloudLifecycle();
     }
@@ -396,9 +478,18 @@ class CloudsManager {
             while (!positionFound && attempts < 10) {
                 // Scale the positioning with scene scale as well
                 // Position clouds higher in taller scenes
-                const heightRange = screenHeight * 0.8;
-                randomTop = Math.floor(Math.random() * heightRange * sceneScale);
-                
+                const cloudNumber = this.activeCloudSprites.length;
+
+                if (cloudNumber % 3 === 0) {
+                    // Terço superior do contêiner
+                    randomTop = Math.random() * (screenHeight / 3);
+                } else if (cloudNumber % 3 === 1) {
+                    // Terço médio do contêiner
+                    randomTop = (screenHeight / 3) + Math.random() * (screenHeight / 3);
+                } else {
+                    // Terço inferior do contêiner
+                    randomTop = (screenHeight * 2/3) + Math.random() * (screenHeight / 3);
+                }
                 // Random horizontal position
                 if (randomAnimType === 'driftLeftToRight') {
                     randomLeft = -cloud.width; // Start off-screen left
@@ -406,7 +497,7 @@ class CloudsManager {
                     randomLeft = screenWidth + cloud.width; // Start off-screen right
                 } else if (randomAnimType === 'driftDiagonalUp') {
                     randomLeft = -cloud.width; // Start off-screen left
-                    randomTop = (screenHeight * sceneScale) - cloud.height/2; // Start at bottom, scale with scene
+                    randomTop = screenHeight - cloud.height/2;
                 } else {
                     // For driftSlow animation
                     randomLeft = Math.floor(Math.random() * screenWidth * 0.8) + (screenWidth * 0.1);
@@ -444,7 +535,7 @@ class CloudsManager {
                 finalScale: scaledSize,
                 startTime: performance.now(),
                 startPosition: { x: randomLeft, y: randomTop },
-                endPosition: this.calculateEndPosition(randomAnimType, randomLeft, randomTop, screenWidth, screenHeight * sceneScale),
+                endPosition: this.calculateEndPosition(randomAnimType, randomLeft, randomTop, screenWidth, screenHeight),
                 // Scale factors for reference
                 sceneScale: sceneScale,
                 baseScale: baseScale,
@@ -474,6 +565,16 @@ class CloudsManager {
         }
     }
     
+    getSceneHeight() {
+    // Se o SceneManager existe e tem a altura do app, use-a
+    if (window.sceneManager && window.sceneManager.app) 
+    {
+        return window.sceneManager.app.screen.height * 0.35;
+    }
+        
+        // Fallback: 55% da altura da janela
+        return window.innerHeight * 0.55;
+    }
     /**
      * Get the current scene scale factor
      * This helps adjust cloud sizes to match the scene
@@ -539,7 +640,7 @@ class CloudsManager {
             }
             
             // Constrain to reasonable values
-            scaleFactor = Math.max(0.5, Math.min(scaleFactor, 1.5));
+            scaleFactor = Math.max(0.25, Math.min(scaleFactor, 1.25));
             
             // Use a smaller factor for clouds so they don't get too large
             // but still scale with the scene
@@ -710,15 +811,20 @@ class CloudsManager {
     /**
      * Handle window resize events
      */
-    onResize() {
+    onResize() 
+    {
         if (this.isDestroyed) return;
         
-        // Update container height
-        this.config.containerHeight = window.innerHeight * 0.55;
+        // Atualiza a altura do contêiner
+        this.config.containerHeight = this.getSceneHeight();
         
-        // If in light theme, refresh clouds to match new size
+        // Atualiza a visualização de debug se em modo debug
+        if (this.debugMode) {
+            this.createDebugVisualization();
+        }
+        
+        // Se no tema claro, atualiza nuvens para combinar com o novo tamanho
         if (this.currentTheme === 'light' && this.initialized) {
-            // Don't completely refresh, just update scaling
             this.updateCloudScaling();
         }
     }
@@ -731,6 +837,9 @@ class CloudsManager {
         
         const sceneScale = this.getSceneScale();
         console.log(`CloudsManager: Updating cloud scaling with factor ${sceneScale}`);
+        
+        // Importante: Obter nova altura usando getSceneHeight
+        const newContainerHeight = this.getSceneHeight();
         
         // Update all existing clouds
         this.activeCloudSprites.forEach(cloud => {
@@ -760,19 +869,18 @@ class CloudsManager {
                         );
                     }
                     
-                    // Update position for vertical scaling
-                    // This ensures clouds don't "jump" when the scene scales
+                    // Update position for vertical scaling - CORRIGIDO para usar newContainerHeight
                     const verticalRatio = cloud.position.y / this.config.containerHeight;
-                    const newHeight = window.innerHeight * 0.55 * sceneScale; // Scaled container height
-                    cloud.position.y = verticalRatio * newHeight;
+                    cloud.position.y = verticalRatio * newContainerHeight;
+                    
                 } catch (error) {
                     console.warn('CloudsManager: Error updating cloud scale', error);
                 }
             }
         });
         
-        // Update container height
-        this.config.containerHeight = window.innerHeight * 0.55 * sceneScale;
+        // CORREÇÃO AQUI: usar getSceneHeight em vez de window.innerHeight
+        this.config.containerHeight = newContainerHeight;
     }
     
     /**
