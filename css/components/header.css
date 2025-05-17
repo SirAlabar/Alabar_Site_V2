@@ -1,10 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Honk&family=Jersey+15&display=swap');
 
-::-webkit-scrollbar {
+::-webkit-scrollbar 
+{
     display: none;
 }
   
-.navbar {
+.navbar 
+{
     margin-right: 0;
     min-height: unset;
     padding-top: 0.15rem;
@@ -15,14 +17,16 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-.header-logo {
+.header-logo 
+{
     width: 50px;
     height: 50px;
     border-radius: 50%;
     box-shadow: 10px 10px 15px rgb(0, 0, 0);
 }
 
-h1 {
+h1 
+{
     font-family: "Honk", serif;
     font-optical-sizing: auto;
     font-weight: 200;
@@ -33,7 +37,8 @@ h1 {
     margin: 0;
 }
 
-.social-media {
+.social-media 
+{
     background: none;
     border: none;
     cursor: pointer;
@@ -44,36 +49,42 @@ h1 {
     height: 45px;
 }
 
-.social-media:hover {
+.social-media:hover 
+{
     background-color: rgba(255, 255, 255, 0.2);
 }
 
-.navbar-toggler {
+.navbar-toggler 
+{
     border: none;
     padding: 0.5rem;
     transition: transform 0.3s ease;
 }
 
-.navbar-toggler:focus {
+.navbar-toggler:focus 
+{
     box-shadow: none;
     outline: none;
 }
 
-.navbar-toggler[aria-expanded="true"] {
+.navbar-toggler[aria-expanded="true"] 
+{
     transform: rotate(90deg);
 }
 
-/* Animação do colapso do menu */
-.navbar-collapse {
+.navbar-collapse 
+{
     transition: height 0.3s ease;
     gap: 0;
 }
 
-.navbar-collapse.show {
+.navbar-collapse.show 
+{
     height: auto;
 }
 
-.nav-link {
+.nav-link 
+{
     font-family: "Honk", serif;
     color: rgba(255, 255, 255, 0.9);
     transition: all 0.3s ease;
@@ -87,7 +98,8 @@ h1 {
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
 }
 
-.nav-link:hover {
+.nav-link:hover 
+{
     background-color: rgba(81, 81, 81, 0.3);
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.5);
@@ -95,7 +107,8 @@ h1 {
                 inset 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
-.dropdown-menu {
+.dropdown-menu 
+{
     background-color: rgba(81, 81, 81, 0.4);
     backdrop-filter: blur(3px);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -105,7 +118,8 @@ h1 {
     width: auto;
 }
 
-.dropdown-item {
+.dropdown-item 
+{
     color: white;
     font-family: "Honk", serif;
     font-size: 30px;
@@ -115,7 +129,8 @@ h1 {
     margin: 2px 0;      
 }
 
-.dropdown-item:hover {
+.dropdown-item:hover 
+{
     background-color: rgba(81, 81, 81, 0.3);
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.5);
@@ -131,105 +146,108 @@ h6 {
     text-shadow: 10px 10px 15px rgb(30, 0, 44);
     color: rgb(168, 247, 201);
 }
- 
 
-@media (max-width: 768px) {
-  .navbar {
+@media (max-width: 768px) 
+{
+  .navbar 
+  {
     padding: 0.25rem 0.5rem;
   }
-    .container-fluid {
+  .container-fluid 
+  {
     padding: 0 5px;
   }
-.scene {
+  .scene 
+  {
     margin-top: 50px !important;
   }
-  footer {
+  footer 
+  {
     margin-top: var(--scene-height);
-}
-  .header-logo {
+  }
+  .header-logo 
+  {
     width: 40px;
     height: 40px;
   }
-  .navbar-collapse {
+  .navbar-collapse 
+  {
     display: flex;
     flex-wrap: wrap;
     text-align: center;
     justify-content: center;
   }
-  
-    .navbar-toggler {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.8rem;
+  .navbar-toggler 
+  {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.8rem;
   }
-  .navbar-nav {
+  .navbar-nav 
+  {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
     margin: 0.5rem 0;
   }
-  
-  .nav-item {
+  .nav-item 
+  {
     margin: 2px;
   }
-  
-  .nav-link {
+  .nav-link 
+  {
     font-size: 16px;
     padding: 3px 6px;
     margin: 2px 3px;
   }
-
-  .dropdown-item {
+  .dropdown-item 
+  {
     font-size: 15px;
     border-radius: 8px;
     padding: 5px 15px;
     margin: 2px 0;        
-}
-.dropdown-menu {
+  }
+  .dropdown-menu 
+  {
     border-radius: 5px;
     padding: 2px;    
-}
-.social-media {
+  }
+  .social-media 
+  {
     width: 30px;
     height: 30px;
   }
-
-.theme-toggle {
+  .theme-toggle 
+  {
     font-size: 20px;
   }
 }
 
-
-/* Solução específica para o intervalo 769px-992px */
-@media (min-width: 769px) and (max-width: 992px) {
-  /* Reduzir drasticamente o tamanho dos containers de nav-item */
-  .nav-link {
+@media (min-width: 769px) and (max-width: 992px) 
+{
+  .nav-link 
+  {
     font-size: 27px;
     padding-left: 8px;
     padding-right: 8px;
     margin: 2px;
   }
-
-  /* Forçar display flex em linha para todos os elementos */
-  .navbar-nav {
+  .navbar-nav 
+  {
     flex-direction: row;
     justify-content: center;
     margin-top: 0;
     margin-bottom: 0;
   }
-
-.dropdown-item {
+  .dropdown-item 
+  {
     font-size: 25px;
     border-radius: 8px;
     padding: 5px 15px;
-    margin: 2px 0;        
-}
-  /* Reduzir todos os espaçamentos */
-  .nav-item {
+    margin: 2px 0;
+  }
+  .nav-item 
+  {
     margin: 1px;
   }
-  
-
-
-
 }

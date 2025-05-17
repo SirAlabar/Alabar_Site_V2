@@ -5,14 +5,11 @@ class SceneManager
         // PIXI references - will be set by setBackgroundGroup
         this.app = null;
         this.backgroundGroup = null;
-        
         // Layer containers
         this.layers = {};
         this.parallaxEffect = null;
-        
         // Theme state
         this.currentTheme = localStorage.getItem('theme') || 'light';
-        
         // Layer configuration with parallax speeds
         this.layerConfig = [
             { id: 'background', speed: 0.0, zIndex: -11 },
@@ -28,28 +25,22 @@ class SceneManager
             { id: 'field2', speed: -0.1, zIndex: -3 },
             { id: 'field1', speed: 0.09, zIndex: -2 }
         ];
-        
         // Set up theme toggle button
         this.setupThemeToggle();
         // Resize listener to update scaling when window size changes
         window.addEventListener('resize', this.handleResize.bind(this));
     }
-    
-
      //Set the PIXI background group and app references
      //This will be called by Game.js to connect SceneManager with PIXI
     setBackgroundGroup(backgroundGroup, app) 
     {
         this.backgroundGroup = backgroundGroup;
         this.app = app;
-        
         // Now we can initialize the PIXI background
         this.createPixiScene();
-        
         // Apply the current theme
         this.applyTheme(this.currentTheme);
-        
-        return this; // For method chaining
+        return this;
     }
     
     /**
@@ -62,12 +53,10 @@ class SceneManager
             console.error("PIXI background group or app not set. Call setBackgroundGroup first.");
             return;
         }
-        
         // Clear existing layers if any
         this.backgroundGroup.removeChildren();
         this.layers = {};
         this.backgroundGroup.sortableChildren = true;
-        
         // Create each layer based on the configuration
         // We're creating empty containers first, textures will be applied later
         this.layerConfig.forEach(config => {
@@ -84,7 +73,6 @@ class SceneManager
             this.layers[config.id] = container;
         });
         this.backgroundGroup.position.set(0, 0);
-        console.log("PIXI scene created with layers:", Object.keys(this.layers));
     }
     
     // Apply a theme to the scene
@@ -95,25 +83,19 @@ class SceneManager
             console.warn("PIXI not initialized yet, skipping theme application");
             return;
         }
-        
         // Check if AssetManager is available
         if (!window.assetManager) 
         {
             console.error("AssetManager not available");
             return;
         }
-        
-        console.log(`Applying theme: ${theme}`);
-        
         // First, make all layers visible
         for (const [id, container] of Object.entries(this.layers)) 
         {
             container.visible = true;
         }
-        
         // Set up the base background (color or image)
         this.setupBackground(theme);
-        
         // Apply textures to each layer
         for (const [id, container] of Object.entries(this.layers)) 
         {
@@ -122,14 +104,12 @@ class SceneManager
             {
                 continue;
             }
-            
             // Skip clouds in dark theme
             if (id === 'clouds' && theme === 'dark') 
             {
                 container.visible = false;
                 continue;
             }
-            
             // Skip moon in light theme
             if (id === 'moon' && theme === 'light') 
             {
@@ -138,14 +118,11 @@ class SceneManager
             }
             // Clear existing sprites
             container.removeChildren();
-            
             // Get the texture for this layer
             const texture = window.assetManager.getBackgroundTexture(theme, id);
-            
             if (texture) 
             {
                 const sprite = new PIXI.Sprite(texture);
-                
                 // Add to container without setting dimensions yet
                 // We'll apply scaling to all sprites at once later
                 container.addChild(sprite);

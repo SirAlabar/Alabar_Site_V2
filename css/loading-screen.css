@@ -1,5 +1,6 @@
 /* Loading Screen Styles */
-:root {
+:root 
+{
     --primary-color: #3366ff;
     --secondary-color: #ff33cc;
     --accent-color-1: #33ccff;
@@ -7,7 +8,8 @@
 }
 
 /* Loading Screen Base Styles */
-#loading-screen {
+#loading-screen 
+{
     position: fixed;
     width: 100%;
     height: 100%;
@@ -22,12 +24,14 @@
     overflow: hidden;
 }
 
-#loading-canvas {
+#loading-canvas 
+{
     display: none; /* Not used anymore */
 }
 
 /* Loading Progress Bar */
-#loading-progress {
+#loading-progress 
+{
     position: relative;
     width: 300px;
     height: 10px;
@@ -41,7 +45,8 @@
     transform: translateX(-50%); /* Ensure it's centered */
 }
 
-#loading-bar {
+#loading-bar 
+{
     width: 0%;
     height: 100%;
     background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
@@ -52,7 +57,8 @@
 }
 
 /* Shimmer Effect for Loading Bar */
-#loading-bar::after {
+#loading-bar::after 
+{
     content: '';
     position: absolute;
     top: 0;
@@ -69,7 +75,8 @@
 }
 
 /* Loading Text */
-#loading-text {
+#loading-text 
+{
     color: white;
     font-family: "Honk", serif;
     font-size: 2rem;
@@ -80,7 +87,8 @@
 }
 
 /* Particles Container */
-.particles-container {
+.particles-container 
+{
     position: absolute;
     width: 100%;
     height: 100%;
@@ -91,7 +99,8 @@
 }
 
 /* Particle Styling */
-.particle {
+.particle 
+{
     position: absolute;
     background: var(--primary-color);
     border-radius: 50%;
@@ -102,23 +111,27 @@
 }
 
 /* Particle Color Variations */
-.particle:nth-child(3n) {
+.particle:nth-child(3n) 
+{
     background: var(--secondary-color);
     box-shadow: 0 0 10px 2px rgba(255, 51, 204, 0.8);
 }
 
-.particle:nth-child(3n+1) {
+.particle:nth-child(3n+1) 
+{
     background: var(--accent-color-1);
     box-shadow: 0 0 10px 2px rgba(51, 204, 255, 0.8);
 }
 
-.particle:nth-child(5n) {
+.particle:nth-child(5n) 
+{
     background: var(--accent-color-2);
     box-shadow: 0 0 10px 2px rgba(255, 204, 51, 0.8);
 }
 
 /* Magic Circle */
-.magic-circle {
+.magic-circle 
+{
     position: absolute;
     width: 200px;
     height: 200px;
@@ -132,7 +145,8 @@
 }
 
 /* Runes Around Magic Circle */
-.magic-rune {
+.magic-rune 
+{
     position: absolute;
     width: 30px;
     height: 30px;
@@ -145,20 +159,23 @@
     z-index: 9995;
 }
 
-.loading-complete .magic-circle {
+.loading-complete .magic-circle 
+{
     opacity: 0.8;
     transform: scale(1);
 }
 
 .loading-complete .magic-circle::before,
-.loading-complete .magic-circle::after {
+.loading-complete .magic-circle::after 
+{
     content: '';
     position: absolute;
     border: 1px dashed rgba(51, 204, 255, 0.6);
     border-radius: 50%;
 }
 
-.loading-complete .magic-circle::before {
+.loading-complete .magic-circle::before 
+{
     top: -10px;
     left: -10px;
     right: -10px;
@@ -166,7 +183,8 @@
     animation: rotateCircle 8s linear infinite;
 }
 
-.loading-complete .magic-circle::after {
+.loading-complete .magic-circle::after 
+{
     top: -20px;
     left: -20px;
     right: -20px;
@@ -174,17 +192,20 @@
     animation: rotateCircleReverse 12s linear infinite;
 }
 
-.loading-complete .particle {
+.loading-complete .particle 
+{
     animation: convergeToCenter 2s forwards;
 }
 
-.loading-complete #loading-text {
+.loading-complete #loading-text 
+{
     animation: pulseText 1.5s ease-in-out forwards;
     font-size: 3rem;
 }
 
 /* Completion Flash */
-.completion-flash {
+.completion-flash 
+{
     position: absolute;
     top: 0;
     left: 0;
@@ -197,13 +218,15 @@
 }
 
 /* Keyframe Animations */
-@keyframes shimmer {
+@keyframes shimmer 
+{
     100% {
         transform: translateX(100%);
     }
 }
 
-@keyframes particleFloat {
+@keyframes particleFloat 
+{
     0% {
         transform: translate(0, 0) scale(0.8) rotate(0deg);
         opacity: 0;
@@ -220,7 +243,8 @@
     }
 }
 
-@keyframes runeAppear {
+@keyframes runeAppear 
+{
     0% {
         transform: translate(-50%, -50%) scale(0) rotate(0deg);
         opacity: 0;
@@ -231,17 +255,20 @@
     }
 }
 
-@keyframes rotateCircle {
+@keyframes rotateCircle 
+{
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-@keyframes rotateCircleReverse {
+@keyframes rotateCircleReverse 
+{
     0% { transform: rotate(0deg); }
     100% { transform: rotate(-360deg); }
 }
 
-@keyframes convergeToCenter {
+@keyframes convergeToCenter 
+{
     0% {
         opacity: 0.8;
     }
@@ -255,34 +282,40 @@
     }
 }
 
-@keyframes pulseText {
+@keyframes pulseText 
+{
     0% { transform: scale(1); }
     50% { transform: scale(1.2); }
     100% { transform: scale(1); }
 }
 
-@keyframes flash {
+@keyframes flash 
+{
     0% { opacity: 0; }
     20% { opacity: 0.8; }
     100% { opacity: 0; }
 }
 
 
-.main-content {
+.main-content 
+{
     opacity: 0;
     transition: opacity 1s ease;
 }
 
-#loading-screen.fade-out {
+#loading-screen.fade-out 
+{
     opacity: 0;
     transition: opacity 1s ease;
 }
 
-.glow {
+.glow 
+{
     animation: glow 2s infinite ease-in-out;
 }
 
-@keyframes glow {
+@keyframes glow 
+{
     0% { filter: brightness(1); }
     50% { filter: brightness(1.5); }
     100% { filter: brightness(1); }

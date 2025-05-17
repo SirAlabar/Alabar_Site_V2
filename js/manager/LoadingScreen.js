@@ -161,7 +161,6 @@ class LoadingScreen
         app.stage.addChild(gameplayGroup);
         app.stage.addChild(uiGroup);
         
-        console.log("Render groups created for background, gameplay, and UI");
         app.stage.sortableChildren = true;
         app.stage.sortChildren();
         // Return the created groups for use by initSite
@@ -174,37 +173,9 @@ class LoadingScreen
 
     async initSite() 
     {
-        console.log("===== INÍCIO DE initSite() =====");
-
         const currentTheme = localStorage.getItem('theme') || 'light';
-        console.log(`Tema atual: ${currentTheme}`);
-
         const sceneElement = document.getElementById('main-scene');
         const gameContainer = document.getElementById('game-container');
-        //////////////////////
-        if (!sceneElement) {
-            console.error("ERROR: Elemento 'main-scene' não encontrado!");
-            return;
-        }
-        if (!gameContainer) {
-            console.error("ERROR: Elemento 'game-container' não encontrado!");
-            return;
-        }
-
-        console.log("Elementos DOM encontrados:", {
-            scene: {
-                id: sceneElement.id,
-                clientWidth: sceneElement.clientWidth,
-                clientHeight: sceneElement.clientHeight
-            },
-            gameContainer: {
-                id: gameContainer.id,
-                clientWidth: gameContainer.clientWidth,
-                clientHeight: gameContainer.clientHeight
-            }
-        });
-        //////////////////////////
-        console.log("Inicializando PIXI Application...");
         const app = new PIXI.Application();
         await app.init({
             background: 0x000000,
@@ -215,16 +186,9 @@ class LoadingScreen
             clearBeforeRender: true
         });
         sceneElement.appendChild(app.canvas);
-        sceneElement.style.height = '200vh';
-        console.log("Canvas anexado ao elemento:", app.canvas.parentElement.id);
-        console.log("Dimensões do canvas:", { 
-            width: app.canvas.width, 
-            height: app.canvas.height 
-        });
-        
+        sceneElement.style.height = '200vh';  
         // Create render groups using the dedicated method
         const { backgroundGroup, gameplayGroup, uiGroup } = this.createRenderGroups(app);
-        
         if (window.initSceneManager) 
         {
             window.initSceneManager();
@@ -234,72 +198,52 @@ class LoadingScreen
                 window.sceneManager.applyTheme(currentTheme);
             }
         }
-        
         if (window.Game) 
         {
             window.game = new Game();
             window.game.setGameplayGroup(gameplayGroup, app, gameContainer);
         }
-        
         if (window.CloudsManager && !window.cloudsManager && window.assetManager.getSpritesheet('clouds_spritesheet')) {
-            console.log("Creating CloudsManager instance");
             window.cloudsManager = new CloudsManager(app, backgroundGroup);
-            console.log("Initializing CloudsManager with theme:", currentTheme);
             window.cloudsManager.init(currentTheme);
-            console.log("CloudsManager initialization completed");
-        } else {
-            console.log("Deferring CloudsManager initialization until spritesheet is ready");
+        }
+        else 
+        {
             // Set up a retry mechanism
             const checkForSpritesheet = setInterval(() => {
                 if (window.assetManager.getSpritesheet('clouds_spritesheet')) {
                     clearInterval(checkForSpritesheet);
                     window.cloudsManager = new CloudsManager(app, backgroundGroup);
                     window.cloudsManager.init(currentTheme);
-                    console.log("CloudsManager initialization completed (delayed)");
                 }
-            }, 500); // Check every 500ms
+            }, 500);
         }
-        if (window.CursorEffectComponent) {
-            console.log("Criando CursorEffectComponent");
+        if (window.CursorEffectComponent) 
+        {
             window.cursorEffect = new CursorEffectComponent(null, app, uiGroup, {
                 particlesCount: 3,
             });
-            console.log("CursorEffectComponent inicializado");
-        } else {
-            console.error("CursorEffectComponent não disponível");
+        } 
+        else 
+        {
+            console.error("CursorEffectComponent not available");
         }
-            
-
-console.log("Verificando layout inicial...");
-
-// Verificar se estamos em uma tela grande com layout incorreto
-if (window.innerWidth > 768) {
-    console.log("Tela grande detectada, verificando layout");
-    
-    // Verificar se o layout está incorreto (navbar expandida mas não visível)
-    const navbarCollapse = document.getElementById('navbarSupportedContent');
-    const navbarToggler = document.querySelector('.navbar-toggler');
-    
-    if (navbarCollapse && !navbarCollapse.classList.contains('show')) {
-        console.log("Layout incorreto detectado em tela grande, forçando correção");
-        
-        // Forçar a classe show no navbar-collapse
-        navbarCollapse.classList.add('show');
-        
-        // Atualizar o estado do botão toggle, se existir
-        if (navbarToggler) {
-            navbarToggler.setAttribute('aria-expanded', 'true');
+        if (window.innerWidth > 768) 
+        {
+            const navbarCollapse = document.getElementById('navbarSupportedContent');
+            const navbarToggler = document.querySelector('.navbar-toggler');
+            if (navbarCollapse && !navbarCollapse.classList.contains('show')) 
+            {
+                navbarCollapse.classList.add('show');
+                if (navbarToggler) 
+                {
+                    navbarToggler.setAttribute('aria-expanded', 'true');
+                }
+                setTimeout(() => {
+                    window.dispatchEvent(new Event('resize'));
+                }, 100);
+            }
         }
-        
-        // Disparar um resize para garantir que outros componentes se ajustem
-        setTimeout(() => {
-            window.dispatchEvent(new Event('resize'));
-            console.log("Evento de resize disparado para corrigir layout");
-        }, 100);
-    }
-}
-
-        console.log('Site initialization complete');
     }
 }
 

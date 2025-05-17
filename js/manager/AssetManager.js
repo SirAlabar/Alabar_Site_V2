@@ -114,11 +114,11 @@ class AssetManager
 	 */
 	async loadAssets() 
 	{
-		try {
+		try 
+		{
 			const manifest = this.createManifest();
 			const bundleNames = manifest.bundles.map(bundle => bundle.name);
 			let loadedBundles = 0;
-			
 			// Load each bundle and track progress
 			for (const bundleName of bundleNames) 
 			{
@@ -164,19 +164,15 @@ class AssetManager
 		// Player bundle
 		const playerBundle = this.createPlayerBundle();
 		manifest.bundles.push(playerBundle);
-		
 		// Monsters bundle
 		const monstersBundle = this.createMonstersBundle();
 		manifest.bundles.push(monstersBundle);
-		
 		// Background bundles
 		const bgBundles = this.createBackgroundBundles();
 		manifest.bundles.push(...bgBundles);
-
 		// UI bundle
 		const uiBundle = this.createUiBundle();
 		manifest.bundles.push(uiBundle);
-
 		// Bundle of spritesheets
 		const spritesheetsBundle = this.createSpritesheetsBundle();
 		manifest.bundles.push(spritesheetsBundle);
@@ -293,32 +289,27 @@ class AssetManager
 	/**
 	 * Create bundle for spritesheets
 	 */
-	createSpritesheetsBundle() {
-		console.log("Creating spritesheets bundle");
-		console.log("Clouds paths:", this.assetPaths.clouds_spritesheet);
-		
+	createSpritesheetsBundle() 
+	{
 		const spritesheetsBundle = {
 			name: 'spritesheets',
 			assets: []
 		};
 		
 		// Add clouds spritesheet
-		if (this.assetPaths.clouds_spritesheet) {
-			console.log("Adding clouds to bundle:", {
-				data: this.assetPaths.clouds_spritesheet.data,
-				texture: this.assetPaths.clouds_spritesheet.texture
-			});
-			
+		if (this.assetPaths.clouds_spritesheet) 
+		{
 			spritesheetsBundle.assets.push({
 				alias: 'clouds_spritesheet_json',
 				src: this.assetPaths.clouds_spritesheet.data
 			});
-			
 			spritesheetsBundle.assets.push({
 				alias: 'clouds_spritesheet_texture',
 				src: this.assetPaths.clouds_spritesheet.texture
 			});
-		} else {
+		} 
+		else 
+		{
 			console.error("clouds_spritesheet not found in assetPaths!");
 		}
 		
@@ -348,9 +339,8 @@ class AssetManager
 		}
 		else if (bundleName === 'spritesheets') 
 		{
-			console.log("Processing spritesheets bundle resources:", Object.keys(resources));
-			for (const [alias, resource] of Object.entries(resources)) {
-				console.log(`Adding resource ${alias} to textures`);
+			for (const [alias, resource] of Object.entries(resources)) 
+			{
 				this.textures[alias] = resource;
 			}
 		}
@@ -409,10 +399,12 @@ class AssetManager
 	 * Process spritesheets with modern PixiJS 8.x approach
 	 * Using direct loading for simplicity
 	 */
-	async processSpritesheets() {
-		try {
-			console.log("=== STARTING SPRITESHEET PROCESSING ===");
-			console.log("Available spritesheets before processing:", Object.keys(this.spritesheets));
+	async processSpritesheets() 
+	{
+		try 
+		{
+			// console.log("=== STARTING SPRITESHEET PROCESSING ===");
+			// console.log("Available spritesheets before processing:", Object.keys(this.spritesheets));
 
 			// Define spritesheets to load directly from their JSON files
 			const spritesheetsToLoad = [
@@ -427,51 +419,47 @@ class AssetManager
 					path: this.assetPaths.player.data
 				}
 			];
-
 			// Add monster spritesheets
-			for (const [monsterType, info] of Object.entries(this.assetPaths.monsters)) {
+			for (const [monsterType, info] of Object.entries(this.assetPaths.monsters)) 
+			{
 				spritesheetsToLoad.push({
 					name: `${monsterType}_spritesheet`,
 					path: info.data
 				});
 			}
-
-			console.log(`Processing ${spritesheetsToLoad.length} spritesheets...`);
-
+			// console.log(`Processing ${spritesheetsToLoad.length} spritesheets...`);
 			// Simply load each spritesheet directly
-			for (const sheet of spritesheetsToLoad) {
+			for (const sheet of spritesheetsToLoad) 
+			{
 				// Skip if already loaded
-				if (this.spritesheets[sheet.name]) {
-					console.log(`- Spritesheet ${sheet.name} already loaded, skipping`);
+				if (this.spritesheets[sheet.name])
+				{
+					// console.log(`- Spritesheet ${sheet.name} already loaded, skipping`);
 					continue;
 				}
-
-				console.log(`- Loading ${sheet.name} from ${sheet.path}`);
-				
-				try {
-					// Direct loading is the simplest approach
-					// PixiJS will handle parsing the JSON and extracting frames automatically
+				// console.log(`- Loading ${sheet.name} from ${sheet.path}`);
+				try 
+				{
 					const spritesheet = await PIXI.Assets.load(sheet.path);
-					
-					// Store the result
 					this.spritesheets[sheet.name] = spritesheet;
-					
-					// Log success
 					const frameCount = spritesheet.textures ? Object.keys(spritesheet.textures).length : 0;
-					console.log(`- Successfully loaded ${sheet.name} with ${frameCount} frames`);
-				} catch (error) {
+					// console.log(`- Successfully loaded ${sheet.name} with ${frameCount} frames`);
+				} 
+				catch (error) 
+				{
 					console.error(`- Failed to load ${sheet.name}:`, error);
 				}
 			}
-			
-			console.log("\n=== FINAL SPRITESHEET PROCESSING SUMMARY ===");
-			console.log("Processed spritesheets:", Object.keys(this.spritesheets));
-			for (const [key, sheet] of Object.entries(this.spritesheets)) {
-				const frameCount = sheet.textures ? Object.keys(sheet.textures).length : 0;
-				console.log(`- ${key}: ${frameCount} frames`);
-			}
-			
-		} catch (error) {
+			// console.log("\n=== FINAL SPRITESHEET PROCESSING SUMMARY ===");
+			// console.log("Processed spritesheets:", Object.keys(this.spritesheets));
+			// for (const [key, sheet] of Object.entries(this.spritesheets)) 
+			// {
+			// 	const frameCount = sheet.textures ? Object.keys(sheet.textures).length : 0;
+			// 	console.log(`- ${key}: ${frameCount} frames`);
+			// }
+		} 
+		catch (error) 
+		{
 			console.error("GLOBAL ERROR in spritesheet processing:", error);
 		}
 	}
@@ -517,8 +505,10 @@ class AssetManager
 	/**
 	 * Get a spritesheet by name
 	 */
-	getSpritesheet(name) {
-		if (this.spritesheets[name]) {
+	getSpritesheet(name) 
+	{
+		if (this.spritesheets[name]) 
+		{
 			return this.spritesheets[name];
 		}
 		console.warn(`Spritesheet not found: ${name}`);
@@ -528,9 +518,11 @@ class AssetManager
 	/**
 	 * Get all frames from a spritesheet
 	 */
-	getSpriteFrames(spritesheetName) {
+	getSpriteFrames(spritesheetName) 
+	{
 		const spritesheet = this.getSpritesheet(spritesheetName);
-		if (spritesheet && spritesheet.textures) {
+		if (spritesheet && spritesheet.textures) 
+		{
 			return Object.values(spritesheet.textures);
 		}
 		console.warn(`No frames found for spritesheet: ${spritesheetName}`);
@@ -559,7 +551,7 @@ class AssetManager
 			else if (theme === 'dark') 
 			{
 				// Dark theme uses a background image
-				result.color = 0x000000; // Black base
+				result.color = 0x000000;
 				result.useTexture = true;
 				// Try to load the background texture
 				try 
