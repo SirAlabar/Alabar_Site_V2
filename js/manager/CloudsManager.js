@@ -725,6 +725,7 @@ class CloudsManager {
 		if (this.currentTheme === 'light' && this.initialized) 
 		{
 			this.updateCloudScaling();
+			this.refreshClouds() 
 		}
 	}
 	
