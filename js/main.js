@@ -6,11 +6,11 @@ import { CloudsManager } from './manager/CloudsManager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    const swordButton = createSwordButton();
+	const swordButton = createSwordButton();
 
-    const loadingManager = new LoadingManager();
+	const loadingManager = new LoadingManager();
 
-    loadingManager.start();
+	loadingManager.start();
 
-    console.log('Application initialization started');
+	console.log('Application initialization started');
 });

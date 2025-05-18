@@ -6,12 +6,13 @@ import { lerp, boundValue } from '../utils/MathUtils.js';
  * Creates and manages cloud sprites with custom animations
  */
 export class CloudsManager {
-	constructor(app, backgroundGroup, assetManager) 
+	constructor(app, backgroundGroup, assetManager, sceneManager) 
 	{
 		// Store PixiJS references
 		this.app = app;
 		this.backgroundGroup = backgroundGroup;
-        this.assetManager = assetManager;
+		this.assetManager = assetManager;
+		this.sceneManager = sceneManager;
 		// Cloud container
 		this.cloudsContainer = new PIXI.Container();
 		this.cloudsContainer.name = 'clouds';
@@ -129,11 +130,11 @@ export class CloudsManager {
 		const themeToggle = document.getElementById('theme-toggle');
 		const themeToggleMobile = document.getElementById('theme-toggle-mobile');
 		
-		if (window.sceneManager) 
+		if (this.sceneManager) 
 		{
-			const originalToggleTheme = window.sceneManager.toggleTheme;
-			window.sceneManager.toggleTheme = () => {
-				originalToggleTheme.call(window.sceneManager);
+			const originalToggleTheme = this.sceneManager.toggleTheme;
+			this.sceneManager.toggleTheme = () => {
+				originalToggleTheme.call(this.sceneManager);
 				
 				const newTheme = document.body.getAttribute('data-theme') || 'light';
 				
@@ -494,9 +495,9 @@ export class CloudsManager {
 	//Get the current scene height
 	getSceneHeight() 
 	{
-		if (window.sceneManager && window.sceneManager.app) 
+		if (this.sceneManager && this.sceneManager.app) 
 		{
-			return window.sceneManager.app.screen.height * 0.35;
+			return this.sceneManager.app.screen.height * 0.35;
 		}
 		// Fallback:
 		return window.innerHeight * 0.55;
@@ -511,10 +512,10 @@ export class CloudsManager {
 		try 
 		{
 			// First try to get scale info from SceneManager if available
-			if (window.sceneManager && window.sceneManager.backgroundGroup) 
+			if (this.sceneManager && this.sceneManager.backgroundGroup) 
 			{
 				// Find the background or layer scale
-				const backgroundGroup = window.sceneManager.backgroundGroup;
+				const backgroundGroup = this.sceneManager.backgroundGroup;
 				if (backgroundGroup.children && backgroundGroup.children.length > 0) 
 				{
 					// Check layers

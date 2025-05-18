@@ -3,12 +3,13 @@ import { lerp, boundValue } from '../utils/MathUtils.js';
 
 export class SceneManager 
 {
-	constructor(assetManager) 
+	constructor(assetManager,  cloudsManager) 
 	{
 		// PIXI references - will be set by setBackgroundGroup
 		this.app = null;
 		this.backgroundGroup = null;
 		this.assetManager = assetManager;
+		this.cloudsManager = cloudsManager;
 		// Layer containers
 		this.layers = {};
 		this.parallaxEffect = null;
@@ -37,6 +38,11 @@ export class SceneManager
 		
 		// Resize listener to update scaling when window size changes
 		window.addEventListener('resize', this.handleResize.bind(this));
+	}
+
+	setCloudsManager(cloudsManager) 
+	{
+		this.cloudsManager = cloudsManager;
 	}
 
 	// Set the PIXI background group and app references
@@ -159,15 +165,15 @@ export class SceneManager
 		this.applySpecialEffects(theme);
 
 		// Update the cloud system if available
-		if (window.cloudsManager) 
+		if (this.cloudsManager) 
 		{
 			if (theme === 'light') 
 			{
-				window.cloudsManager.init(theme);
+				this.cloudsManager.init(theme);
 			} 
 			else 
 			{
-				window.cloudsManager.hideAllClouds();
+				this.cloudsManager.hideAllClouds();
 			}
 		}
 
@@ -480,17 +486,17 @@ export class SceneManager
 		document.body.setAttribute('data-theme', newTheme);
 		
 		// Update clouds if CloudsManager exists
-		if (window.cloudsManager) 
+		if (this.cloudsManager) 
 		{
 			try 
 			{
-				if (typeof window.cloudsManager.init === 'function') 
+				if (typeof this.cloudsManager.init === 'function') 
 				{
-					window.cloudsManager.init(newTheme);
+					this.cloudsManager.init(newTheme);
 				} 
-				else if (typeof window.cloudsManager.refreshClouds === 'function') 
+				else if (typeof this.cloudsManager.refreshClouds === 'function') 
 				{
-					window.cloudsManager.refreshClouds();
+					this.cloudsManager.refreshClouds();
 				}
 			} 
 			catch (error) 
@@ -795,15 +801,15 @@ export class SceneManager
 // Function to initialize the SceneManager
 export function getSceneManager(assetManager) 
 {
-    if (!window.sceneManager) 
+	if (!window.sceneManager) 
 	{
-        window.sceneManager = new SceneManager(assetManager);
-    }
-    return window.sceneManager;
+		window.sceneManager = new SceneManager(assetManager);
+	}
+	return window.sceneManager;
 }
 
 
 export function initSceneManager(assetManager) 
 {
-    return getSceneManager(assetManager);
+	return getSceneManager(assetManager);
 }

@@ -13,7 +13,7 @@ export class CursorEffectComponent
 		this.game = game;
 		this.app = app;
 		this.uiGroup = uiGroup;
-    this.assetManager = assetManager;
+		this.assetManager = assetManager;
 		
 		// Check if we have the necessary dependencies
 		if (!this.app || !this.uiGroup) 
@@ -63,39 +63,39 @@ export class CursorEffectComponent
 	/**
 	 * Initialize the component
 	 */
-  init() 
-  {
-      if (this.isInitialized)
-      {
-        return;
-      }
-      
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme) 
-      {
-          this.currentTheme = savedTheme;
-      } 
-      else 
-      {
-          this.currentTheme = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-      }
-      
-      // Configure PIXI containers
-      this.setupContainers();
-      // Load textures and create cursor sprite with correct theme
-      this.loadTextures().then(() => {
-          this.createCursorSprite();
-          if (this.cursorSprite) 
-          {
-              this.cursorSprite.visible = false;
-          }
-      });
-      // Set up theme change observer
-      this.observeThemeChanges();
-      // Add event listeners
-      this.bindEvents();
-      this.isInitialized = true;
-  }
+	init() 
+	{
+			if (this.isInitialized)
+			{
+				return;
+			}
+			
+			const savedTheme = localStorage.getItem('theme');
+			if (savedTheme) 
+			{
+					this.currentTheme = savedTheme;
+			} 
+			else 
+			{
+					this.currentTheme = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+			}
+			
+			// Configure PIXI containers
+			this.setupContainers();
+			// Load textures and create cursor sprite with correct theme
+			this.loadTextures().then(() => {
+					this.createCursorSprite();
+					if (this.cursorSprite) 
+					{
+							this.cursorSprite.visible = false;
+					}
+			});
+			// Set up theme change observer
+			this.observeThemeChanges();
+			// Add event listeners
+			this.bindEvents();
+			this.isInitialized = true;
+	}
 
 	/**
 	 * Set up PIXI containers for particles
@@ -111,7 +111,7 @@ export class CursorEffectComponent
 		this.uiGroup.zIndex = 1000;
 		// Force sorting if parent has sortableChildren
 		if (this.uiGroup.parent && this.uiGroup.parent.sortableChildren) 
-    {
+		{
 			this.uiGroup.parent.sortChildren();
 		}
 	}
@@ -122,13 +122,13 @@ export class CursorEffectComponent
 	async loadTextures() 
 	{
 		try 
-    {
+		{
 			// Get textures directly from AssetManager
-      if (this.assetManager && this.assetManager.textures) 
-      {
-          this.cursorLightTexture = this.assetManager.textures.cursor_light;
-          this.cursorDarkTexture = this.assetManager.textures.cursor_dark;
-      }
+			if (this.assetManager && this.assetManager.textures) 
+			{
+					this.cursorLightTexture = this.assetManager.textures.cursor_light;
+					this.cursorDarkTexture = this.assetManager.textures.cursor_dark;
+			}
 		} 
 		catch (error) 
 		{
@@ -192,9 +192,9 @@ export class CursorEffectComponent
 	onThemeChange(newTheme) 
 	{
 		if (newTheme === this.currentTheme) 
-    {
-      return;
-    }
+		{
+			return;
+		}
 		
 		this.currentTheme = newTheme;
 		// Update cursor texture
