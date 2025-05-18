@@ -31,7 +31,7 @@ class SceneManager
 		window.addEventListener('resize', this.handleResize.bind(this));
 	}
 	 //Set the PIXI background group and app references
-	 //This will be called by Game.js to connect SceneManager with PIXI
+
 	setBackgroundGroup(backgroundGroup, app) 
 	{
 		this.backgroundGroup = backgroundGroup;
@@ -255,74 +255,121 @@ class SceneManager
 		container.addChild(bgSprite);
 		return bgSprite;
 	}
-	 //Apply special visual effects to certain layers
-	applySpecialEffects(theme)
-	{
-		// Moon animation in dark theme
-		if (theme === 'dark' && this.layers['moon']) 
-		{
-			const moonContainer = this.layers['moon'];
-			if (moonContainer.children.length > 0) 
-			{
-				const moonSprite = moonContainer.children[0];
-				
-				// Add a simple glow effect using core PIXI filters
-				try 
-				{
-					// Create a simple glow effect without GlowFilter
-					// Since GlowFilter is part of pixi-filters package which we may not have
-					if (PIXI.filters && PIXI.filters.ColorMatrixFilter) 
-					{
-						// Use ColorMatrixFilter for a simple brightness effect
-						const brightFilter = new PIXI.filters.ColorMatrixFilter();
-						brightFilter.brightness(1.3); // Increase brightness for glow effect
-						
-						// Create a blur filter for soft edges
-						const blurFilter = new PIXI.filters.BlurFilter(2);
-						blurFilter.quality = 1; // Lower quality for better performance
-						
-						// Apply filters
-						moonSprite.filters = [brightFilter, blurFilter];
-					} 
-					else 
-					{
-						console.log("ColorMatrixFilter not available, skipping glow effect");
-					}
-				} 
-				catch (error) 
-				{
-					console.warn("Error applying filter to moon:", error);
-					// Continue without filter
-				}
-				
-				// Set up animation
-				this.animateMoon(moonSprite);
-			}
-		}
-		
-		// Cloud effects will be handled separately by CloudsManager
-	}
-	
-	/**
-	 * Animate the moon with floating effect
-	 * @param {PIXI.Sprite} moonSprite - The moon sprite to animate
-	 */
-	animateMoon(moonSprite)
-	{
-		// Store original position
-		const originalY = moonSprite.position.y;
-		
-		// Create animation function
-		const animate = (delta) => {
-			// Simple sine wave movement
-			const time = performance.now() / 1000;
-			moonSprite.position.y = originalY + Math.sin(time * 0.5) * 10;
-		};
-		
-		// Add to ticker
-		this.app.ticker.add(animate);
-	}
-	
+    
+    applySpecialEffects(theme) 
+    {
+        if (theme === 'dark' && this.layers['moon']) 
+        {
+            const moonContainer = this.layers['moon'];
+            
+            if (moonContainer.children.length > 0) 
+            {
+                const moonSprite = moonContainer.children[0];
+                const originalY = moonSprite.position.y;
+                // Clean up previous effects
+                if (moonSprite.glowEffects) 
+                {
+                    moonSprite.glowEffects.forEach(effect => {
+                        if (effect.parent) effect.parent.removeChild(effect);
+                    });
+                }
+                // Initialize glow effects array
+                moonSprite.glowEffects = [];
+                // Configure glow layers - Adjust scale values to increase/decrease glow size
+                const glowLayers = [
+                    { scale: 1.015, alpha: 0.15 }, // First layer (closest to moon)
+                    { scale: 1.025, alpha: 0.1 },  // Middle layer
+                    { scale: 1.035, alpha: 0.05 }  // Outer layer (increase for wider glow)
+                ];
+                moonSprite.glowLayers = glowLayers;
+                // Get moon anchor points
+                const moonAnchorX = moonSprite.anchor.x;
+                const moonAnchorY = moonSprite.anchor.y;
+                // Create each glow layer
+                glowLayers.forEach(setting => {
+                    const glowSprite = new PIXI.Sprite(moonSprite.texture);
+                    
+                    // Match moon anchor points
+                    glowSprite.anchor.set(moonAnchorX, moonAnchorY);
+                    
+                    // Set initial scale based on configuration
+                    glowSprite.scale.set(
+                        moonSprite.scale.x * setting.scale,
+                        moonSprite.scale.y * setting.scale
+                    );
+                    // Configure appearance
+                    glowSprite.alpha = setting.alpha;
+                    glowSprite.tint = 0xFFFFFF;
+                    // Add to container behind moon
+                    moonContainer.addChildAt(glowSprite, 0);
+                    moonSprite.glowEffects.push(glowSprite);
+                });
+                // Animation function
+                const animate = (delta) => {
+                    const time = performance.now() / 1000;
+                    // Moon floating animation
+                    moonSprite.position.y = originalY + Math.sin(time * 0.4) * 10;
+                    // Animate glow layers
+                    if (moonSprite.glowEffects && moonSprite.glowEffects.length) 
+                    {
+                        const layers = moonSprite.glowLayers;
+                        
+                        moonSprite.glowEffects.forEach((glow, index) => {
+                            // Position glow layers (offset by -10px for better centering)
+                            glow.position.x = moonSprite.position.x - 10;
+                            glow.position.y = moonSprite.position.y - 10;
+                            // Create phase offset for each layer
+                            const phaseOffset = index * 0.3;
+                            // Pulsing effect - controls the "breathing" of the glow
+                            const pulse = (Math.sin((time + phaseOffset) * 0.6) + 1) / 2;
+                            // Adjust opacity with pulse
+                            const baseAlpha = layers[index].alpha;
+                            glow.alpha = baseAlpha * (0.7 + pulse * 0.6);
+                            // Apply uniform scale with pulsing variation
+                            // Adjust scaleVariation (0.025) to increase/decrease pulse intensity
+                            const baseScale = layers[index].scale;
+                            const scaleVariation = 1 + (pulse * 0.025);
+                            glow.scale.set(
+                                moonSprite.scale.x * baseScale * scaleVariation,
+                                moonSprite.scale.y * baseScale * scaleVariation
+                            );
+                        });
+                    }
+                };
+                // Remove previous animation if exists
+                if (moonSprite.moonAnimation) 
+                {
+                    this.app.ticker.remove(moonSprite.moonAnimation);
+                }
+                // Add animation to ticker
+                this.app.ticker.add(animate);
+                moonSprite.moonAnimation = animate;
+            }
+        } 
+        else if (theme === 'light') 
+        {
+            // Clean up any moon effects when in light theme
+            const moonContainer = this.layers['moon'];
+            if (moonContainer && moonContainer.children.length > 0) 
+            {
+                const moonSprite = moonContainer.children[0];
+                
+                if (moonSprite && moonSprite.glowEffects) 
+                {
+                    moonSprite.glowEffects.forEach(effect => {
+                        if (effect.parent) effect.parent.removeChild(effect);
+                    });
+                    moonSprite.glowEffects = [];
+                }
+                if (moonSprite && moonSprite.moonAnimation) 
+                {
+                    this.app.ticker.remove(moonSprite.moonAnimation);
+                    moonSprite.moonAnimation = null;
+                }
+            }
+        }
+    }
+
 	/**
 	 * Setup the theme toggle button
 	 */
