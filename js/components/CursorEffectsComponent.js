@@ -62,32 +62,39 @@ class CursorEffectComponent
 	/**
 	 * Initialize the component
 	 */
-	init() 
-	{
-		if (this.isInitialized) return;
-		
-		// Get current theme from body attribute
-		this.currentTheme = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-		
-		// Configure PIXI containers
-		this.setupContainers();
-		
-		// Load textures and create cursor sprite
-		this.loadTextures().then(() => {
-			this.createCursorSprite();
-			if (this.cursorSprite) {
-				this.cursorSprite.visible = false;
-			}
-		});
-		
-		// Set up theme change observer
-		this.observeThemeChanges();
-		
-		// Add event listeners
-		this.bindEvents();
-		
-		this.isInitialized = true;
-	}
+  init() 
+  {
+      if (this.isInitialized)
+      {
+        return;
+      }
+      
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) 
+      {
+          this.currentTheme = savedTheme;
+      } 
+      else 
+      {
+          this.currentTheme = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      }
+      
+      // Configure PIXI containers
+      this.setupContainers();
+      // Load textures and create cursor sprite with correct theme
+      this.loadTextures().then(() => {
+          this.createCursorSprite();
+          if (this.cursorSprite) 
+          {
+              this.cursorSprite.visible = false;
+          }
+      });
+      // Set up theme change observer
+      this.observeThemeChanges();
+      // Add event listeners
+      this.bindEvents();
+      this.isInitialized = true;
+  }
 
 	/**
 	 * Set up PIXI containers for particles
