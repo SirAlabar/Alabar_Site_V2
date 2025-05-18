@@ -122,7 +122,7 @@ export class SceneManager
 		for (const [id, container] of Object.entries(this.layers)) 
 		{
 			// Skip the background layer, it's handled separately
-			if (id === 'background')
+			if (id === 'background' || id === 'clouds') 
 			{
 				continue;
 			}

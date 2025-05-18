@@ -403,9 +403,6 @@ export class AssetManager
 	{
 		try 
 		{
-			// console.log("=== STARTING SPRITESHEET PROCESSING ===");
-			// console.log("Available spritesheets before processing:", Object.keys(this.spritesheets));
-
 			// Define spritesheets to load directly from their JSON files
 			const spritesheetsToLoad = [
 				// Clouds spritesheet
@@ -419,6 +416,7 @@ export class AssetManager
 					path: this.assetPaths.player.data
 				}
 			];
+			
 			// Add monster spritesheets
 			for (const [monsterType, info] of Object.entries(this.assetPaths.monsters)) 
 			{
@@ -427,40 +425,30 @@ export class AssetManager
 					path: info.data
 				});
 			}
-			// console.log(`Processing ${spritesheetsToLoad.length} spritesheets...`);
+			
 			// Simply load each spritesheet directly
 			for (const sheet of spritesheetsToLoad) 
 			{
 				// Skip if already loaded
-				if (this.spritesheets[sheet.name])
+				if (this.spritesheets[sheet.name]) 
 				{
-					// console.log(`- Spritesheet ${sheet.name} already loaded, skipping`);
 					continue;
 				}
-				// console.log(`- Loading ${sheet.name} from ${sheet.path}`);
+				
 				try 
 				{
 					const spritesheet = await PIXI.Assets.load(sheet.path);
 					this.spritesheets[sheet.name] = spritesheet;
-					const frameCount = spritesheet.textures ? Object.keys(spritesheet.textures).length : 0;
-					// console.log(`- Successfully loaded ${sheet.name} with ${frameCount} frames`);
 				} 
 				catch (error) 
 				{
-					console.error(`- Failed to load ${sheet.name}:`, error);
+					console.error(`Failed to load ${sheet.name}:`, error);
 				}
 			}
-			// console.log("\n=== FINAL SPRITESHEET PROCESSING SUMMARY ===");
-			// console.log("Processed spritesheets:", Object.keys(this.spritesheets));
-			// for (const [key, sheet] of Object.entries(this.spritesheets)) 
-			// {
-			// 	const frameCount = sheet.textures ? Object.keys(sheet.textures).length : 0;
-			// 	console.log(`- ${key}: ${frameCount} frames`);
-			// }
 		} 
 		catch (error) 
 		{
-			console.error("GLOBAL ERROR in spritesheet processing:", error);
+			console.error("Error in spritesheet processing:", error);
 		}
 	}
 

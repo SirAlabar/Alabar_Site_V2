@@ -67,12 +67,12 @@ export class LoadingManager
 	   // Initialize PIXI application
 	   const app = new PIXI.Application();
 	   await app.init({
-		   background: 0x000000,
-		   backgroundAlpha: 0,
-		   resizeTo: sceneElement,  
-		   antialias: true,
-		   useBackBuffer: true,
-		   clearBeforeRender: true
+			background: 0x000000,
+			backgroundAlpha: 0,
+			resizeTo: sceneElement,  
+			antialias: true,
+			useBackBuffer: true,
+			clearBeforeRender: true
 	   });
 	   
 	   sceneElement.appendChild(app.canvas);
