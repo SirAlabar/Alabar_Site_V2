@@ -1,348 +1,822 @@
 /**
- * CloudsManager.js
- * Manages the creation and animation of clouds in the scene
+ * CloudsManager.js for PixiJS
+ * Creates and manages cloud sprites with custom animations
  */
+class CloudsManager {
+	constructor(app, backgroundGroup) 
+	{
+		// Store PixiJS references
+		this.app = app;
+		this.backgroundGroup = backgroundGroup;
+		// Cloud container
+		this.cloudsContainer = new PIXI.Container();
+		this.cloudsContainer.name = 'clouds';
+		this.cloudsContainer.position.set(0, 0);
+		this.cloudsContainer.zIndex = -9;
+		// Add to background group if available
+		if (this.backgroundGroup) 
+		{
+			this.backgroundGroup.addChild(this.cloudsContainer);
+		}
+		// Cloud settings
+		this.config = {
+			minClouds: 3,
+			maxClouds: 10,
+			minDistance: 100,
+			containerHeight: this.getSceneHeight(),
+			minScale: 0.5,
+			maxScale: 2.5,
+			spritesheetName: 'clouds_spritesheet'
+		};
+		// Animation type probabilities
+		this.animationTypes = [
+			'driftLeftToRight',
+			'driftRightToLeft',
+			'driftDiagonalUp',
+			'driftSlow'
+		];
+		// Animation speeds (matching CSS classes)
+		this.formationSpeeds = [
+			{ formationTime: 4000, driftDelay: 0 },
+			{ formationTime: 5000, driftDelay: 1000 },
+			{ formationTime: 6000, driftDelay: 2000 }
+		];
+		// Opacity levels 
+		this.opacityLevels = [
+			0.2,
+			0.3,
+			0.5,
+			0.7,
+			0.8 
+		];
+		// Collection of active cloud sprites
+		this.activeCloudSprites = [];
+		// Setup flags
+		this.initialized = false;
+		this.initInProgress = false;
+		this.isDestroyed = false;
+		// Current theme
+		this.currentTheme = document.body.getAttribute('data-theme') || 'light';
+	}
 
-class CloudsManager 
-{
-    constructor() 
-    {
-        // Cloud settings
-        this.config = {
-            minClouds: 4,
-            maxClouds: 11,
-            minDistance: 20,
-            containerHeight: '50%',
-            spriteSheetSize: '1024px 800px'
-        };
-        
-        // Frame, animation, speed and opacity classes
-        this.framePositions = [
-            '0px 0px', '-338px 0px', '-676px 0px',
-            '0px -200px', '-338px -200px', '-676px -200px',
-            '0px -400px', '-338px -400px', '-676px -400px',
-            '0px -600px', '-338px -600px', '-676px -600px'
-        ];
-        
-        this.animationClasses = [
-            'anim-combo-1',   
-            'anim-combo-2',     
-            'anim-combo-3',   
-            'anim-combo-4'    
-        ];
-        
-        this.formSpeedClasses = [
-            'form-speed-1',
-            'form-speed-2',
-            'form-speed-3',
-        ];
-        
-        this.opacityClasses = [
-            'opacity-light',
-            'opacity-medium',
-            'opacity-full'
-        ];
-        this.initialized = false;
-        this.initInProgress = false;
-        this.initTimer = null;
-        // Check if current theme allows showing clouds
-        this.currentTheme = document.body.getAttribute('data-theme') || 'light';
-    }
-    
-    init() 
-    {
-        // Prevent multiple simultaneous initialization attempts
-        if (this.initInProgress) 
-        {
-            return;
-        }
-        // If already initialized, just refresh the clouds
-        if (this.initialized) 
-        {
-            this.refreshClouds();
-            return;
-        }
-        this.initInProgress = true;
-        // Check if the CSS variable for cloud image is defined
-        const computedStyle = getComputedStyle(document.documentElement);
-        const cloudImageValue = computedStyle.getPropertyValue('--clouds-image').trim();
-        if (!cloudImageValue || cloudImageValue === 'none') 
-        {
-            this.initInProgress = false;
-            return;
-        }
-        // Create clouds
-        this.refreshClouds();
-        this.startCloudLifecycle();
-        // Set up cloud updates on theme changes
-        this.setupThemeListeners();
-        this.initialized = true;
-        this.initInProgress = false;
-    }
-    
-    setupThemeListeners() 
-    {
-        const themeToggle = document.getElementById('theme-toggle');
-        if (themeToggle) 
-        {
-            themeToggle.addEventListener('click', () => {
-                // Update current theme
-                this.currentTheme = document.body.getAttribute('data-theme') || 'light';
-                // Small delay to allow theme change to occur first
-                setTimeout(() => this.refreshClouds(), 500);
-            });
-        }
-    }
-    
-    startCloudLifecycle() 
-    {
-        this.cloudLifecycleInterval = setInterval(() => {
-            if (this.initialized && this.currentTheme === 'light') 
-            {
-                this.manageCloudLifecycle();
-            }
-        }, 5000); // Check every 5 seconds
-    }
+	/**
+	 * Initialize the clouds manager
+	 */
+	init(theme) 
+	{
+		// Prevent multiple simultaneous initialization attempts
+		if (this.initInProgress || this.isDestroyed) 
+		{
+			return;
+		}
+		// If already initialized, just refresh the clouds
+		if (this.initialized) 
+		{
+			this.refreshClouds();
+			return;
+		}
+		this.initInProgress = true;
+		// Check if we have access to the asset manager and app
+		if (!window.assetManager || !this.app) 
+		{
+			console.error('CloudsManager: assetManager or PixiJS app not available');
+			this.initInProgress = false;
+			return;
+		}
+		// Verify that the clouds spritesheet is loaded
+		const cloudsSpritesheet = window.assetManager.getSpritesheet(this.config.spritesheetName);
+		if (!cloudsSpritesheet) 
+		{
+			console.warn(`CloudsManager: ${this.config.spritesheetName} not found - will retry later`);
+			this.initInProgress = false;
+			// Set up a retry mechanism
+			setTimeout(() => this.init(theme), 2000);
+			return;
+		}
+		// Set current theme from parameter or get from document
+		if (theme) 
+		{
+			this.currentTheme = theme;
+		} 
+		else 
+		{
+			this.currentTheme = document.body.getAttribute('data-theme') || 'light';
+		}
+		
+		// Only proceed with cloud creation for light theme
+		if (this.currentTheme === 'light') 
+		{
+			// Create initial clouds
+			this.refreshClouds();
+			// Set up the cloud lifecycle ticker
+			this.startCloudLifecycle();
+		} 
+		// Set up theme change listener
+		this.setupThemeListeners();
+		// Listen for window resize
+		window.addEventListener('resize', this.onResize.bind(this));
+		this.initialized = true;
+		this.initInProgress = false;
+	}
+	
+	//Set up theme change listeners
+	setupThemeListeners() 
+	{
+		const themeToggle = document.getElementById('theme-toggle');
+		const themeToggleMobile = document.getElementById('theme-toggle-mobile');
+		
+		if (window.sceneManager) 
+		{
+			const originalToggleTheme = window.sceneManager.toggleTheme;
+			window.sceneManager.toggleTheme = () => {
+				originalToggleTheme.call(window.sceneManager);
+				
+				const newTheme = document.body.getAttribute('data-theme') || 'light';
+				
+				if (newTheme !== this.currentTheme) 
+				{
+					this.currentTheme = newTheme;
+					
+					if (newTheme === 'light')
+					{
+						this.refreshClouds();
+					} 
+					else 
+					{
+						this.hideAllClouds();
+					}
+				}
+			};
+			
+		}
+		const handleThemeToggle = () => {
+			setTimeout(() => {
+				const newTheme = document.body.getAttribute('data-theme') || 'light';
 
-    manageCloudLifecycle() 
-    {
-        const cloudsContainer = document.getElementById('clouds');
-        if (!cloudsContainer) return;
-        // Get all cloud elements
-        const clouds = cloudsContainer.querySelectorAll('.cloud-item');
-        let visibleCount = 0;
-        let offscreenCount = 0;
-        // Check each cloud's position and visibility
-        clouds.forEach(cloud => {
-            const rect = cloud.getBoundingClientRect();
-            // Check if cloud is completely off-screen
-            if (rect.right < -100 || rect.left > window.innerWidth + 100) 
-            {
-                // Mark for removal
-                cloud.classList.add('cloud-remove');
-                offscreenCount++;
-            } 
-            else 
-            {
-                visibleCount++;
-            }
-        });
-        // Remove marked clouds
-        cloudsContainer.querySelectorAll('.cloud-remove').forEach(cloud => {
-            cloud.remove();
-        });
-        
-        // Add new clouds if needed
-        const targetCount = this.config.minClouds + 
-            Math.floor(Math.random() * (this.config.maxClouds - this.config.minClouds + 1));
-        
-        if (visibleCount < targetCount) 
-        {
-            const newCount = targetCount - visibleCount;
-            this.addNewClouds(newCount);
-        }
-    }
-    
-    addNewClouds(count) 
-    {
-        const cloudsContainer = document.getElementById('clouds');
-        if (!cloudsContainer) return;
-        // Screen dimensions for distribution
-        const screenWidth = window.innerWidth;
-        const screenHeight = window.innerHeight * 0.55;
-        // Track used positions including existing clouds
-        const usedPositions = [];
-        // Get positions of existing clouds to avoid overlap
-        cloudsContainer.querySelectorAll('.cloud-item').forEach(cloud => {
-            const top = parseInt(cloud.style.top);
-            const left = parseInt(cloud.style.left);
-            if (!isNaN(top) && !isNaN(left)) {
-                usedPositions.push({ top, left });
-            }
-        });
-        // Add new cloud count
-        const startIndex = cloudsContainer.childElementCount;
-        for (let i = 0; i < count; i++) 
-        {
-            this.createSingleCloud(cloudsContainer, startIndex + i, screenWidth, screenHeight, usedPositions);
-        }
-    }
-    
-    refreshClouds() 
-    {
-        const cloudsContainer = document.getElementById('clouds');
-        if (cloudsContainer) {
-            cloudsContainer.innerHTML = '';
-        }
-        
-        // Create initial set of clouds
-        const cloudCount = this.config.minClouds + 
-            Math.floor(Math.random() * (this.config.maxClouds - this.config.minClouds + 1));
-        this.createClouds(cloudCount);
-    }
-    
-    createClouds(count) 
-    {
-        // Find existing clouds container or create one
-        let cloudsContainer = document.getElementById('clouds');
-        // If not found, look in the scene
-        if (!cloudsContainer) 
-        {
-            const scene = document.querySelector('.scene');
-            if (scene) 
-            {
-                cloudsContainer = document.getElementById('clouds');
-                // If it still doesn't exist, create it
-                if (!cloudsContainer) 
-                {
-                    cloudsContainer = document.createElement('div');
-                    cloudsContainer.id = 'clouds';
-                    cloudsContainer.className = 'layer';
-                    cloudsContainer.dataset.speed = '0.02';
-                    scene.appendChild(cloudsContainer);
-                }
-            } 
-            else 
-            {
-                return;
-            }
-        }
-        // Clear previous clouds
-        cloudsContainer.innerHTML = '';
-        // Set up container
-        cloudsContainer.style.position = 'absolute';
-        cloudsContainer.style.width = '100%';
-        cloudsContainer.style.height = this.config.containerHeight;
-        cloudsContainer.style.overflow = 'hidden';
-        cloudsContainer.style.zIndex = '-9';
-        // Screen dimensions for distribution
-        const screenWidth = window.innerWidth;
-        const screenHeight = window.innerHeight * 0.55;
-        // Track used positions to avoid excessive overlap
-        const usedPositions = [];
-        // Create multiple clouds
-        for (let i = 0; i < count; i++) 
-        {
-            this.createSingleCloud(cloudsContainer, i, screenWidth, screenHeight, usedPositions);
-        }
-    }
-    
-    createSingleCloud(container, index, screenWidth, screenHeight, usedPositions) 
-    {
-        // Create cloud element
-        const cloud = document.createElement('div');
-        cloud.id = `cloud-${index}`;
-        cloud.className = 'cloud-item';
-        // Basic styles
-        cloud.style.position = 'absolute';
-        cloud.style.opacity = '0';
-        cloud.style.width = '338px';
-        cloud.style.height = '200px';
-        cloud.style.backgroundImage = 'var(--clouds-image)';
-        cloud.style.backgroundRepeat = 'no-repeat';
-        cloud.style.backgroundSize = this.config.spriteSheetSize;
-        cloud.style.mixBlendMode = 'screen';
-        cloud.style.zIndex = '100';
-        // Apply a random frame
-        const randomFrame = this.framePositions[Math.floor(Math.random() * this.framePositions.length)];
-        cloud.style.backgroundPosition = randomFrame;
-        let randomAnim;
-        if (index % 4 === 0) 
-        {
-            randomAnim = 'anim-combo-1';
-        } 
-        else if (index % 4 === 1) 
-        {
-            randomAnim = 'anim-combo-2';
-        } 
-        else if (index % 4 === 2) 
-        {
-            randomAnim = 'anim-combo-3'; 
-        } 
-        else 
-        {
-            randomAnim = 'anim-combo-4';
-        }
-        cloud.classList.add(randomAnim);
-        const speedClasses = ['form-speed-1', 'form-speed-2', 'form-speed-3'];
-        const randomSpeed = speedClasses[Math.floor(Math.random() * speedClasses.length)];
-        cloud.classList.add(randomSpeed);
-        // Apply random final opacity
-        const randomOpacity = this.opacityClasses[Math.floor(Math.random() * this.opacityClasses.length)];
-        cloud.classList.add(randomOpacity);
-        // Find a position that's not too close to existing clouds
-        let positionFound = false;
-        let attempts = 0;
-        let randomTop, randomLeft;
-        while (!positionFound && attempts < 10) {
-            // Random vertical position (more distributed, using full vertical space)
-            randomTop = Math.floor(Math.random() * (screenHeight * 0.8));
-            // Random horizontal position
-            if (index % 2 === 0) 
-            {
-                // Horizontal position within visible screen area
-                randomLeft = Math.floor(Math.random() * screenWidth * 0.8) + (screenWidth * 0.1);
-            } 
-            else 
-            {
-                // Random position offscreen
-                randomLeft = Math.floor(Math.random() * screenWidth * 1.5) - (screenWidth * 0.25);
-            }
-            
-            // Check if this position is far enough from existing clouds
-            positionFound = true;
-            for (const pos of usedPositions) 
-            {
-                const xDist = Math.abs(pos.left - randomLeft);
-                const yDist = Math.abs(pos.top - randomTop);
-                const distance = Math.sqrt(xDist*xDist + yDist*yDist);
-                // If too close, try again
-                if (distance < this.config.minDistance) 
-                {
-                    positionFound = false;
-                    break;
-                }
-            }
-            attempts++;
-        }
-        
-        // Store the position
-        usedPositions.push({ top: randomTop, left: randomLeft });
-        // Ensure some clouds cover the entire width of the screen
-        if (index === 0) randomLeft = -400; // First cloud starts at the left
-        if (index === 1) randomLeft = screenWidth - 200; // Second cloud starts at the right
-        // Position the cloud
-        cloud.style.top = `${randomTop}px`;
-        if (randomAnim === 'anim-combo-1' || randomAnim === 'anim-combo-3') 
-        {
-            cloud.style.left = `${randomLeft}px`;
-        } 
-        else if (randomAnim === 'anim-combo-2') 
-        {
-            cloud.style.right = `${randomLeft}px`;
-        } 
-        else 
-        {
-            cloud.style.left = `${randomLeft}px`;
-        }
-        // Apply random delay to start all animations
-        const randomBaseDelay = Math.floor(Math.random() * 10);
-        cloud.style.setProperty('--drift-delay', `${randomBaseDelay + 1}s`);
-        cloud.style.setProperty('--formation-delay', `${randomBaseDelay}s`);
-        // Some clouds appear immediately
-        if (index < 3) 
-        {
-            cloud.style.setProperty('--formation-delay', '0s');
-            cloud.style.setProperty('--drift-delay', '0.5s');
-        }
-        // Apply random size
-        const randomScale = 0.5 + Math.random() * 5;
-        cloud.style.setProperty('--base-scale', randomScale);
-        cloud.style.transform = `scale(${randomScale})`;
-        // Add to container
-        container.appendChild(cloud);
-    }
+				if (newTheme !== this.currentTheme) 
+				{
+					this.currentTheme = newTheme;
+					if (newTheme === 'light') 
+					{
+						this.refreshClouds();
+					} 
+					else 
+					{
+						this.hideAllClouds();
+					}
+				}
+			}, 100);
+		};
+		
+		if (themeToggle) 
+		{
+			themeToggle.addEventListener('click', handleThemeToggle);
+		}
+		if (themeToggleMobile) 
+		{
+			themeToggleMobile.addEventListener('click', handleThemeToggle);
+		}
+	}
+
+	//Hide all clouds - used when switching to dark theme
+	hideAllClouds() 
+	{
+		// Stop the lifecycle interval
+		if (this.cloudLifecycleInterval) 
+		{
+			clearInterval(this.cloudLifecycleInterval);
+			this.cloudLifecycleInterval = null;
+		}
+		// Safely remove all cloud ticker callbacks
+		this.activeCloudSprites.forEach(cloud => {
+			if (cloud && cloud.tickerCallback) 
+			{
+				this.app.ticker.remove(cloud.tickerCallback);
+				cloud.tickerCallback = null;
+			}
+		});
+		// Clear the container
+		if (this.cloudsContainer) 
+		{
+			this.cloudsContainer.removeChildren();
+		}
+		// Clear the active sprites array
+		this.activeCloudSprites = [];
+	}
+	
+	//Start the cloud lifecycle management
+	startCloudLifecycle() 
+	{
+		// Clear any existing interval first
+		if (this.cloudLifecycleInterval) 
+		{
+			clearInterval(this.cloudLifecycleInterval);
+		}
+		// Check cloud lifecycle every 5 seconds
+		this.cloudLifecycleInterval = setInterval(() => {
+			if (this.isDestroyed) 
+			{
+				clearInterval(this.cloudLifecycleInterval);
+				return;
+			}
+			if (this.initialized && this.currentTheme === 'light') 
+			{
+				this.manageCloudLifecycle();
+			}
+		}, 5000);
+	}
+	
+	 //Manage the cloud lifecycle (add/remove as needed)
+	manageCloudLifecycle()
+	{
+		if (!this.cloudsContainer || this.isDestroyed)
+		{
+			return;
+		}
+		// Clean up any completed animations
+		this.cleanupCompletedClouds();
+		// Count current visible clouds
+		const visibleCount = this.activeCloudSprites.filter(
+			cloud => !cloud.markedForRemoval && cloud.visible
+		).length;
+		// Determine target number of clouds
+		const targetCount = this.config.minClouds + 
+			Math.floor(Math.random() * (this.config.maxClouds - this.config.minClouds + 1));
+		// Add new clouds if needed
+		if (visibleCount < targetCount) 
+		{
+			const newCount = targetCount - visibleCount;
+			this.addNewClouds(newCount);
+		}
+	}
+	
+	 //Remove clouds that have completed their animations
+	cleanupCompletedClouds() 
+	{
+		if (this.isDestroyed) 
+		{
+			return;
+		}
+		// Filter out clouds marked for removal
+		this.activeCloudSprites = this.activeCloudSprites.filter(cloud => {
+			if (cloud.markedForRemoval) 
+			{
+				if (cloud.parent) 
+				{
+					cloud.parent.removeChild(cloud);
+				}
+				// Remove ticker callback
+				if (cloud.tickerCallback) 
+				{
+					this.app.ticker.remove(cloud.tickerCallback);
+					cloud.tickerCallback = null;
+				}
+				cloud.destroy({children: true});
+				return false;
+			}
+			return true;
+		});
+	}
+	
+	 //Add a batch of new clouds to the scene
+	addNewClouds(count) 
+	{
+		if (!this.cloudsContainer || this.isDestroyed) 
+		{
+			return;
+		}
+		// Screen dimensions for distribution
+		const screenWidth = window.innerWidth;
+		const screenHeight = this.config.containerHeight;
+		// Track used positions including existing clouds
+		const usedPositions = [];
+		// Get positions of existing clouds to avoid overlap
+		this.activeCloudSprites.forEach(cloud => {
+			if (cloud && cloud.position) 
+			{
+				usedPositions.push({ 
+					top: cloud.position.y, 
+					left: cloud.position.x 
+				});
+			}
+		});
+		// Add new clouds
+		for (let i = 0; i < count && !this.isDestroyed; i++) 
+		{
+			this.createSingleCloud(screenWidth, screenHeight, usedPositions);
+		}
+	}
+	
+	 //Completely refresh all clouds
+	refreshClouds() 
+	{
+		if (this.isDestroyed) 
+		{
+			return;
+		}
+		// Only handle light theme
+		if (this.currentTheme !== 'light') 
+		{
+			this.hideAllClouds();
+			return;
+		}
+		// Clear all existing clouds
+		this.hideAllClouds();
+		// Create new clouds batch
+		const cloudCount = this.config.minClouds + 
+			Math.floor(Math.random() * (this.config.maxClouds - this.config.minClouds + 1));
+		// Screen dimensions for cloud positions
+		const screenWidth = window.innerWidth;
+		const screenHeight = this.config.containerHeight;
+		// Create multiple clouds
+		const usedPositions = [];
+		for (let i = 0; i < cloudCount && !this.isDestroyed; i++) 
+		{
+			this.createSingleCloud(screenWidth, screenHeight, usedPositions);
+		}
+		if (this.debugMode) 
+		{
+			this.createDebugVisualization();
+		}
+		// Ensure the lifecycle is running
+		this.startCloudLifecycle();
+	}
+	
+	 //Create a single cloud sprite with animation
+	createSingleCloud(screenWidth, screenHeight, usedPositions) 
+	{
+		if (this.isDestroyed) 
+		{
+			return null;
+		}
+		// Get the spritesheet
+		const cloudsSpritesheet = window.assetManager.getSpritesheet(this.config.spritesheetName);
+		if (!cloudsSpritesheet || !cloudsSpritesheet.textures) 
+		{
+			console.error('CloudsManager: Cannot create cloud - spritesheet not available');
+			return null;
+		}
+		// Get all cloud frames from the spritesheet
+		const frames = Object.values(cloudsSpritesheet.textures);
+		if (frames.length === 0)
+		{
+			console.error('CloudsManager: No cloud frames found in spritesheet');
+			return null;
+		}
+
+		try 
+		{
+			// Get a random cloud frame
+			const randomFrameIndex = Math.floor(Math.random() * frames.length);
+			const randomTexture = frames[randomFrameIndex];
+			// Create a sprite with the random frame
+			const cloud = new PIXI.Sprite(randomTexture);
+			cloud.name = `cloud-${this.activeCloudSprites.length}`;
+			cloud.anchor.set(0.5, 0.5);
+			// Initialize cloud properties
+			cloud.alpha = 0;
+			// Choose random animation properties
+			const randomAnimIndex = Math.floor(Math.random() * this.animationTypes.length);
+			const randomAnimType = this.animationTypes[randomAnimIndex];
+			const randomSpeedIndex = Math.floor(Math.random() * this.formationSpeeds.length);
+			const randomSpeed = this.formationSpeeds[randomSpeedIndex];
+			const randomOpacityIndex = Math.floor(Math.random() * this.opacityLevels.length);
+			const finalOpacity = this.opacityLevels[randomOpacityIndex];
+			// Get scene scale - adjust cloud scale and positioning
+			const sceneScale = this.getSceneScale();
+			// Choose a random base scale for variety
+			const baseScale = this.config.minScale + 
+				Math.random() * (this.config.maxScale - this.config.minScale);
+			// Apply scene scaling to the cloud scale
+			const scaledSize = baseScale * sceneScale;
+			// Start at 80% of final size
+			cloud.scale.set(scaledSize * 0.7);
+			// Find a position that's not too close to existing clouds
+			let positionFound = false;
+			let attempts = 0;
+			let randomTop, randomLeft;
+			while (!positionFound && attempts < 10) 
+			{
+				// Scale the positioning with scene scale as well
+				const cloudNumber = this.activeCloudSprites.length;
+				if (cloudNumber % 3 === 0) 
+				{
+					randomTop = Math.random() * (screenHeight / 3);
+				} 
+				else if (cloudNumber % 3 === 1) 
+				{
+					randomTop = (screenHeight / 3) + Math.random() * (screenHeight / 3);
+				} 
+				else 
+				{
+					randomTop = (screenHeight * 2/3) + Math.random() * (screenHeight / 3);
+				}
+				// Random horizontal position
+				if (randomAnimType === 'driftLeftToRight') 
+				{
+					randomLeft = -cloud.width; // Start off-screen left
+				} 
+				else if (randomAnimType === 'driftRightToLeft') 
+				{
+					randomLeft = screenWidth + cloud.width; // Start off-screen right
+				} 
+				else if (randomAnimType === 'driftDiagonalUp') 
+				{
+					randomLeft = -cloud.width; // Start off-screen left
+					randomTop = screenHeight - cloud.height/2;
+				} 
+				else 
+				{
+					// For driftSlow animation
+					randomLeft = Math.floor(Math.random() * screenWidth * 0.8) + (screenWidth * 0.1);
+				}
+				// Check if this position is far enough from existing clouds
+				positionFound = true;
+				for (const pos of usedPositions) 
+				{
+					const xDist = Math.abs(pos.left - randomLeft);
+					const yDist = Math.abs(pos.top - randomTop);
+					const distance = Math.sqrt(xDist*xDist + yDist*yDist);
+					// Min distance also scales with scene
+					if (distance < this.config.minDistance * sceneScale) 
+					{
+						positionFound = false;
+						break;
+					}
+				}
+				attempts++;
+			}
+			// Ensure some clouds cover the entire width of the screen
+			if (this.activeCloudSprites.length === 0) randomLeft = -cloud.width; // First cloud starts at the left
+			if (this.activeCloudSprites.length === 1) randomLeft = screenWidth - cloud.width/2; // Second cloud starts at the right
+			// Position the cloud
+			cloud.position.set(randomLeft, randomTop);
+			// Store animation parameters in cloud for the ticker
+			cloud.animationData = {
+				type: randomAnimType,
+				formationTime: randomSpeed.formationTime,
+				driftDelay: randomSpeed.driftDelay,
+				finalOpacity: finalOpacity,
+				finalScale: scaledSize,
+				startTime: performance.now(),
+				startPosition: { x: randomLeft, y: randomTop },
+				endPosition: this.calculateEndPosition(randomAnimType, randomLeft, randomTop, screenWidth, screenHeight),
+				// Scale factors for reference
+				sceneScale: sceneScale,
+				baseScale: baseScale,
+				// Custom state for driftSlow animation
+				driftSlowState: {
+					phase: 0,
+					offset: Math.random() * Math.PI * 2 // Random starting phase
+				}
+			};
+			// Add cloud to container
+			this.cloudsContainer.addChild(cloud);
+			// Start animations
+			this.setupCloudAnimations(cloud);
+			// Track the cloud
+			this.activeCloudSprites.push(cloud);
+			// Add to used positions to avoid overlap
+			usedPositions.push({ top: randomTop, left: randomLeft });
+			return cloud;
+		} 
+		catch (error) 
+		{
+			console.error('CloudsManager: Error creating cloud', error);
+			return null;
+		}
+	}
+	
+	//Get the current scene height
+	getSceneHeight() 
+	{
+		if (window.sceneManager && window.sceneManager.app) 
+		{
+			return window.sceneManager.app.screen.height * 0.35;
+		}
+		// Fallback:
+		return window.innerHeight * 0.55;
+	}
+
+
+	 //Get the current scene scale factor
+	getSceneScale() 
+	{
+		// Default scale factor if scene manager is not available
+		let scaleFactor = 1.0;
+		try 
+		{
+			// First try to get scale info from SceneManager if available
+			if (window.sceneManager && window.sceneManager.backgroundGroup) 
+			{
+				// Find the background or layer scale
+				const backgroundGroup = window.sceneManager.backgroundGroup;
+				if (backgroundGroup.children && backgroundGroup.children.length > 0) 
+				{
+					// Check layers
+					for (const layer of backgroundGroup.children) 
+					{
+						if (layer.name === 'background' || layer.name === 'mountain') 
+						{
+							if (layer.children && layer.children.length > 0) 
+							{
+								const sprite = layer.children[0];
+								if (sprite && sprite.width && window.innerWidth > 0) 
+								{
+									// Use width ratio for scale factor
+									scaleFactor = sprite.width / window.innerWidth;
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+			// Fallback to element size comparison
+			if (scaleFactor === 1.0) 
+			{
+				const sceneElement = document.getElementById('main-scene');
+				if (sceneElement) 
+				{
+					// Get height ratio compared to window
+					const sceneHeight = sceneElement.clientHeight;
+					const windowHeight = window.innerHeight;
+					if (windowHeight > 0) 
+					{
+						scaleFactor = sceneHeight / windowHeight;
+					}
+				}
+			}
+			// Constrain to reasonable values
+			scaleFactor = Math.max(0.25, Math.min(scaleFactor, 1.25));
+			// Use a smaller factor for clouds so they don't get too large
+			// but still scale with the scene
+			scaleFactor = 0.5 + (scaleFactor - 1.0) * 0.4;
+		} 
+		catch (error) 
+		{
+			console.warn('CloudsManager: Error calculating scene scale', error);
+		}
+		return scaleFactor;
+	}
+	
+	 //Setup cloud animations using PixiJS ticker
+	setupCloudAnimations(cloud) 
+	{
+		if (this.isDestroyed) 
+		{
+			return;
+		}
+		const animData = cloud.animationData;
+		const startTime = animData.startTime;
+		let tickerCallback;
+		// Calculate animation durations based on type
+		let animationDuration;
+		switch (animData.type) 
+		{
+			case 'driftLeftToRight':
+				animationDuration = 60000; // 60 seconds
+				break;
+			case 'driftRightToLeft':
+				animationDuration = 80000; // 80 seconds
+				break;
+			case 'driftDiagonalUp':
+				animationDuration = 90000; // 90 seconds
+				break;
+			case 'driftSlow':
+				animationDuration = 30000; // 30 seconds per "wave" but actually infinite
+				break;
+			default:
+				animationDuration = 60000;
+		}
+				// Create the animation ticker
+		tickerCallback = (time) => {
+			// Safety check - if cloud is destroyed, removed, or manager is destroyed
+			if (this.isDestroyed || !cloud || !cloud.parent) 
+			{
+				this.app.ticker.remove(tickerCallback);
+				return;
+			}
+			try 
+			{
+				const currentTime = performance.now();
+				const elapsed = currentTime - startTime;
+				// Phase 1: Formation (fade in and scale)
+				if (elapsed <= animData.formationTime) 
+				{
+					const formProgress = elapsed / animData.formationTime;
+					// Fade in
+					cloud.alpha = formProgress * animData.finalOpacity;
+					// Scale up
+					const scaleProgress = Math.min(1, formProgress * 1.1);
+					cloud.scale.set(
+						lerp(animData.finalScale * 0.8, animData.finalScale, scaleProgress)
+					);
+					return;
+				}
+				// Phase 2: Drift delay (pause before drifting)
+				if (elapsed <= animData.formationTime + animData.driftDelay) 
+				{
+					cloud.alpha = animData.finalOpacity;
+					cloud.scale.set(animData.finalScale);
+					return;
+				}
+				// Phase 3: Drift animation
+				const driftStartTime = animData.formationTime + animData.driftDelay;
+				const driftElapsed = elapsed - driftStartTime;
+				const driftProgress = Math.min(1, driftElapsed / animationDuration);
+				// Handle different animation types
+				switch (animData.type) 
+				{
+					case 'driftLeftToRight':
+					case 'driftRightToLeft':
+					case 'driftDiagonalUp':
+						// Linear movement from start to end position
+						cloud.position.x = lerp(animData.startPosition.x, animData.endPosition.x, driftProgress);
+						cloud.position.y = lerp(animData.startPosition.y, animData.endPosition.y, driftProgress);
+						// Fade in/out bell curve
+						if (driftProgress < 0.1) 
+						{
+							// Fade in
+							cloud.alpha = lerp(0, animData.finalOpacity, driftProgress * 10);
+						} 
+						else if (driftProgress > 0.8) 
+						{
+							// Fade out
+							cloud.alpha = lerp(animData.finalOpacity, 0, (driftProgress - 0.8) * 5);
+						} 
+						else 
+						{
+							// Middle section
+							cloud.alpha = animData.finalOpacity;
+						}
+						// If animation is complete, mark for removal
+						if (driftProgress >= 1) 
+						{
+							cloud.markedForRemoval = true;
+							cloud.visible = false;
+							this.app.ticker.remove(tickerCallback);
+							cloud.tickerCallback = null;
+						}
+						break;
+						
+					case 'driftSlow':
+						// Oscillating movement
+						animData.driftSlowState.phase += 0.001; // Slow phase increment
+						const offsetX = Math.sin(animData.driftSlowState.phase) * 50; // 50px amplitude
+						cloud.position.x = animData.startPosition.x + offsetX;
+						// No complete condition - will run infinitely until cleaned up
+						// But set alpha based on sine wave to create pulsing effect
+						const alphaOffset = Math.sin(animData.driftSlowState.phase) * 0.3;
+						cloud.alpha = animData.finalOpacity + alphaOffset;
+						// Clouds with driftSlow will eventually be removed during refresh
+						break;
+				}
+			} 
+			catch (error) 
+			{
+				console.warn('CloudsManager: Error in cloud animation', error);
+				this.app.ticker.remove(tickerCallback);
+				// Mark cloud for removal on error
+				if (cloud) 
+				{
+					cloud.markedForRemoval = true;
+					cloud.visible = false;
+					cloud.tickerCallback = null;
+				}
+			}
+		};
+		// Add to ticker
+		this.app.ticker.add(tickerCallback);
+		// Store ticker callback for later removal
+		cloud.tickerCallback = tickerCallback;
+	}
+	
+	 //Calculate end position for cloud animation
+	calculateEndPosition(animType, startX, startY, screenWidth, screenHeight) 
+	{
+		switch (animType) 
+		{
+			case 'driftLeftToRight':
+				return { x: screenWidth + 200, y: startY };
+				
+			case 'driftRightToLeft':
+				return { x: -200, y: startY };
+				
+			case 'driftDiagonalUp':
+				return { x: screenWidth + 200, y: startY - 200 };
+				
+			case 'driftSlow':
+				// End position not really used for driftSlow, as it oscillates
+				return { x: startX, y: startY };
+			default:
+				return { x: screenWidth + 200, y: startY };
+		}
+	}
+	
+	 //Handle window resize events
+	onResize() 
+	{
+		if (this.isDestroyed) 
+		{
+			return;
+		}
+		this.config.containerHeight = this.getSceneHeight();
+		if (this.currentTheme === 'light' && this.initialized) 
+		{
+			this.updateCloudScaling();
+			this.refreshClouds() 
+		}
+	}
+	
+	 //Update cloud scaling without completely refreshing
+	updateCloudScaling() 
+	{
+		if (this.isDestroyed) 
+		{
+			return;
+		}
+		const sceneScale = this.getSceneScale();
+		const newContainerHeight = this.getSceneHeight();
+		// Update all existing clouds
+		this.activeCloudSprites.forEach(cloud => {
+			if (cloud && cloud.animationData && !cloud.markedForRemoval) 
+			{
+				try 
+				{
+					// Calculate new scale using the original base scale and the new scene scale
+					const baseScale = cloud.animationData.baseScale || 
+						(cloud.animationData.finalScale / cloud.animationData.sceneScale || 1.0);
+					// Store the new values
+					cloud.animationData.sceneScale = sceneScale;
+					cloud.animationData.baseScale = baseScale;
+					cloud.animationData.finalScale = baseScale * sceneScale;
+					// Apply the new scale if we're past the formation phase
+					const elapsed = performance.now() - cloud.animationData.startTime;
+					if (elapsed >= cloud.animationData.formationTime) 
+					{
+						// Apply the new scale directly
+						cloud.scale.set(cloud.animationData.finalScale);
+					} 
+					else 
+					{
+						// Still in formation phase, keep the partial scale
+						const formProgress = elapsed / cloud.animationData.formationTime;
+						const scaleProgress = Math.min(1, formProgress * 1.2);
+						cloud.scale.set(
+							lerp(cloud.animationData.finalScale * 0.8, cloud.animationData.finalScale, scaleProgress)
+						);
+					}
+					// Update position for vertical scaling - CORRIGIDO para usar newContainerHeight
+					const verticalRatio = cloud.position.y / this.config.containerHeight;
+					cloud.position.y = verticalRatio * newContainerHeight;
+				} 
+				catch (error) 
+				{
+					console.warn('CloudsManager: Error updating cloud scale', error);
+				}
+			}
+		});
+		this.config.containerHeight = newContainerHeight;
+	}
+	
+	 //Destroy all resources
+	destroy() 
+	{
+		console.log('CloudsManager: Destroying');
+		this.isDestroyed = true;
+		// Clear interval
+		if (this.cloudLifecycleInterval) 
+		{
+			clearInterval(this.cloudLifecycleInterval);
+			this.cloudLifecycleInterval = null;
+		}
+		// Remove all cloud sprites
+		if (this.cloudsContainer) 
+		{
+			// Remove all ticker callbacks first
+			this.activeCloudSprites.forEach(cloud => {
+				if (cloud && cloud.tickerCallback) 
+				{
+					this.app.ticker.remove(cloud.tickerCallback);
+					cloud.tickerCallback = null;
+				}
+			});
+			// Clear container
+			this.cloudsContainer.removeChildren();
+		}
+		// Remove resize listener
+		window.removeEventListener('resize', this.onResize.bind(this));
+		// Clear arrays
+		this.activeCloudSprites = [];
+	}
 }
 
-// Export the class
+ //Linear interpolation helper function
+function lerp(start, end, t) 
+{
+	return start + (end - start) * t;
+}
+
+// Make CloudsManager globally available
 window.CloudsManager = CloudsManager;

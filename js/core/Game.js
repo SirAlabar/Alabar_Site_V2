@@ -4,74 +4,19 @@
  */
 class Game 
 {
-    constructor(canvasContainer) 
+    constructor() 
     {
         console.log("Game constructor called");
         
-        // Store reference to container
-        this.canvasContainer = canvasContainer;
+        // Set up game properties
+        this.entities = [];
+        this.player = null;
+        this.isRunning = false;
         
-        // Make sure PIXI is defined
-        if (typeof PIXI === 'undefined') 
-            {
-                console.error("PIXI is not defined! Make sure Pixi.js is loaded.");
-                this.showErrorMessage("PIXI is not defined");
-                return;
-            }
-        
-        this.initialize();
+        // Game is waiting for groups to be set
+        this.initialized = false;
     }
     
-    async initialize() 
-    {
-        try 
-        {
-            // Initialize PIXI application
-            await this.initializePixiApp();
-            
-            // Set up game properties
-            this.entities = [];
-            this.player = null;
-            this.isRunning = false;
-            
-            // Initialize systems and managers
-            this.initializeSystems();
-            
-            // Start the game loop
-            this.startGameLoop();
-        } 
-        catch (error) 
-        {
-            console.error("Error initializing game:", error);
-            this.showErrorMessage(error.message);
-        }
-    }
-
-    // Creates the PIXI application
-    async initializePixiApp()
-    {
-        // Create PIXI application (v8 style)
-        this.app = new PIXI.Application();
-        
-        // Initialize it asynchronously
-        await this.app.init({
-            width: this.canvasContainer.clientWidth || window.innerWidth,
-            height: this.canvasContainer.clientHeight || window.innerHeight,
-            backgroundColor: 0x000000,
-            backgroundAlpha: 0,
-            antialias: true
-        });
-        
-        // Add the canvas to the container
-        this.canvasContainer.appendChild(this.app.canvas);
-        console.log("PIXI canvas created and appended to container");
-        
-        // Create a container for all game entities
-        this.worldContainer = new PIXI.Container();
-        this.app.stage.addChild(this.worldContainer);
-    }
-    
-    // Initializes game systems and managers
     initializeSystems() 
     {
         // Connect to existing managers where possible
@@ -87,6 +32,12 @@ class Game
             this.assetManager = window.assetManager;
         }
         
+        // Create game area manager to handle boundaries
+        if (window.GameAreaManager) {
+            this.gameAreaManager = new GameAreaManager(this);
+            console.log("GameAreaManager created");
+        }
+        
         // Create input manager for game controls
         if (window.InputManager) {
             this.inputManager = new InputManager(this);
@@ -96,25 +47,52 @@ class Game
         // Add a simple debug graphic to confirm rendering is working
         this.addDebugGraphic();
     }
-    
-    // Adds debug graphics to verify rendering
+
+    setGameplayGroup(gameplayGroup, app, canvasContainer) 
+    {
+        this.gameplayGroup = gameplayGroup;
+        this.app = app;
+        this.canvasContainer = canvasContainer;
+        
+        // Now we can initialize game systems
+        this.initialized = true;
+        this.initializeSystems();
+        
+        // Start the game loop
+        this.startGameLoop();
+        
+        return this; // Para encadeamento de métodos
+    }
+
     addDebugGraphic() 
     {
         // Adicionar um fundo com transparência
         const background = new PIXI.Graphics();
-        background.beginFill(0xFF0000, 0.15); // Cor azul céu com 50% de transparência
+        background.beginFill(0xFF0000, 0.15); // Cor vermelha com 15% de transparência
         background.drawRect(0, 0, this.app.screen.width, this.app.screen.height);
         background.endFill();
-        this.worldContainer.addChild(background);
+        this.gameplayGroup.addChild(background);
         
-        // O resto do seu código para os gráficos de debug
+        // Adicionar linhas de grade para mostrar os limites da área de jogo
         const graphics = new PIXI.Graphics();
+        graphics.lineStyle(1, 0xFFFFFF, 0.3);
         
+        // Linhas verticais
+        for (let x = 0; x < this.app.screen.width; x += 100) {
+            graphics.moveTo(x, 0);
+            graphics.lineTo(x, this.app.screen.height);
+        }
         
-        // Add to stage
-        this.worldContainer.addChild(graphics);
+        // Linhas horizontais
+        for (let y = 0; y < this.app.screen.height; y += 100) {
+            graphics.moveTo(0, y);
+            graphics.lineTo(this.app.screen.width, y);
+        }
+        
+        this.gameplayGroup.addChild(graphics);
         console.log("Debug graphics added to confirm rendering");
     }
+    
     // Starts the game loop
     startGameLoop() 
     {
@@ -147,6 +125,22 @@ class Game
     {
         // Handle any game-specific resize logic
         console.log(`Game area resized to ${bounds.width}x${bounds.height}`);
+        
+        // Resize the renderer
+        if (this.app && this.app.renderer) {
+            this.app.renderer.resize(bounds.width, bounds.height);
+        }
+        
+        // Update background group position and scale if needed
+        if (this.backgroundGroup) {
+            // Scale could be adjusted based on screen size
+            // this.backgroundGroup.scale.set(newScale);
+        }
+        
+        // Update gameplay group position
+        if (this.gameplayGroup) {
+            // Any gameplay-specific adjustments
+        }
     }
     
     // Creates player entity
@@ -154,6 +148,7 @@ class Game
     {
         console.log("Player creation placeholder");
         // Will implement actual player creation later
+        // Player sprite will be added to gameplayGroup
     }
     
     // Creates enemy entity
@@ -161,6 +156,7 @@ class Game
     {
         console.log(`Enemy creation placeholder for ${type}`);
         // Will implement actual enemy creation later
+        // Enemy sprites will be added to gameplayGroup
     }
     
     // Shows error message when initialization fails
