@@ -7,7 +7,7 @@
 
 export class CursorEffectComponent 
 {
-	constructor(game, app, uiGroup, options = {}, assetManage) 
+	constructor(game, app, uiGroup, options = {}, assetManager) 
 	{
 		// System references
 		this.game = game;
@@ -689,14 +689,4 @@ export class CursorEffectComponent
 		
 		this.isInitialized = false;
 	}
-}
-
-// Export for global use or as module
-if (typeof module !== 'undefined' && module.exports) 
-{
-	module.exports = CursorEffectComponent;
-} 
-else 
-{
-	window.CursorEffectComponent = CursorEffectComponent;
 }

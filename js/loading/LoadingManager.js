@@ -7,6 +7,7 @@ import { GameInitializer } from './GameInitializer.js';
 import { createAssetManager } from '../manager/AssetManager.js';
 import { initSceneManager, getSceneManager } from '../manager/SceneManager.js';
 import { CloudsManager } from '../manager/CloudsManager.js';
+import { CursorEffectComponent } from '../components/CursorEffectsComponent.js';
 
 export class LoadingManager 
 {
@@ -157,16 +158,9 @@ export class LoadingManager
         }
             
        // Initialize CursorEffectComponent
-       if (window.CursorEffectComponent) 
-       {
-           window.cursorEffect = new CursorEffectComponent(null, app, uiGroup, {
-               particlesCount: 3,
-           });
-       } 
-       else 
-       {
-           console.error("CursorEffectComponent not available");
-       }
+        const cursorEffect = new CursorEffectComponent(null, app, uiGroup, {
+            particlesCount: 3,
+        }, this.assetManager);
        
        // Handle responsive UI
        if (window.innerWidth > 768) 
