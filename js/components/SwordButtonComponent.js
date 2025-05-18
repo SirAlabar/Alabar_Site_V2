@@ -2,7 +2,7 @@
  * Sword Menu Button Component
  * Replaces default hamburger button with animated sword
  */
-class SwordButtonComponent 
+export class SwordButtonComponent 
 {
 	constructor() 
 	{
@@ -255,11 +255,7 @@ class SwordButtonComponent
 	}
 }
 
-// Export component for usage
-if (typeof window !== 'undefined') 
+export function createSwordButton() 
 {
-	// Initialize component immediately
-	window.swordButtonComponent = new SwordButtonComponent();
-	// Also make class available
-	window.SwordButtonComponent = SwordButtonComponent;
+  return new SwordButtonComponent();
 }
