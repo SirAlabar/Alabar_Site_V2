@@ -26,10 +26,10 @@ class Game
             this.sceneManager = window.sceneManager;
         }
         
-        if (window.assetManager) 
+        if (this.assetManager) 
         {
             console.log("Connected to existing AssetManager");
-            this.assetManager = window.assetManager;
+            this.assetManager = this.assetManager;
         }
         
         // Create game area manager to handle boundaries

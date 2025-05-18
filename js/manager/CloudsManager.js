@@ -1,13 +1,17 @@
+
+import { lerp, boundValue } from '../utils/MathUtils.js';
+
 /**
  * CloudsManager.js for PixiJS
  * Creates and manages cloud sprites with custom animations
  */
-class CloudsManager {
-	constructor(app, backgroundGroup) 
+export class CloudsManager {
+	constructor(app, backgroundGroup, assetManager) 
 	{
 		// Store PixiJS references
 		this.app = app;
 		this.backgroundGroup = backgroundGroup;
+        this.assetManager = assetManager;
 		// Cloud container
 		this.cloudsContainer = new PIXI.Container();
 		this.cloudsContainer.name = 'clouds';
@@ -77,14 +81,14 @@ class CloudsManager {
 		}
 		this.initInProgress = true;
 		// Check if we have access to the asset manager and app
-		if (!window.assetManager || !this.app) 
+		if (!this.assetManager || !this.app) 
 		{
 			console.error('CloudsManager: assetManager or PixiJS app not available');
 			this.initInProgress = false;
 			return;
 		}
 		// Verify that the clouds spritesheet is loaded
-		const cloudsSpritesheet = window.assetManager.getSpritesheet(this.config.spritesheetName);
+		const cloudsSpritesheet = this.assetManager.getSpritesheet(this.config.spritesheetName);
 		if (!cloudsSpritesheet) 
 		{
 			console.warn(`CloudsManager: ${this.config.spritesheetName} not found - will retry later`);
@@ -350,7 +354,7 @@ class CloudsManager {
 			return null;
 		}
 		// Get the spritesheet
-		const cloudsSpritesheet = window.assetManager.getSpritesheet(this.config.spritesheetName);
+		const cloudsSpritesheet = this.assetManager.getSpritesheet(this.config.spritesheetName);
 		if (!cloudsSpritesheet || !cloudsSpritesheet.textures) 
 		{
 			console.error('CloudsManager: Cannot create cloud - spritesheet not available');
@@ -811,12 +815,3 @@ class CloudsManager {
 		this.activeCloudSprites = [];
 	}
 }
-
- //Linear interpolation helper function
-function lerp(start, end, t) 
-{
-	return start + (end - start) * t;
-}
-
-// Make CloudsManager globally available
-window.CloudsManager = CloudsManager;

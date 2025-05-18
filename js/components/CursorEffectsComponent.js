@@ -5,14 +5,15 @@
  * Includes geometric particles in light theme and blood drops in dark theme
  */
 
-class CursorEffectComponent 
+export class CursorEffectComponent 
 {
-	constructor(game, app, uiGroup, options = {}) 
+	constructor(game, app, uiGroup, options = {}, assetManage) 
 	{
 		// System references
 		this.game = game;
 		this.app = app;
 		this.uiGroup = uiGroup;
+    this.assetManager = assetManager;
 		
 		// Check if we have the necessary dependencies
 		if (!this.app || !this.uiGroup) 
@@ -123,23 +124,11 @@ class CursorEffectComponent
 		try 
     {
 			// Get textures directly from AssetManager
-			if (window.assetManager && window.assetManager.textures) 
-			{
-				this.cursorLightTexture = window.assetManager.textures['cursor_light'];
-				this.cursorDarkTexture = window.assetManager.textures['cursor_dark'];
-				
-				if (!this.cursorLightTexture || !this.cursorDarkTexture) 
-				{
-					console.error("Required cursor textures not available in AssetManager");
-					return false;
-				}
-				return true;
-			} 
-			else 
-			{
-				console.error("AssetManager not available");
-				return false;
-			}
+      if (this.assetManager && this.assetManager.textures) 
+      {
+          this.cursorLightTexture = this.assetManager.textures.cursor_light;
+          this.cursorDarkTexture = this.assetManager.textures.cursor_dark;
+      }
 		} 
 		catch (error) 
 		{

@@ -2,7 +2,7 @@
  * AssetManager - Handles loading and managing game assets
  * Uses PixiJS Assets API for efficient resource loading
  */
-class AssetManager 
+export class AssetManager 
 {
 	constructor() 
 	{
@@ -584,5 +584,7 @@ class AssetManager
 	}
 }
 
-// Make AssetManager globally available
-window.AssetManager = AssetManager;
+export function createAssetManager() 
+{
+	return new AssetManager();
+}
