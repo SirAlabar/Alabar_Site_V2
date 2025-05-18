@@ -5,11 +5,14 @@ class SceneManager
 		// PIXI references - will be set by setBackgroundGroup
 		this.app = null;
 		this.backgroundGroup = null;
+		
 		// Layer containers
 		this.layers = {};
 		this.parallaxEffect = null;
+		
 		// Theme state
 		this.currentTheme = localStorage.getItem('theme') || 'light';
+		
 		// Layer configuration with parallax speeds
 		this.layerConfig = [
 			{ id: 'background', speed: 0.0, zIndex: -11 },
@@ -25,27 +28,30 @@ class SceneManager
 			{ id: 'field2', speed: -0.1, zIndex: -3 },
 			{ id: 'field1', speed: 0.09, zIndex: -2 }
 		];
+		
 		// Set up theme toggle button
 		this.setupThemeToggle();
+		
 		// Resize listener to update scaling when window size changes
 		window.addEventListener('resize', this.handleResize.bind(this));
 	}
-	 //Set the PIXI background group and app references
 
+	// Set the PIXI background group and app references
 	setBackgroundGroup(backgroundGroup, app) 
 	{
 		this.backgroundGroup = backgroundGroup;
 		this.app = app;
-		// Now we can initialize the PIXI background
+		
+		// Initialize the PIXI background
 		this.createPixiScene();
+		
 		// Apply the current theme
 		this.applyTheme(this.currentTheme);
+		
 		return this;
 	}
 	
-	/**
-	 * Create the PIXI scene with all background layers
-	 */
+	// Create the PIXI scene with all background layers
 	createPixiScene() 
 	{
 		if (!this.backgroundGroup || !this.app) 
@@ -53,16 +59,18 @@ class SceneManager
 			console.error("PIXI background group or app not set. Call setBackgroundGroup first.");
 			return;
 		}
+		
 		// Clear existing layers if any
 		this.backgroundGroup.removeChildren();
 		this.layers = {};
 		this.backgroundGroup.sortableChildren = true;
+		
 		// Create each layer based on the configuration
-		// We're creating empty containers first, textures will be applied later
 		this.layerConfig.forEach(config => {
 			const container = new PIXI.Container();
 			container.name = config.id;
 			container.zIndex = config.zIndex;
+			
 			// Store the speed for parallax effect
 			container.parallaxSpeed = config.speed;
 			
@@ -72,6 +80,7 @@ class SceneManager
 			// Store reference
 			this.layers[config.id] = container;
 		});
+		
 		this.backgroundGroup.position.set(0, 0);
 	}
 	
@@ -83,19 +92,23 @@ class SceneManager
 			console.warn("PIXI not initialized yet, skipping theme application");
 			return;
 		}
+		
 		// Check if AssetManager is available
 		if (!window.assetManager) 
 		{
 			console.error("AssetManager not available");
 			return;
 		}
+		
 		// First, make all layers visible
 		for (const [id, container] of Object.entries(this.layers)) 
 		{
 			container.visible = true;
 		}
+		
 		// Set up the base background (color or image)
 		this.setupBackground(theme);
+		
 		// Apply textures to each layer
 		for (const [id, container] of Object.entries(this.layers)) 
 		{
@@ -104,27 +117,30 @@ class SceneManager
 			{
 				continue;
 			}
+			
 			// Skip clouds in dark theme
 			if (id === 'clouds' && theme === 'dark') 
 			{
 				container.visible = false;
 				continue;
 			}
+			
 			// Skip moon in light theme
 			if (id === 'moon' && theme === 'light') 
 			{
 				container.visible = false;
 				continue;
 			}
+			
 			// Clear existing sprites
 			container.removeChildren();
+			
 			// Get the texture for this layer
 			const texture = window.assetManager.getBackgroundTexture(theme, id);
 			if (texture) 
 			{
 				const sprite = new PIXI.Sprite(texture);
 				// Add to container without setting dimensions yet
-				// We'll apply scaling to all sprites at once later
 				container.addChild(sprite);
 			} 
 			else 
@@ -140,17 +156,18 @@ class SceneManager
 		this.applySpecialEffects(theme);
 
 		// Update the cloud system if available
-		if (window.cloudsManager) {
-			if (theme === 'light') {
+		if (window.cloudsManager) 
+		{
+			if (theme === 'light') 
+			{
 				window.cloudsManager.init(theme);
-			} else {
+			} 
+			else 
+			{
 				window.cloudsManager.hideAllClouds();
 			}
 		}
 
-		// Update current theme
-		this.currentTheme = theme;
-		localStorage.setItem('theme', theme);
 		// Update current theme
 		this.currentTheme = theme;
 		localStorage.setItem('theme', theme);
@@ -165,43 +182,49 @@ class SceneManager
 		console.log(`Theme applied: ${theme}`);
 	}
 	
-	/**
-	 * Set up the background layer (color or image)
-	 * @param {string} theme - 'light' or 'dark'
-	 */
-	setupBackground(theme) {
+	// Set up the background layer (color or image)
+	setupBackground(theme) 
+	{
 		const backgroundContainer = this.layers['background'];
 		if (!backgroundContainer) return;
 		
 		// Clear existing content
 		backgroundContainer.removeChildren();
 		
-		// For BOTH themes, create a proper sprite setup
-		if (theme === 'dark') {
+		// Create appropriate background based on theme
+		if (theme === 'dark') 
+		{
 			// Try to get background texture for dark theme
 			const bgTexture = window.assetManager.getBackgroundTexture('dark', 'background');
 			
-			if (bgTexture) {
+			if (bgTexture) 
+			{
 				// Create sprite with the texture
 				const bgSprite = new PIXI.Sprite(bgTexture);
 				this.setupBackgroundSprite(bgSprite);
 				backgroundContainer.addChild(bgSprite);
-			} else {
-				// Create a colored rectangle but with proper sprite-like handling
+			} 
+			else 
+			{
+				// Create a colored rectangle as fallback
 				this.createColorBackground(backgroundContainer, 0x191970); // Midnight blue
 			}
-		} else {
-			// For light theme, use BOTH approaches:
-			// 1. Try to get a day background texture if it exists
+		} 
+		else 
+		{
+			// For light theme
 			const bgTexture = window.assetManager.getBackgroundTexture('light', 'background');
 			
-			if (bgTexture) {
+			if (bgTexture) 
+			{
 				// If we have a texture, use it
 				const bgSprite = new PIXI.Sprite(bgTexture);
 				this.setupBackgroundSprite(bgSprite);
 				backgroundContainer.addChild(bgSprite);
-			} else {
-				// Otherwise create a colored rectangle but with proper sprite-like handling
+			} 
+			else 
+			{
+				// Create a colored rectangle as fallback
 				this.createColorBackground(backgroundContainer, 0x87CEEB); // Sky blue
 			}
 		}
@@ -209,171 +232,190 @@ class SceneManager
 		// Apply also to CSS for fallback
 		document.documentElement.style.setProperty('--bg-color', theme === 'light' ? '#87CEEB' : '#191970');
 		document.documentElement.style.setProperty('--bg-image', theme === 'dark' ? 'url(assets/images/background/dark/background_night.webp)' : 'none');
+		
+		// Force background visibility
 		setTimeout(() => {
-			// Verificar se o fundo foi realmente aplicado
 			const bgContainer = this.layers['background'];
-			// Tentar forçar o container a ficar visível
 			bgContainer.visible = true;
 			bgContainer.alpha = 1;
 			bgContainer.children.forEach(child => {
 				child.visible = true;
 				child.alpha = 1;
-				child.zIndex = -999; // Forçar o mais baixo possível
+				child.zIndex = -999;
 			});
 		}, 500);
 	}
-	// Add these helper methods to your SceneManager class
-	setupBackgroundSprite(sprite) {
-		// Apply consistent sizing and positioning for ALL sprites
+	
+	// Helper to setup background sprite sizing
+	setupBackgroundSprite(sprite) 
+	{
+		// Apply consistent sizing and positioning
 		sprite.width = this.app.screen.width;
 		sprite.height = Math.max(this.app.screen.height * 3, this.app.screen.width * 2);
 		
-		// Important: Set the anchor point for proper positioning
+		// Set the anchor point for proper positioning
 		sprite.anchor.set(0.5, 0);
-		sprite.position.set(this.app.screen.width / 2, 0); // CORRETO: Centro da tela, topo
+		sprite.position.set(this.app.screen.width / 2, 0);
 	}
 
-	createColorBackground(container, color) {
-		console.log(`Criando fundo colorido com cor: #${color.toString(16)}`);
-		
+	// Create a solid color background
+	createColorBackground(container, color) 
+	{
 		const colorTexture = PIXI.Texture.WHITE;
 		const bgSprite = new PIXI.Sprite(colorTexture);
 		
 		bgSprite.tint = color;
 		
-		// Cubra toda a área visualizável
-		bgSprite.width = this.app.screen.width * 1.2;  // 20% maior para garantir
+		// Cover the entire viewable area with extra margin
+		bgSprite.width = this.app.screen.width * 1.2;
 		bgSprite.height = this.app.screen.height * 3;
 		
-		// Posicionar no centro da tela
+		// Position at center of screen
 		bgSprite.anchor.set(0.5, 0);
 		bgSprite.position.set(this.app.screen.width / 2, 0);
 		
-		// Garantir que este sprite fique atrás de tudo
+		// Ensure this sprite stays behind everything
 		bgSprite.zIndex = -9999;
 		
 		container.addChild(bgSprite);
 		return bgSprite;
 	}
-    
-    applySpecialEffects(theme) 
-    {
-        if (theme === 'dark' && this.layers['moon']) 
-        {
-            const moonContainer = this.layers['moon'];
-            
-            if (moonContainer.children.length > 0) 
-            {
-                const moonSprite = moonContainer.children[0];
-                const originalY = moonSprite.position.y;
-                // Clean up previous effects
-                if (moonSprite.glowEffects) 
-                {
-                    moonSprite.glowEffects.forEach(effect => {
-                        if (effect.parent) effect.parent.removeChild(effect);
-                    });
-                }
-                // Initialize glow effects array
-                moonSprite.glowEffects = [];
-                // Configure glow layers - Adjust scale values to increase/decrease glow size
-                const glowLayers = [
-                    { scale: 1.015, alpha: 0.15 }, // First layer (closest to moon)
-                    { scale: 1.025, alpha: 0.1 },  // Middle layer
-                    { scale: 1.035, alpha: 0.05 }  // Outer layer (increase for wider glow)
-                ];
-                moonSprite.glowLayers = glowLayers;
-                // Get moon anchor points
-                const moonAnchorX = moonSprite.anchor.x;
-                const moonAnchorY = moonSprite.anchor.y;
-                // Create each glow layer
-                glowLayers.forEach(setting => {
-                    const glowSprite = new PIXI.Sprite(moonSprite.texture);
-                    
-                    // Match moon anchor points
-                    glowSprite.anchor.set(moonAnchorX, moonAnchorY);
-                    
-                    // Set initial scale based on configuration
-                    glowSprite.scale.set(
-                        moonSprite.scale.x * setting.scale,
-                        moonSprite.scale.y * setting.scale
-                    );
-                    // Configure appearance
-                    glowSprite.alpha = setting.alpha;
-                    glowSprite.tint = 0xFFFFFF;
-                    // Add to container behind moon
-                    moonContainer.addChildAt(glowSprite, 0);
-                    moonSprite.glowEffects.push(glowSprite);
-                });
-                // Animation function
-                const animate = (delta) => {
-                    const time = performance.now() / 1000;
-                    // Moon floating animation
-                    moonSprite.position.y = originalY + Math.sin(time * 0.4) * 10;
-                    // Animate glow layers
-                    if (moonSprite.glowEffects && moonSprite.glowEffects.length) 
-                    {
-                        const layers = moonSprite.glowLayers;
-                        
-                        moonSprite.glowEffects.forEach((glow, index) => {
-                            // Position glow layers (offset by -10px for better centering)
-                            glow.position.x = moonSprite.position.x - 10;
-                            glow.position.y = moonSprite.position.y - 10;
-                            // Create phase offset for each layer
-                            const phaseOffset = index * 0.3;
-                            // Pulsing effect - controls the "breathing" of the glow
-                            const pulse = (Math.sin((time + phaseOffset) * 0.6) + 1) / 2;
-                            // Adjust opacity with pulse
-                            const baseAlpha = layers[index].alpha;
-                            glow.alpha = baseAlpha * (0.7 + pulse * 0.6);
-                            // Apply uniform scale with pulsing variation
-                            // Adjust scaleVariation (0.025) to increase/decrease pulse intensity
-                            const baseScale = layers[index].scale;
-                            const scaleVariation = 1 + (pulse * 0.025);
-                            glow.scale.set(
-                                moonSprite.scale.x * baseScale * scaleVariation,
-                                moonSprite.scale.y * baseScale * scaleVariation
-                            );
-                        });
-                    }
-                };
-                // Remove previous animation if exists
-                if (moonSprite.moonAnimation) 
-                {
-                    this.app.ticker.remove(moonSprite.moonAnimation);
-                }
-                // Add animation to ticker
-                this.app.ticker.add(animate);
-                moonSprite.moonAnimation = animate;
-            }
-        } 
-        else if (theme === 'light') 
-        {
-            // Clean up any moon effects when in light theme
-            const moonContainer = this.layers['moon'];
-            if (moonContainer && moonContainer.children.length > 0) 
-            {
-                const moonSprite = moonContainer.children[0];
-                
-                if (moonSprite && moonSprite.glowEffects) 
-                {
-                    moonSprite.glowEffects.forEach(effect => {
-                        if (effect.parent) effect.parent.removeChild(effect);
-                    });
-                    moonSprite.glowEffects = [];
-                }
-                if (moonSprite && moonSprite.moonAnimation) 
-                {
-                    this.app.ticker.remove(moonSprite.moonAnimation);
-                    moonSprite.moonAnimation = null;
-                }
-            }
-        }
-    }
+	
+	// Apply special visual effects to certain layers
+	applySpecialEffects(theme)
+	{
+		if (theme === 'dark' && this.layers['moon']) 
+		{
+			const moonContainer = this.layers['moon'];
+			
+			if (moonContainer.children.length > 0) 
+			{
+				const moonSprite = moonContainer.children[0];
+				const originalY = moonSprite.position.y;
+				
+				// Clean up previous effects
+				if (moonSprite.glowEffects) 
+				{
+					moonSprite.glowEffects.forEach(effect => {
+						if (effect.parent) effect.parent.removeChild(effect);
+					});
+				}
+				
+				// Initialize glow effects array
+				moonSprite.glowEffects = [];
+				
+				// Configure glow layers
+				const glowLayers = [
+					{ scale: 1.01, alpha: 0.15 }, // First layer (closest)
+					{ scale: 1.015, alpha: 0.1 },  // Middle layer
+					{ scale: 1.02, alpha: 0.05 }  // Outer layer
+				];
+				
+				moonSprite.glowLayers = glowLayers;
+				
+				// Get moon anchor points
+				const moonAnchorX = moonSprite.anchor.x;
+				const moonAnchorY = moonSprite.anchor.y;
+				
+				// Create each glow layer
+				glowLayers.forEach(setting => {
+					const glowSprite = new PIXI.Sprite(moonSprite.texture);
+					
+					// Match moon anchor points
+					glowSprite.anchor.set(moonAnchorX, moonAnchorY);
+					
+					// Set initial scale based on configuration
+					glowSprite.scale.set(
+						moonSprite.scale.x * setting.scale,
+						moonSprite.scale.y * setting.scale
+					);
+					
+					// Configure appearance
+					glowSprite.alpha = setting.alpha;
+					glowSprite.tint = 0xFFFFFF;
+					
+					// Add to container behind moon
+					moonContainer.addChildAt(glowSprite, 0);
+					moonSprite.glowEffects.push(glowSprite);
+				});
+				
+				// Animation function
+				const animate = (delta) => {
+					const time = performance.now() / 1000;
+					
+					// Moon floating animation
+					moonSprite.position.y = originalY + Math.sin(time * 0.4) * 10;
+					
+					// Animate glow layers
+					if (moonSprite.glowEffects && moonSprite.glowEffects.length) 
+					{
+						const layers = moonSprite.glowLayers;
+						
+						moonSprite.glowEffects.forEach((glow, index) => {
+							// Position glow layers
+							glow.position.x = moonSprite.position.x;
+							glow.position.y = moonSprite.position.y;
+							
+							// Create phase offset for each layer
+							const phaseOffset = index * 0.3;
+							
+							// Pulsing effect
+							const pulse = (Math.sin((time + phaseOffset) * 0.6) + 1) / 2;
+							
+							// Adjust opacity with pulse
+							const baseAlpha = layers[index].alpha;
+							glow.alpha = baseAlpha * (0.5 + pulse * 0.4);
+							
+							// Apply uniform scale with pulsing variation
+							const baseScale = layers[index].scale;
+							const scaleVariation = 1 + (pulse * 0.025);
+							glow.scale.set(
+								moonSprite.scale.x * baseScale * scaleVariation,
+								moonSprite.scale.y * baseScale * scaleVariation
+							);
+						});
+					}
+				};
+				
+				// Remove previous animation if exists
+				if (moonSprite.moonAnimation) 
+				{
+					this.app.ticker.remove(moonSprite.moonAnimation);
+				}
+				
+				// Add animation to ticker
+				this.app.ticker.add(animate);
+				moonSprite.moonAnimation = animate;
+			}
+		} 
+		else if (theme === 'light') 
+		{
+			// Clean up any moon effects when in light theme
+			const moonContainer = this.layers['moon'];
+			if (moonContainer && moonContainer.children.length > 0) 
+			{
+				const moonSprite = moonContainer.children[0];
+				
+				if (moonSprite && moonSprite.glowEffects) 
+				{
+					moonSprite.glowEffects.forEach(effect => {
+						if (effect.parent) effect.parent.removeChild(effect);
+					});
+					moonSprite.glowEffects = [];
+				}
+				
+				if (moonSprite && moonSprite.moonAnimation) 
+				{
+					this.app.ticker.remove(moonSprite.moonAnimation);
+					moonSprite.moonAnimation = null;
+				}
+			}
+		}
+	}
 
-	/**
-	 * Setup the theme toggle button
-	 */
-	setupThemeToggle() {
+	// Setup the theme toggle button
+	setupThemeToggle()
+	{
 		const themeToggleDesktop = document.getElementById('theme-toggle');
 		const themeToggleMobile = document.getElementById('theme-toggle-mobile');
 		
@@ -388,41 +430,38 @@ class SceneManager
 		updateToggleText(this.currentTheme);
 		
 		// Add click event to desktop button
-		if (themeToggleDesktop) {
+		if (themeToggleDesktop) 
+		{
 			themeToggleDesktop.addEventListener('click', () => {
 				this.toggleTheme();
 			});
 		}
 		
 		// Add click event to mobile button
-		if (themeToggleMobile) {
+		if (themeToggleMobile) 
+		{
 			themeToggleMobile.addEventListener('click', () => {
 				this.toggleTheme();
 			});
 		}
-		
-		console.log("Theme toggle buttons configured:", {
-			desktop: !!themeToggleDesktop,
-			mobile: !!themeToggleMobile
-		});
 	}
 
-	
-	/**
-	 * Toggle between light and dark themes
-	 */
-	toggleTheme() {
+	// Toggle between light and dark themes
+	toggleTheme()
+	{
 		// Toggle theme
 		const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
-		console.log(`Toggling theme from ${this.currentTheme} to ${newTheme}`);
 		
 		// Store the new theme in localStorage
 		localStorage.setItem('theme', newTheme);
 		
 		// Apply the new theme to PIXI scene
-		try {
+		try 
+		{
 			this.applyTheme(newTheme);
-		} catch (error) {
+		} 
+		catch (error) 
+		{
 			console.error("Error applying PIXI theme:", error);
 		}
 		
@@ -436,40 +475,36 @@ class SceneManager
 		
 		// Apply theme to body for CSS styling
 		document.body.setAttribute('data-theme', newTheme);
-		console.log(`Body data-theme attribute updated to: ${newTheme}`);
 		
-		// If CloudsManager exists, refresh it
-		if (window.cloudsManager) {
-			console.log("Refreshing clouds for theme:", newTheme);
-			try {
-				// If the clouds manager has init method for the theme, use it
-				if (typeof window.cloudsManager.init === 'function') {
+		// Update clouds if CloudsManager exists
+		if (window.cloudsManager) 
+		{
+			try 
+			{
+				if (typeof window.cloudsManager.init === 'function') 
+				{
 					window.cloudsManager.init(newTheme);
 				} 
-				// Otherwise use the refresh method
-				else if (typeof window.cloudsManager.refreshClouds === 'function') {
+				else if (typeof window.cloudsManager.refreshClouds === 'function') 
+				{
 					window.cloudsManager.refreshClouds();
 				}
-			} catch (error) {
+			} 
+			catch (error) 
+			{
 				console.warn("Error refreshing clouds:", error);
 			}
 		}
 	}
-	/**
-	 * Initialize parallax effect
-	 */
+	
+	// Initialize parallax effect
 	initParallax() 
 	{
-		// For PIXI-based parallax, we'll implement this directly here
-		// rather than using a separate ParallaxEffect class
-		
 		// Set up the mouse move and scroll event handlers
 		this.setupParallaxEvents();
-		
-		console.log("PIXI parallax effect initialized");
 	}
 	
-	 //Set up event handlers for parallax effects
+	// Set up event handlers for parallax effects
 	setupParallaxEvents()
 	{
 		if (!this.app)
@@ -507,7 +542,7 @@ class SceneManager
 				}
 				
 				const speed = container.parallaxSpeed || 0;
-				const mouseIntensity = 0.3; // Increased for more noticeable effect
+				const mouseIntensity = 0.3;
 				
 				// Calculate offsets
 				const targetX = (e.clientX - centerX) * speed * mouseIntensity;
@@ -524,8 +559,6 @@ class SceneManager
 			// Get scroll position
 			const scrolled = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
 			
-			console.log("Scroll position detected:", scrolled);
-			
 			for (const [id, container] of Object.entries(this.layers)) 
 			{
 				// Skip background or invisible layers
@@ -540,16 +573,11 @@ class SceneManager
 				// Skip layers with zero speed
 				if (speed === 0) continue;
 				
-				// Use a stronger effect for scroll - direct mapping
+				// Calculate offset for scroll effect
 				const yOffset = -scrolled * speed * 1.0;
 				
 				// Apply scroll effect to target
 				this.parallaxTargets[id].targetScrollY = yOffset;
-				
-				// Debug logging for specific layers
-				if (id === 'mountain' || id === 'field1' || id === 'castle') {
-					console.log(`Parallax for ${id}: speed=${speed}, offset=${yOffset}`);
-				}
 			}
 		};
 		
@@ -563,13 +591,9 @@ class SceneManager
 		
 		// Increase ticker priority for smoother parallax
 		this.app.ticker.add(this.updateParallax.bind(this), null, PIXI.UPDATE_PRIORITY.HIGH);
-		
-		console.log("Parallax scroll events configured");
 	}
 
-	/**
-	 * Update parallax positions on each frame
-	 */
+	// Update parallax positions on each frame
 	updateParallax() 
 	{
 		if (!this.parallaxTargets) 
@@ -577,7 +601,7 @@ class SceneManager
 			return;
 		}
 		
-		const smoothFactor = 0.1; // Increased for faster movement
+		const smoothFactor = 0.1;
 		
 		for (const [id, container] of Object.entries(this.layers)) 
 		{
@@ -606,90 +630,99 @@ class SceneManager
 			// Apply the transform to the PIXI container
 			container.position.x = (target.originalX || 0) + target.x;
 			container.position.y = (target.originalY || 0) + target.y;
-			
-			// Debug logging for first few frames of mountain layer
-			if ((id === 'mountain' || id === 'field1') && this.app.ticker.elapsedMS < 1000) {
-				console.log(`Parallax update ${id}: x=${container.position.x}, y=${container.position.y}`);
-			}
 		}
 	}
 
-	// Apply scaling to maintain 2:1 ratio (height:width) for all devices
-	applyBackgroundScaling() {
+	// Apply scaling to maintain 2:1 ratio for all devices
+	applyBackgroundScaling() 
+	{
 		const screenWidth = this.app.screen.width;
 		
-		// Para rastrear a altura necessária para o documento
+		// Track maximum layer height
 		let maxLayerHeight = 0;
 		
-		// Calcular altura do conteúdo baseado nas texturas reais
-		for (const [id, container] of Object.entries(this.layers)) {
-			for (let i = 0; i < container.children.length; i++) {
+		// Calculate content height based on actual textures
+		for (const [id, container] of Object.entries(this.layers)) 
+		{
+			for (let i = 0; i < container.children.length; i++) 
+			{
 				const child = container.children[i];
 				
-				if (child instanceof PIXI.Sprite) {
-					// Calcular proporção original da imagem
+				if (child instanceof PIXI.Sprite) 
+				{
+					// Calculate original image ratio
 					let originalRatio = 2; // Fallback
-					if (child.texture && child.texture.width && child.texture.height) {
+					if (child.texture && child.texture.width && child.texture.height) 
+					{
 						originalRatio = child.texture.width / child.texture.height;
 					}
 					
-					// Usar contain
+					// Apply contain sizing
 					let newWidth = screenWidth;
 					let newHeight = screenWidth / originalRatio;
 					
-					// Aplicar dimensões
+					// Apply dimensions
 					child.width = newWidth;
 					child.height = newHeight;
 					
-					// Centralizar horizontalmente
+					// Center horizontally
 					child.anchor.set(0.5, 0);
 					child.position.x = screenWidth / 2;
 					
-					// Rastrear altura máxima para ajustar
-					if (newHeight > maxLayerHeight) {
+					// Track maximum height
+					if (newHeight > maxLayerHeight) 
+					{
 						maxLayerHeight = newHeight;
 					}
 				}
 			}
 		}
 		
-		// AQUI É A PARTE IMPORTANTE: Ajustar elementos DOM dinamicamente
-		if (maxLayerHeight > 0) {
-			// 1. Ajustar altura da scene para conter a imagem
+		// Adjust DOM elements dynamically
+		if (maxLayerHeight > 0) 
+		{
+			// Adjust scene height to contain image
 			const sceneElement = document.getElementById('main-scene');
-			if (sceneElement) {
+			if (sceneElement) 
+			{
 				sceneElement.style.height = maxLayerHeight + 'px';
-				
 			}
-			if (this.app && this.app.renderer) {
+			
+			if (this.app && this.app.renderer) 
+			{
 				this.app.renderer.resize(this.app.screen.width, maxLayerHeight);
 			}
-			// 2. Posicionar game-container na metade inferior
+			
+			// Position game-container in lower half
 			const gameContainer = document.getElementById('game-container');
-			if (gameContainer) {
-				// Precisamente na metade
+			if (gameContainer) 
+			{
 				const halfHeight = maxLayerHeight / 2;
 				gameContainer.style.top = halfHeight + 'px';
 				gameContainer.style.height = halfHeight + 'px';
 			}
+			
+			// Adjust footer position
 			const footer = document.querySelector('footer');
-			if (footer && sceneElement) {
-				// Use o valor da altura calculada para a scene
-				const sceneBottom = maxLayerHeight;
-				if (window.innerWidth <= 768) {
-					// Adicionar margem extra para telas pequenas
+			if (footer && sceneElement) 
+			{
+				if (window.innerWidth <= 768) 
+				{
+					// Extra margin for small screens
 					footer.style.marginTop = (maxLayerHeight + 50) + 'px';
-				} else {
-					// Margem normal para telas maiores
+				} 
+				else 
+				{
+					// Normal margin for larger screens
 					footer.style.marginTop = maxLayerHeight + 'px';
 				}
 			}
-			document.body.style.minHeight = (maxLayerHeight) + 'px';
 			
-			console.log(`Layout ajustado dinamicamente: altura imagem=${maxLayerHeight}px, game-area começa em ${maxLayerHeight/2}px`);
+			document.body.style.minHeight = (maxLayerHeight) + 'px';
 		}
 	}
-		// Handle window resize events
+	
+	// Handle window resize events
 	onResize(width, height) 
 	{
 		if (!this.app || !this.backgroundGroup) 
@@ -697,31 +730,24 @@ class SceneManager
 			return;
 		}
 		
-		console.log(`Handling resize event: ${width}x${height}`);
-		
-		// Atualizar dimensões do renderizador
+		// Update renderer dimensions
 		if (this.app.renderer) 
 		{
 			this.app.renderer.resize(width, height);
 		}
 		
-		// NOVA ABORDAGEM: Simplesmente chamar applyBackgroundScaling()
-		// que já contém a lógica correta de "contain" que implementamos
+		// Apply background scaling
 		this.applyBackgroundScaling();
-		
-		console.log(`Scene resized to ${width}x${height} with contain behavior`);
 	}
 
-	/**
-	 * Handle window resize events to update scaling
-	 */
-	handleResize() {
+	// Handle window resize events to update scaling
+	handleResize() 
+	{
 		// Skip if not initialized yet
-		if (!this.app || !this.backgroundGroup) {
+		if (!this.app || !this.backgroundGroup) 
+		{
 			return;
 		}
-		
-		console.log("Window resize detected, updating scene scaling");
 		
 		// Update PIXI renderer size
 		this.app.renderer.resize(window.innerWidth, window.innerHeight);
@@ -729,12 +755,14 @@ class SceneManager
 		// Update scene scaling
 		this.applyBackgroundScaling();
 		
-		
 		// Update parallax targets if they exist
-		if (this.parallaxTargets) {
+		if (this.parallaxTargets) 
+		{
 			// Reset targets to avoid jumps
-			for (const [id, target] of Object.entries(this.parallaxTargets)) {
-				if (target) {
+			for (const [id, target] of Object.entries(this.parallaxTargets)) 
+			{
+				if (target) 
+				{
 					target.targetX = 0;
 					target.targetY = 0;
 					target.targetScrollY = 0;
@@ -742,25 +770,32 @@ class SceneManager
 			}
 		}
 
+		// Handle navbar behavior on resize
 		const navbarCollapse = document.getElementById('navbarSupportedContent');
 		const navbarToggler = document.querySelector('.navbar-toggler');
 		
-		if (navbarCollapse && navbarToggler) {
-			// Se a tela for maior que 768px, força o menu a aparecer
-			if (window.innerWidth > 768) {
+		if (navbarCollapse && navbarToggler) 
+		{
+			// Force menu to show on larger screens
+			if (window.innerWidth > 768) 
+			{
 				navbarCollapse.classList.add('show');
 				navbarToggler.setAttribute('aria-expanded', 'true');
-				console.log("Screen size > 768px, showing navbar");
-			} else {
-				// Opcional: se quiser esconder automaticamente em telas pequenas
-				// navbarCollapse.classList.remove('show');
-				// navbarToggler.setAttribute('aria-expanded', 'false');
-				console.log("Screen size <= 768px, navbar state unchanged");
 			}
 		}
 	}
-
 	
+	// Linear interpolation helper
+	lerp(start, end, t) 
+	{
+		return start + (end - start) * t;
+	}
+	
+	// Constrain a value between min and max
+	boundValue(value, min, max) 
+	{
+		return Math.min(Math.max(value, min), max);
+	}
 }
 
 // Function to initialize the SceneManager
