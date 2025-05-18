@@ -109,7 +109,8 @@ class CursorEffectComponent
 		// Ensure uiGroup is in front
 		this.uiGroup.zIndex = 1000;
 		// Force sorting if parent has sortableChildren
-		if (this.uiGroup.parent && this.uiGroup.parent.sortableChildren) {
+		if (this.uiGroup.parent && this.uiGroup.parent.sortableChildren) 
+    {
 			this.uiGroup.parent.sortChildren();
 		}
 	}
@@ -119,7 +120,8 @@ class CursorEffectComponent
 	 */
 	async loadTextures() 
 	{
-		try {
+		try 
+    {
 			// Get textures directly from AssetManager
 			if (window.assetManager && window.assetManager.textures) 
 			{
@@ -200,10 +202,12 @@ class CursorEffectComponent
 	 */
 	onThemeChange(newTheme) 
 	{
-		if (newTheme === this.currentTheme) return;
+		if (newTheme === this.currentTheme) 
+    {
+      return;
+    }
 		
 		this.currentTheme = newTheme;
-		
 		// Update cursor texture
 		if (this.cursorSprite) 
 		{
