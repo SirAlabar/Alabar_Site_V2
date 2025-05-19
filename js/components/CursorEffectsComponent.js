@@ -211,10 +211,39 @@ export class CursorEffectComponent
 	 */
 	bindEvents() 
 	{
+		// Define global variables for mouse tracking
+		window.mouseX = 0;
+		window.mouseY = 0;
+		
+		// Add listener to update global mouse position
+		document.addEventListener('mousemove', (e) => {
+			window.mouseX = e.clientX;
+			window.mouseY = e.clientY;
+		});
+		
 		// Track cursor events on canvas
 		this.app.view.addEventListener('pointerenter', this.onCanvasEnter.bind(this));
 		this.app.view.addEventListener('pointerleave', this.onCanvasLeave.bind(this));
 		this.app.view.addEventListener('pointermove', this.onPointerMove.bind(this));
+		
+		// Add scroll handler for PIXI cursor
+		window.addEventListener('scroll', () => {
+			// If cursor was in canvas, ensure cursor sprite stays visible during scroll
+			if (this.cursorInCanvas && this.cursorSprite) 
+			{
+				const rect = this.app.view.getBoundingClientRect();
+				// Now window.mouseX and window.mouseY exist and have valid values
+				const mouseX = window.mouseX || 0;
+				const mouseY = window.mouseY || 0;
+				// Update cursor position relative to canvas
+				this.cursorPos.x = mouseX - rect.left;
+				this.cursorPos.y = mouseY - rect.top;
+				// Update the sprite
+				this.cursorSprite.x = this.cursorPos.x;
+				this.cursorSprite.y = this.cursorPos.y;
+				this.cursorSprite.visible = true;
+			}
+		}, { passive: true });
 		// Add to PIXI ticker for frame updates
 		this.app.ticker.add(this.update, this);
 	}
@@ -230,6 +259,11 @@ export class CursorEffectComponent
 		{
 			this.cursorSprite.visible = true;
 		}
+		const rect = this.app.view.getBoundingClientRect();
+		const mouseX = event.clientX || 0;
+		const mouseY = event.clientY || 0;
+		this.cursorPos.x = mouseX - rect.left;
+		this.cursorPos.y = mouseY - rect.top;
 	}
 
 	/**
