@@ -469,11 +469,16 @@ export class AssetManager
 	 */
 	getBackgroundTexture(theme, layer) 
 	{
+		const skipWarningLayers = ['background', 'clouds'];
+
 		if (this.backgrounds[theme] && this.backgrounds[theme][layer]) 
 		{
 			return this.backgrounds[theme][layer];
 		}
-		console.warn(`Texture not found for ${theme}_${layer}`);
+		if (!skipWarningLayers.includes(layer)) 
+		{
+			console.warn(`Texture not found for ${theme}_${layer}`);
+		}
 		return null;
 	}
 	

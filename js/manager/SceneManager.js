@@ -187,8 +187,6 @@ export class SceneManager
 		{
 			themeToggle.textContent = theme === 'light' ? '🌚' : '🌞';
 		}
-		
-		console.log(`Theme applied: ${theme}`);
 	}
 	
 	// Set up the background layer (color or image)

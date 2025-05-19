@@ -12,5 +12,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	loadingManager.start();
 
-	console.log('Application initialization started');
 });
