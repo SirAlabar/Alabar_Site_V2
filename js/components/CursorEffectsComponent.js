@@ -5,14 +5,15 @@
  * Includes geometric particles in light theme and blood drops in dark theme
  */
 
-class CursorEffectComponent 
+export class CursorEffectComponent 
 {
-	constructor(game, app, uiGroup, options = {}) 
+	constructor(game, app, uiGroup, options = {}, assetManager) 
 	{
 		// System references
 		this.game = game;
 		this.app = app;
 		this.uiGroup = uiGroup;
+		this.assetManager = assetManager;
 		
 		// Check if we have the necessary dependencies
 		if (!this.app || !this.uiGroup) 
@@ -62,39 +63,39 @@ class CursorEffectComponent
 	/**
 	 * Initialize the component
 	 */
-  init() 
-  {
-      if (this.isInitialized)
-      {
-        return;
-      }
-      
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme) 
-      {
-          this.currentTheme = savedTheme;
-      } 
-      else 
-      {
-          this.currentTheme = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-      }
-      
-      // Configure PIXI containers
-      this.setupContainers();
-      // Load textures and create cursor sprite with correct theme
-      this.loadTextures().then(() => {
-          this.createCursorSprite();
-          if (this.cursorSprite) 
-          {
-              this.cursorSprite.visible = false;
-          }
-      });
-      // Set up theme change observer
-      this.observeThemeChanges();
-      // Add event listeners
-      this.bindEvents();
-      this.isInitialized = true;
-  }
+	init() 
+	{
+			if (this.isInitialized)
+			{
+				return;
+			}
+			
+			const savedTheme = localStorage.getItem('theme');
+			if (savedTheme) 
+			{
+					this.currentTheme = savedTheme;
+			} 
+			else 
+			{
+					this.currentTheme = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+			}
+			
+			// Configure PIXI containers
+			this.setupContainers();
+			// Load textures and create cursor sprite with correct theme
+			this.loadTextures().then(() => {
+					this.createCursorSprite();
+					if (this.cursorSprite) 
+					{
+							this.cursorSprite.visible = false;
+					}
+			});
+			// Set up theme change observer
+			this.observeThemeChanges();
+			// Add event listeners
+			this.bindEvents();
+			this.isInitialized = true;
+	}
 
 	/**
 	 * Set up PIXI containers for particles
@@ -110,7 +111,7 @@ class CursorEffectComponent
 		this.uiGroup.zIndex = 1000;
 		// Force sorting if parent has sortableChildren
 		if (this.uiGroup.parent && this.uiGroup.parent.sortableChildren) 
-    {
+		{
 			this.uiGroup.parent.sortChildren();
 		}
 	}
@@ -121,24 +122,12 @@ class CursorEffectComponent
 	async loadTextures() 
 	{
 		try 
-    {
+		{
 			// Get textures directly from AssetManager
-			if (window.assetManager && window.assetManager.textures) 
+			if (this.assetManager && this.assetManager.textures) 
 			{
-				this.cursorLightTexture = window.assetManager.textures['cursor_light'];
-				this.cursorDarkTexture = window.assetManager.textures['cursor_dark'];
-				
-				if (!this.cursorLightTexture || !this.cursorDarkTexture) 
-				{
-					console.error("Required cursor textures not available in AssetManager");
-					return false;
-				}
-				return true;
-			} 
-			else 
-			{
-				console.error("AssetManager not available");
-				return false;
+					this.cursorLightTexture = this.assetManager.textures.cursor_light;
+					this.cursorDarkTexture = this.assetManager.textures.cursor_dark;
 			}
 		} 
 		catch (error) 
@@ -203,9 +192,9 @@ class CursorEffectComponent
 	onThemeChange(newTheme) 
 	{
 		if (newTheme === this.currentTheme) 
-    {
-      return;
-    }
+		{
+			return;
+		}
 		
 		this.currentTheme = newTheme;
 		// Update cursor texture
@@ -700,14 +689,4 @@ class CursorEffectComponent
 		
 		this.isInitialized = false;
 	}
-}
-
-// Export for global use or as module
-if (typeof module !== 'undefined' && module.exports) 
-{
-	module.exports = CursorEffectComponent;
-} 
-else 
-{
-	window.CursorEffectComponent = CursorEffectComponent;
 }

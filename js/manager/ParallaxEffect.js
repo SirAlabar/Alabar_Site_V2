@@ -1,4 +1,7 @@
-class ParallaxEffect 
+
+import { lerp, boundValue } from '../utils/MathUtils.js';
+
+export class ParallaxEffect 
 {
 	constructor(pixiApp, backgroundGroup) 
 	{
@@ -77,8 +80,8 @@ class ParallaxEffect
 			const current = this.currentPositions.get(layer);
 			if (current) 
 			{
-				current.targetX = this.boundValue(targetX, this.bounds.mouse.min, this.bounds.mouse.max);
-				current.targetY = this.boundValue(targetY, this.bounds.mouse.min, this.bounds.mouse.max);
+				current.targetX = boundValue(targetX, this.bounds.mouse.min, this.bounds.mouse.max);
+				current.targetY = boundValue(targetY, this.bounds.mouse.min, this.bounds.mouse.max);
 			}
 		}
 	}
@@ -101,7 +104,7 @@ class ParallaxEffect
 			const speed = layer.parallaxSpeed || 0;
 			
 			const yOffset = -(scrolled * speed * this.scrollIntensity);
-			const boundedY = this.boundValue(yOffset, this.bounds.scroll.min, this.bounds.scroll.max);
+			const boundedY = boundValue(yOffset, this.bounds.scroll.min, this.bounds.scroll.max);
 			
 			const current = this.currentPositions.get(layer);
 			if (current) 
@@ -150,25 +153,15 @@ class ParallaxEffect
 			}
 			
 			// Smoothly interpolate to target values
-			current.x = this.lerp(current.x, current.targetX, this.smoothFactor);
-			current.y = this.lerp(current.y, current.targetScrollY + current.targetY, this.smoothFactor);
+			current.x = lerp(current.x, current.targetX, this.smoothFactor);
+			current.y = lerp(current.y, current.targetScrollY + current.targetY, this.smoothFactor);
 			
 			// Apply transform
 			layer.position.x = current.x;
 			layer.position.y = current.y;
 		}
 	}
-	
-	lerp(start, end, factor) 
-	{
-		return start + (end - start) * factor;
-	}
-	
-	boundValue(value, min, max) 
-	{
-		return Math.min(Math.max(value, min), max);
-	}
-	
+
 	/**
 	 * Update when window is resized
 	 */
@@ -189,5 +182,7 @@ class ParallaxEffect
 	}
 }
 
-// Make ParallaxEffect globally available
-window.ParallaxEffect = ParallaxEffect;
+export function createParallaxEffect(pixiApp, backgroundGroup) 
+{
+  return new ParallaxEffect(pixiApp, backgroundGroup);
+}

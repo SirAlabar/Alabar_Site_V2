@@ -1,13 +1,18 @@
+
+import { lerp, boundValue } from '../utils/MathUtils.js';
+
 /**
  * CloudsManager.js for PixiJS
  * Creates and manages cloud sprites with custom animations
  */
-class CloudsManager {
-	constructor(app, backgroundGroup) 
+export class CloudsManager {
+	constructor(app, backgroundGroup, assetManager, sceneManager) 
 	{
 		// Store PixiJS references
 		this.app = app;
 		this.backgroundGroup = backgroundGroup;
+		this.assetManager = assetManager;
+		this.sceneManager = sceneManager;
 		// Cloud container
 		this.cloudsContainer = new PIXI.Container();
 		this.cloudsContainer.name = 'clouds';
@@ -77,14 +82,14 @@ class CloudsManager {
 		}
 		this.initInProgress = true;
 		// Check if we have access to the asset manager and app
-		if (!window.assetManager || !this.app) 
+		if (!this.assetManager || !this.app) 
 		{
 			console.error('CloudsManager: assetManager or PixiJS app not available');
 			this.initInProgress = false;
 			return;
 		}
 		// Verify that the clouds spritesheet is loaded
-		const cloudsSpritesheet = window.assetManager.getSpritesheet(this.config.spritesheetName);
+		const cloudsSpritesheet = this.assetManager.getSpritesheet(this.config.spritesheetName);
 		if (!cloudsSpritesheet) 
 		{
 			console.warn(`CloudsManager: ${this.config.spritesheetName} not found - will retry later`);
@@ -125,11 +130,11 @@ class CloudsManager {
 		const themeToggle = document.getElementById('theme-toggle');
 		const themeToggleMobile = document.getElementById('theme-toggle-mobile');
 		
-		if (window.sceneManager) 
+		if (this.sceneManager) 
 		{
-			const originalToggleTheme = window.sceneManager.toggleTheme;
-			window.sceneManager.toggleTheme = () => {
-				originalToggleTheme.call(window.sceneManager);
+			const originalToggleTheme = this.sceneManager.toggleTheme;
+			this.sceneManager.toggleTheme = () => {
+				originalToggleTheme.call(this.sceneManager);
 				
 				const newTheme = document.body.getAttribute('data-theme') || 'light';
 				
@@ -350,7 +355,7 @@ class CloudsManager {
 			return null;
 		}
 		// Get the spritesheet
-		const cloudsSpritesheet = window.assetManager.getSpritesheet(this.config.spritesheetName);
+		const cloudsSpritesheet = this.assetManager.getSpritesheet(this.config.spritesheetName);
 		if (!cloudsSpritesheet || !cloudsSpritesheet.textures) 
 		{
 			console.error('CloudsManager: Cannot create cloud - spritesheet not available');
@@ -490,9 +495,9 @@ class CloudsManager {
 	//Get the current scene height
 	getSceneHeight() 
 	{
-		if (window.sceneManager && window.sceneManager.app) 
+		if (this.sceneManager && this.sceneManager.app) 
 		{
-			return window.sceneManager.app.screen.height * 0.35;
+			return this.sceneManager.app.screen.height * 0.35;
 		}
 		// Fallback:
 		return window.innerHeight * 0.55;
@@ -507,10 +512,10 @@ class CloudsManager {
 		try 
 		{
 			// First try to get scale info from SceneManager if available
-			if (window.sceneManager && window.sceneManager.backgroundGroup) 
+			if (this.sceneManager && this.sceneManager.backgroundGroup) 
 			{
 				// Find the background or layer scale
-				const backgroundGroup = window.sceneManager.backgroundGroup;
+				const backgroundGroup = this.sceneManager.backgroundGroup;
 				if (backgroundGroup.children && backgroundGroup.children.length > 0) 
 				{
 					// Check layers
@@ -811,12 +816,3 @@ class CloudsManager {
 		this.activeCloudSprites = [];
 	}
 }
-
- //Linear interpolation helper function
-function lerp(start, end, t) 
-{
-	return start + (end - start) * t;
-}
-
-// Make CloudsManager globally available
-window.CloudsManager = CloudsManager;

@@ -1,11 +1,15 @@
-class SceneManager 
+import { createParallaxEffect } from './ParallaxEffect.js';
+import { lerp, boundValue } from '../utils/MathUtils.js';
+
+export class SceneManager 
 {
-	constructor() 
+	constructor(assetManager,  cloudsManager) 
 	{
 		// PIXI references - will be set by setBackgroundGroup
 		this.app = null;
 		this.backgroundGroup = null;
-		
+		this.assetManager = assetManager;
+		this.cloudsManager = cloudsManager;
 		// Layer containers
 		this.layers = {};
 		this.parallaxEffect = null;
@@ -34,6 +38,11 @@ class SceneManager
 		
 		// Resize listener to update scaling when window size changes
 		window.addEventListener('resize', this.handleResize.bind(this));
+	}
+
+	setCloudsManager(cloudsManager) 
+	{
+		this.cloudsManager = cloudsManager;
 	}
 
 	// Set the PIXI background group and app references
@@ -94,7 +103,7 @@ class SceneManager
 		}
 		
 		// Check if AssetManager is available
-		if (!window.assetManager) 
+		if (!this.assetManager) 
 		{
 			console.error("AssetManager not available");
 			return;
@@ -113,7 +122,7 @@ class SceneManager
 		for (const [id, container] of Object.entries(this.layers)) 
 		{
 			// Skip the background layer, it's handled separately
-			if (id === 'background')
+			if (id === 'background' || id === 'clouds') 
 			{
 				continue;
 			}
@@ -136,7 +145,7 @@ class SceneManager
 			container.removeChildren();
 			
 			// Get the texture for this layer
-			const texture = window.assetManager.getBackgroundTexture(theme, id);
+			const texture = this.assetManager.getBackgroundTexture(theme, id);
 			if (texture) 
 			{
 				const sprite = new PIXI.Sprite(texture);
@@ -156,15 +165,15 @@ class SceneManager
 		this.applySpecialEffects(theme);
 
 		// Update the cloud system if available
-		if (window.cloudsManager) 
+		if (this.cloudsManager) 
 		{
 			if (theme === 'light') 
 			{
-				window.cloudsManager.init(theme);
+				this.cloudsManager.init(theme);
 			} 
 			else 
 			{
-				window.cloudsManager.hideAllClouds();
+				this.cloudsManager.hideAllClouds();
 			}
 		}
 
@@ -178,8 +187,6 @@ class SceneManager
 		{
 			themeToggle.textContent = theme === 'light' ? '🌚' : '🌞';
 		}
-		
-		console.log(`Theme applied: ${theme}`);
 	}
 	
 	// Set up the background layer (color or image)
@@ -195,7 +202,7 @@ class SceneManager
 		if (theme === 'dark') 
 		{
 			// Try to get background texture for dark theme
-			const bgTexture = window.assetManager.getBackgroundTexture('dark', 'background');
+			const bgTexture = this.assetManager.getBackgroundTexture('dark', 'background');
 			
 			if (bgTexture) 
 			{
@@ -213,7 +220,7 @@ class SceneManager
 		else 
 		{
 			// For light theme
-			const bgTexture = window.assetManager.getBackgroundTexture('light', 'background');
+			const bgTexture = this.assetManager.getBackgroundTexture('light', 'background');
 			
 			if (bgTexture) 
 			{
@@ -477,17 +484,17 @@ class SceneManager
 		document.body.setAttribute('data-theme', newTheme);
 		
 		// Update clouds if CloudsManager exists
-		if (window.cloudsManager) 
+		if (this.cloudsManager) 
 		{
 			try 
 			{
-				if (typeof window.cloudsManager.init === 'function') 
+				if (typeof this.cloudsManager.init === 'function') 
 				{
-					window.cloudsManager.init(newTheme);
+					this.cloudsManager.init(newTheme);
 				} 
-				else if (typeof window.cloudsManager.refreshClouds === 'function') 
+				else if (typeof this.cloudsManager.refreshClouds === 'function') 
 				{
-					window.cloudsManager.refreshClouds();
+					this.cloudsManager.refreshClouds();
 				}
 			} 
 			catch (error) 
@@ -549,8 +556,8 @@ class SceneManager
 				const targetY = (e.clientY - centerY) * speed * mouseIntensity;
 				
 				// Store targets
-				this.parallaxTargets[id].targetX = this.boundValue(targetX, -80, 80);
-				this.parallaxTargets[id].targetY = this.boundValue(targetY, -80, 80);
+				this.parallaxTargets[id].targetX = boundValue(targetX, -80, 80);
+				this.parallaxTargets[id].targetY = boundValue(targetY, -80, 80);
 			}
 		});
 		
@@ -614,7 +621,10 @@ class SceneManager
 			const target = this.parallaxTargets[id];
 			
 			// Skip if no target data
-			if (!target) continue;
+			if (!target) 
+			{
+				continue;
+			}
 			
 			// Initialize values if needed
 			if (target.x === undefined) target.x = 0;
@@ -624,8 +634,8 @@ class SceneManager
 			if (target.targetScrollY === undefined) target.targetScrollY = 0;
 			
 			// Smoothly interpolate to target values
-			target.x = this.lerp(target.x, target.targetX, smoothFactor);
-			target.y = this.lerp(target.y, target.targetScrollY + target.targetY, smoothFactor);
+			target.x = lerp(target.x, target.targetX, smoothFactor);
+			target.y = lerp(target.y, target.targetScrollY + target.targetY, smoothFactor);
 			
 			// Apply the transform to the PIXI container
 			container.position.x = (target.originalX || 0) + target.x;
@@ -784,30 +794,20 @@ class SceneManager
 			}
 		}
 	}
-	
-	// Linear interpolation helper
-	lerp(start, end, t) 
-	{
-		return start + (end - start) * t;
-	}
-	
-	// Constrain a value between min and max
-	boundValue(value, min, max) 
-	{
-		return Math.min(Math.max(value, min), max);
-	}
 }
 
 // Function to initialize the SceneManager
-function initSceneManager() 
+export function getSceneManager(assetManager) 
 {
 	if (!window.sceneManager) 
 	{
-		window.sceneManager = new SceneManager();
+		window.sceneManager = new SceneManager(assetManager);
 	}
 	return window.sceneManager;
 }
 
-// Make SceneManager globally available
-window.SceneManager = SceneManager;
-window.initSceneManager = initSceneManager;
+
+export function initSceneManager(assetManager) 
+{
+	return getSceneManager(assetManager);
+}
