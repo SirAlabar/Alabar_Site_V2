@@ -17,7 +17,8 @@
 
 /* Contact info section */
 .contact-info {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(33, 37, 41, 0.2);
+    backdrop-filter: blur(2px);
     border-radius: 10px;
     padding: 20px;
 }
@@ -33,7 +34,7 @@
 
 /* Contact items */
 .contact-info h5 {
-    color: #33ccff;
+    color: #0011f8;
     margin-bottom: 5px;
     text-shadow: 0 0 3px rgba(51, 204, 255, 0.5);
     font-size: 18px;
@@ -46,7 +47,7 @@
 
 /* Links styling */
 .contact-info a {
-    color: #33ccff;
+    color: #0278a0;
     text-decoration: none;
     transition: color 0.3s ease;
 }

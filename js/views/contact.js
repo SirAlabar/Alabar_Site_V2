@@ -1,29 +1,12 @@
 export default function contact() 
 {
     return `
+        <div class="contact-content">
             <h2 class="text-center mb-4">Contact Me</h2>
             
             <div class="contact-info">
                 <h3>Get In Touch</h3>
                 <div class="row mt-3">
-                    <div class="col-md-6 mb-3">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-envelope me-3"></i>
-                            <div>
-                                <h5>Email</h5>
-                                <p>hugollmarta@hotmail.com</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-map-marker-alt me-3"></i>
-                            <div>
-                                <h5>Location</h5>
-                                <p>Porto, Portugal</p>
-                            </div>
-                        </div>
-                    </div>
                     <div class="col-md-6 mb-3">
                         <div class="d-flex align-items-center">
                             <i class="fab fa-github me-3"></i>
@@ -44,5 +27,6 @@ export default function contact()
                     </div>
                 </div>
             </div>
+        </div>
     `;
 }

@@ -1,14 +1,22 @@
 // views/404.js
 
-// Função para determinar se estamos sendo carregados diretamente (em vez de via router)
-function isDirectAccess() {
-    // Se estivermos sendo carregados via arquivo HTML, não via router
-    return !window.location.hash || window.location.pathname !== "/";
+// Renderização da página 404 personalizada (usada pelo router)
+export default function notFound() 
+{
+    return `
+        <div class="error-container">
+            <h2 class="error-title">404</h2>
+            <div class="pixel-art-404">404</div>
+            <p class="error-message">Oops! The page you're looking for doesn't exist or has been moved.</p>
+            <a href="#/" class="btn-home" data-link>Return to Home</a>
+        </div>
+    `;
 }
 
-// Função para realizar redirecionamento quando acessado diretamente
-function redirectToHashVersion() {
-    if (isDirectAccess()) {
+// Exportar a função de redirecionamento separadamente
+export function handleDirectAccess() {
+    // Se estivermos sendo carregados via arquivo HTML, não via router
+    if (!window.location.hash && window.location.pathname !== "/") {
         // Capturar o caminho atual
         const path = window.location.pathname;
         
@@ -23,28 +31,9 @@ function redirectToHashVersion() {
         }
         
         // Redirecionar para a versão com hash
+        console.log("Redirecting to hash version:", redirectTo);
         window.location.replace(redirectTo);
         return true;
     }
     return false;
-}
-
-// Executar redirecionamento imediatamente se necessário
-redirectToHashVersion();
-
-// Renderização da página 404 personalizada (usada pelo router)
-export default function notFound() {
-    return `
-        <div id="not-found-container">
-            <div class="error-card">
-                <h2>Page Not Found</h2>
-                <div class="pixel-art-404">404</div>
-                <p>The page you're looking for doesn't exist or has been moved.</p>
-                <p>Would you like to return to the castle?</p>
-                <div class="action-buttons">
-                    <a href="#/" class="btn-home">Return Home</a>
-                </div>
-            </div>
-        </div>
-    `;
 }

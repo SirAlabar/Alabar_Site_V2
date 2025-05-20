@@ -5,11 +5,21 @@ import { getSceneManager, initSceneManager } from './manager/SceneManager.js';
 import { LoadingManager } from './loading/LoadingManager.js';
 import { CloudsManager } from './manager/CloudsManager.js';
 
+
 // Import page views
 import home from "./views/home.js";
 import about from "./views/about.js";
 import contact from "./views/contact.js";
-import notFound from "./views/404.js";
+import notFound, { handleDirectAccess } from "./views/404.js";
+
+// No início do seu main.js
+console.log("main.js loaded");
+
+document.addEventListener('DOMContentLoaded', () => {
+  console.log("DOM loaded, URL:", window.location.href);
+  console.log("Current path:", window.location.pathname);
+  console.log("Current hash:", window.location.hash);
+});
 
 // Define routes using hash
 const routes = 
@@ -66,11 +76,13 @@ function navigateTo(hash)
 }
 
 // Separate function to render the page
-function renderPage(route) {
+function renderPage(route) 
+{
     // Get mainScene element
     const mainScene = document.getElementById('main-scene');
     
-    if (mainScene) {
+    if (mainScene) 
+    {
         // Check which page we're displaying
         const hash = getCurrentHash();
         
@@ -87,18 +99,20 @@ function renderPage(route) {
         if (notFoundContainer) notFoundContainer.style.display = 'none';
         
         // Find any other custom containers and hide them
-        document.querySelectorAll('[id$="-container"]').forEach(container => {
+        document.querySelectorAll('[id$="-container"]').forEach(container => 
+        {
             if (container.id !== 'game-container' && 
                 container.id !== 'about-container' && 
                 container.id !== 'contact-container' && 
-                container.id !== 'not-found-container') {
+                container.id !== 'not-found-container') 
+            {
                 container.style.display = 'none';
             }
         });
         
         // Show the appropriate container based on hash
-       switch (hash) 
-       {
+        switch (hash) 
+        {
             case "#/":
             case "":
                 // Home page - Show game container
@@ -149,42 +163,49 @@ function renderPage(route) {
                 }
                 break;
                 
-            case "#/404":
-                // 404 page - Render content and show container
-                if (notFoundContainer) 
+            default:
+                // Check if this is a custom page with a valid route
+                if (routes[hash]) 
                 {
-                    try 
+                    // Valid custom route - get container ID from hash
+                    const containerID = hash.substring(2).replace(/^(\d)/, 'page-$1') + '-container';
+                    const customContainer = document.getElementById(containerID);
+                    
+                    if (customContainer) 
                     {
-                        notFoundContainer.innerHTML = route.render();
-                        notFoundContainer.style.display = 'block';
-                        console.log("Showing not-found-container");
-                    } 
-                    catch (error) 
-                    {
-                        console.error("Error rendering 404 content:", error);
-                        notFoundContainer.innerHTML = "<div style='color:red'>Error loading 404 content</div>";
-                        notFoundContainer.style.display = 'block';
+                        try 
+                        {
+                            customContainer.innerHTML = route.render();
+                            customContainer.style.display = 'block';
+                            console.log("Showing custom container:", containerID);
+                        } 
+                        catch (error) 
+                        {
+                            console.error(`Error rendering ${containerID} content:`, error);
+                            customContainer.innerHTML = "<div style='color:red'>Error loading content</div>";
+                            customContainer.style.display = 'block';
+                        }
                     }
                 }
-                break;
-                
-            default:
-                // Custom pages - Render content based on hash
-                const containerID = hash.substring(2).replace(/^(\d)/, 'page-$1') + '-container';
-                const customContainer = document.getElementById(containerID);
-                if (customContainer) 
+                else 
                 {
-                    try 
+                    // Route not found - Show 404 page
+                    if (notFoundContainer) 
                     {
-                        customContainer.innerHTML = route.render();
-                        customContainer.style.display = 'block';
-                        console.log("Showing custom container:", containerID);
-                    } 
-                    catch (error) 
-                    {
-                        console.error(`Error rendering ${containerID} content:`, error);
-                        customContainer.innerHTML = "<div style='color:red'>Error loading content</div>";
-                        customContainer.style.display = 'block';
+                        try 
+                        {
+                            // Use the 404 route from routes object
+                            const notFoundHTML = routes["#/404"].render();
+                            notFoundContainer.innerHTML = notFoundHTML;
+                            notFoundContainer.style.display = 'block';
+                            console.log("Showing 404 page for unknown route:", hash);
+                        } 
+                        catch (error) 
+                        {
+                            console.error("Error rendering 404 content:", error);
+                            notFoundContainer.innerHTML = "<div style='color:red'>Error loading 404 content</div>";
+                            notFoundContainer.style.display = 'block';
+                        }
                     }
                 }
                 break;

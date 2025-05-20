@@ -2,11 +2,13 @@
 
 /* Character stats section */
 .character-stats {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(33, 37, 41, 0.2);
+    backdrop-filter: blur(2px);
     border-radius: 10px;
     padding: 20px;
     margin-bottom: 30px;
     color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .character-stats h3 {
@@ -37,10 +39,12 @@
 
 /* Quest description section */
 .quest-description {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(33, 37, 41, 0.2);
+    backdrop-filter: blur(2px);
     border-radius: 10px;
     padding: 20px;
     color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .quest-description h3 {
