@@ -1,49 +1,33 @@
 /* spa.css - Estilos para SPA */
 
-/* Container de conteúdo para todas as páginas */
-.page-content-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 5;
-    pointer-events: auto;
-}
-
-/* Estilo base para cards de conteúdo */
-.content-card {
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 800px;
-    margin: 0 auto;
-    margin-top: 100px;
-}
-
 /* Estilos específicos para diferentes containers */
+/* Game container for PIXI.js */
+#game-container 
+{
+	top: 60%;
+	left: 0;
+	width: 100%;
+	height: 50%;
+	position: absolute;
+	pointer-events: none;
+}
+
 #about-container {
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 800px;
-    margin: 0 auto;
-    margin-top: 100px;
+	top: 5%;
+	left: 0;
+	width: 100%;
+	height: 50%;
+	position: absolute;
+	pointer-events: none;
 }
 
 #contact-container {
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 800px;
-    margin: 0 auto;
-    margin-top: 100px;
+	top: 5%;
+	left: 0;
+	width: 100%;
+	height: 50%;
+	position: absolute;
+	pointer-events: none;
 }
 
 #not-found-container {
@@ -52,55 +36,4 @@
     align-items: center;
     height: 100%;
     width: 100%;
-}
-
-.error-card {
-    background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 15px;
-    padding: 30px;
-    max-width: 500px;
-    text-align: center;
-    color: white;
-    box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
-}
-
-/* Estilos para elementos dentro das páginas */
-.character-stats h3, 
-.quest-description h3 {
-    color: #ffcc33;
-    margin-bottom: 15px;
-}
-
-.stat-label {
-    font-weight: bold;
-    color: #33ccff;
-    margin-right: 5px;
-}
-
-.stat-value {
-    color: white;
-}
-
-.pixel-art-404 {
-    font-size: 100px;
-    font-family: 'Courier New', monospace;
-    color: #ff3366;
-    text-shadow: 0 0 15px #ff3366;
-    margin: 20px 0;
-}
-
-.btn-home {
-    display: inline-block;
-    background-color: #3366ff;
-    color: white;
-    padding: 10px 25px;
-    margin-top: 20px;
-    border-radius: 5px;
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-
-.btn-home:hover {
-    background-color: #ff3366;
-    transform: scale(1.05);
 }

@@ -1,7 +1,8 @@
 export default function about() 
 {
+    console.log("About function called!");
     return `
-        <div id="about-container" class="content-card">
+        <div>
             <div class="character-stats">
                 <h3>Character Stats</h3>
                 <div class="row">
@@ -34,7 +35,6 @@ export default function about()
                         </div>
                     </div>
                 </div>
-            </div>
             
             <div class="quest-description">
                 <h3>Current Quest</h3>

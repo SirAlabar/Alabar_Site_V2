@@ -1,7 +1,6 @@
 export default function contact() 
 {
     return `
-        <div class="contact-container" class="content-card">
             <h2 class="text-center mb-4">Contact Me</h2>
             
             <div class="contact-info">
@@ -45,6 +44,5 @@ export default function contact()
                     </div>
                 </div>
             </div>
-        </div>
     `;
 }
