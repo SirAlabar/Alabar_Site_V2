@@ -12,14 +12,8 @@ import about from "./views/about.js";
 import contact from "./views/contact.js";
 import notFound, { handleDirectAccess } from "./views/404.js";
 
-// No início do seu main.js
-console.log("main.js loaded");
-
-document.addEventListener('DOMContentLoaded', () => {
-  console.log("DOM loaded, URL:", window.location.href);
-  console.log("Current path:", window.location.pathname);
-  console.log("Current hash:", window.location.hash);
-});
+// Store global reference to LoadingManager
+let globalLoadingManager;
 
 // Define routes using hash
 const routes = 
@@ -39,8 +33,6 @@ function getCurrentHash()
 // Function to navigate between pages
 function navigateTo(hash) 
 {
-    console.log("Navigating to hash:", hash);
-    
     // Ensure hash starts with #/
     const path = hash.startsWith('#/') ? hash : 
                  hash.startsWith('/') ? `#${hash}` : 
@@ -52,27 +44,53 @@ function navigateTo(hash)
     // Update page title
     document.title = route.title;
     
-    // Show loading screen
-    const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) 
-    {
-        loadingScreen.style.display = 'flex';
-    }
-    
     // Update URL in browser using hash
     window.location.hash = path;
     
-    // Render after small delay to show loading
-    setTimeout(() => 
+    // Use the existing LoadingUI instance if available
+    if (globalLoadingManager && globalLoadingManager.ui) 
     {
-        renderPage(route);
+        const loadingUI = globalLoadingManager.ui;
         
-        // Hide loading screen after navigation
-        if (loadingScreen) 
+        // Show the loading screen
+        const loadingScreen = document.getElementById('loading-screen');
+        loadingScreen.style.display = 'flex';
+        
+        // Reset progress
+        loadingUI.updateProgress(0);
+        
+        // Simulate progress
+        let progress = 0;
+        const interval = setInterval(() => 
         {
-            loadingScreen.style.display = 'none';
-        }
-    }, 500);
+            progress += 5;
+            loadingUI.updateProgress(Math.min(progress, 100));
+            
+            if (progress >= 100) 
+            {
+                clearInterval(interval);
+                
+                // Show completion animation and wait for it
+                loadingUI.showComplete().then(() => 
+                {
+                    // Wait for animations to complete
+                    setTimeout(() => 
+                    {
+                        // Render page
+                        renderPage(route);
+                        
+                        // Hide loading screen
+                        loadingUI.hide();
+                    }, 1500);
+                });
+            }
+        }, 30);
+    } 
+    else 
+    {
+        // Fallback if LoadingUI isn't available
+        renderPage(route);
+    }
 }
 
 // Separate function to render the page
@@ -98,18 +116,6 @@ function renderPage(route)
         if (contactContainer) contactContainer.style.display = 'none';
         if (notFoundContainer) notFoundContainer.style.display = 'none';
         
-        // Find any other custom containers and hide them
-        document.querySelectorAll('[id$="-container"]').forEach(container => 
-        {
-            if (container.id !== 'game-container' && 
-                container.id !== 'about-container' && 
-                container.id !== 'contact-container' && 
-                container.id !== 'not-found-container') 
-            {
-                container.style.display = 'none';
-            }
-        });
-        
         // Show the appropriate container based on hash
         switch (hash) 
         {
@@ -119,7 +125,6 @@ function renderPage(route)
                 if (gameContainer) 
                 {
                     gameContainer.style.display = 'block';
-                    console.log("Showing game-container");
                 }
                 break;
                 
@@ -132,7 +137,6 @@ function renderPage(route)
                         const aboutHTML = route.render();
                         aboutContainer.innerHTML = aboutHTML;
                         aboutContainer.style.display = 'block';
-                        console.log("Showing about-container");
                     } 
                     catch (error) 
                     {
@@ -152,7 +156,6 @@ function renderPage(route)
                         const contactHTML = route.render();
                         contactContainer.innerHTML = contactHTML;
                         contactContainer.style.display = 'block';
-                        console.log("Showing contact-container");
                     } 
                     catch (error) 
                     {
@@ -164,48 +167,21 @@ function renderPage(route)
                 break;
                 
             default:
-                // Check if this is a custom page with a valid route
-                if (routes[hash]) 
+                // Route not found - Show 404 page
+                if (notFoundContainer) 
                 {
-                    // Valid custom route - get container ID from hash
-                    const containerID = hash.substring(2).replace(/^(\d)/, 'page-$1') + '-container';
-                    const customContainer = document.getElementById(containerID);
-                    
-                    if (customContainer) 
+                    try 
                     {
-                        try 
-                        {
-                            customContainer.innerHTML = route.render();
-                            customContainer.style.display = 'block';
-                            console.log("Showing custom container:", containerID);
-                        } 
-                        catch (error) 
-                        {
-                            console.error(`Error rendering ${containerID} content:`, error);
-                            customContainer.innerHTML = "<div style='color:red'>Error loading content</div>";
-                            customContainer.style.display = 'block';
-                        }
-                    }
-                }
-                else 
-                {
-                    // Route not found - Show 404 page
-                    if (notFoundContainer) 
+                        // Use the 404 route from routes object
+                        const notFoundHTML = routes["#/404"].render();
+                        notFoundContainer.innerHTML = notFoundHTML;
+                        notFoundContainer.style.display = 'block';
+                    } 
+                    catch (error) 
                     {
-                        try 
-                        {
-                            // Use the 404 route from routes object
-                            const notFoundHTML = routes["#/404"].render();
-                            notFoundContainer.innerHTML = notFoundHTML;
-                            notFoundContainer.style.display = 'block';
-                            console.log("Showing 404 page for unknown route:", hash);
-                        } 
-                        catch (error) 
-                        {
-                            console.error("Error rendering 404 content:", error);
-                            notFoundContainer.innerHTML = "<div style='color:red'>Error loading 404 content</div>";
-                            notFoundContainer.style.display = 'block';
-                        }
+                        console.error("Error rendering 404 content:", error);
+                        notFoundContainer.innerHTML = "<div style='color:red'>Error loading 404 content</div>";
+                        notFoundContainer.style.display = 'block';
                     }
                 }
                 break;
@@ -251,11 +227,8 @@ document.addEventListener('click', e =>
     if (link) 
     {
         e.preventDefault();
-        
         // Get the hash from the link
         const hash = link.getAttribute('href');
-        console.log("Link clicked:", hash);
-        
         // Navigate to the hash
         navigateTo(hash);
     }
@@ -264,8 +237,6 @@ document.addEventListener('click', e =>
 // Handle hash changes (back/forward buttons, reload)
 window.addEventListener('hashchange', () => 
 {
-    console.log("Hash changed to:", getCurrentHash());
-    
     // Get the route based on current hash
     const hash = getCurrentHash();
     const route = routes[hash] || routes["#/404"];
@@ -277,12 +248,28 @@ window.addEventListener('hashchange', () =>
 // Initialization
 document.addEventListener('DOMContentLoaded', () => 
 {
-    console.log("DOM loaded");
-    
     // Initialize existing components
     const swordButton = createSwordButton();
     const loadingManager = new LoadingManager();
-    loadingManager.start();
+    
+    // Store global reference
+    globalLoadingManager = loadingManager;
+    
+    // Override the onLoadingComplete method to integrate with navigation
+    const originalOnLoadingComplete = loadingManager.onLoadingComplete.bind(loadingManager);
+    loadingManager.onLoadingComplete = function() 
+    {
+        // Call the original method first
+        originalOnLoadingComplete();
+        // After the original method completes, initialize navigation
+        setTimeout(() => 
+        {
+            // Initialize navigation after LoadingManager finishes
+            const initialHash = getCurrentHash();
+            const route = routes[initialHash] || routes["#/404"];
+            renderPage(route);
+        }, 1500);
+    };
     
     // Update navigation links to use hash format
     document.querySelectorAll('a[data-link]').forEach(link => 
@@ -294,17 +281,7 @@ document.addEventListener('DOMContentLoaded', () =>
             const newHref = href === '/' ? '#/' : `#${href}`;
             link.setAttribute('href', newHref);
         }
-        console.log("Link updated:", link.href);
     });
-    
-    // Navigate to initial hash
-    const initialHash = getCurrentHash();
-    console.log("Initial hash:", initialHash);
-    
-    // If it's the first load, wait a bit for LoadingManager to finish
-    setTimeout(() => 
-    {
-        const route = routes[initialHash] || routes["#/404"];
-        renderPage(route);
-    }, 1000);
+    // Start loading
+    loadingManager.start();
 });
