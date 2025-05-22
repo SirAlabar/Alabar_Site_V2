@@ -1,4 +1,4 @@
-// main.js - Pixi.js based content rendering with hash routing
+// main.js - Pixi.js based content rendering with hash routing including project sub-routes
 
 import { SwordButtonComponent, createSwordButton } from './components/SwordButtonComponent.js';
 import { getSceneManager, initSceneManager } from './manager/SceneManager.js';
@@ -8,12 +8,17 @@ import { CloudsManager } from './manager/CloudsManager.js';
 // Store global reference to LoadingManager
 let globalLoadingManager;
 
-// Define route titles
+// Define route titles including project sub-routes
 const routes = 
 {
     "#/": { title: "Home - Hugo Marta" },
     "#/about": { title: "About - Hugo Marta" },
     "#/contact": { title: "Contact - Hugo Marta" },
+    "#/projects": { title: "Projects - Hugo Marta" },
+    "#/projects/42": { title: "42 Projects - Hugo Marta" },
+    "#/projects/web": { title: "Web Projects - Hugo Marta" },
+    "#/projects/mobile": { title: "Mobile Projects - Hugo Marta" },
+    "#/projects/games": { title: "Game Projects - Hugo Marta" },
     "#/404": { title: "Page Not Found - Hugo Marta" }
 };
 
@@ -23,7 +28,26 @@ function getCurrentHash()
     return window.location.hash || "#/";
 }
 
-// Function to navigate between pages
+// Function to parse route and determine page/subpage
+function parseRoute(hash) 
+{
+    const path = hash.replace('#/', '');
+    const segments = path.split('/');
+    
+    if (segments.length === 0 || segments[0] === '') 
+    {
+        return { page: 'home', subpage: null };
+    }
+    
+    if (segments[0] === 'projects' && segments[1]) 
+    {
+        return { page: 'projects', subpage: segments[1] };
+    }
+    
+    return { page: segments[0], subpage: null };
+}
+
+// Function to navigate between pages - WITH PROJECT SUB-ROUTES
 function navigateTo(hash) 
 {
     // Ensure hash starts with #/
@@ -40,20 +64,28 @@ function navigateTo(hash)
     // Update URL in browser using hash
     window.location.hash = path;
     
-    // Extract page name from hash
-    const pageName = path.replace('#/', '') || 'home';
+    // Parse the route to get page and subpage
+    const { page, subpage } = parseRoute(path);
     
     // Use ContentManager to switch to this page
     if (window.contentManager) 
     {
+        // Navigate to main page or subpage
+        if (subpage) 
+        {
+            window.contentManager.navigateTo(page, subpage);
+        } 
+        else 
+        {
+            window.contentManager.navigateTo(page);
+        }
+        
         // Force app stage sorting and rendering
         if (window.app) 
         {
             window.app.stage.sortChildren();
             window.app.renderer.render(window.app.stage);
         }
-        
-        window.contentManager.navigateTo(pageName);
     }
     else 
     {
@@ -64,14 +96,18 @@ function navigateTo(hash)
     updateActiveNavLink();
 }
 
-// Update active nav link
+// Update active nav link (including dropdown items)
 function updateActiveNavLink() 
 {
     const currentHash = getCurrentHash();
+    const { page, subpage } = parseRoute(currentHash);
     
+    // Handle main navigation links
     document.querySelectorAll('.nav-link').forEach(link => 
     {
         const href = link.getAttribute('href');
+        if (!href) return;
+        
         // Convert href to hash format if needed
         const linkHash = href.startsWith('#') ? href : 
                        href === '/' ? '#/' : `#${href}`;
@@ -85,9 +121,37 @@ function updateActiveNavLink()
             link.classList.remove('active');
         }
     });
+    
+    // Handle dropdown items for projects
+    document.querySelectorAll('.dropdown-item').forEach(item => 
+    {
+        const href = item.getAttribute('href');
+        if (!href) return;
+        
+        const linkHash = href.startsWith('#') ? href : `#${href}`;
+        
+        if (linkHash === currentHash) 
+        {
+            item.classList.add('active');
+            // Also mark the parent dropdown as active
+            const parentDropdown = item.closest('.nav-item.dropdown');
+            if (parentDropdown) 
+            {
+                const dropdownToggle = parentDropdown.querySelector('.nav-link.dropdown-toggle');
+                if (dropdownToggle) 
+                {
+                    dropdownToggle.classList.add('active');
+                }
+            }
+        } 
+        else 
+        {
+            item.classList.remove('active');
+        }
+    });
 }
 
-// Handle clicks on links
+// Handle clicks on links (including dropdown items)
 document.addEventListener('click', e => 
 {
     const link = e.target.closest("[data-link]");
@@ -110,6 +174,22 @@ window.addEventListener('hashchange', () =>
     navigateTo(hash);
 });
 
+// Function to setup project dropdown links
+function setupProjectDropdown() 
+{
+    // Update project dropdown items to use proper routes
+    const dropdownMenu = document.querySelector('.dropdown-menu');
+    if (dropdownMenu) 
+    {
+        dropdownMenu.innerHTML = `
+            <li><a class="dropdown-item" href="#/projects/42" data-link>42 Projects</a></li>
+            <li><a class="dropdown-item" href="#/projects/web" data-link>Web</a></li>
+            <li><a class="dropdown-item" href="#/projects/mobile" data-link>Mobile</a></li>
+            <li><a class="dropdown-item" href="#/projects/games" data-link>Games</a></li>
+        `;
+    }
+}
+
 // Initialization
 document.addEventListener('DOMContentLoaded', () => 
 {
@@ -129,6 +209,9 @@ document.addEventListener('DOMContentLoaded', () =>
         // After the original method completes, initialize navigation
         setTimeout(() => 
         {
+            // Setup project dropdown
+            setupProjectDropdown();
+            
             // Initialize navigation after LoadingManager finishes
             const initialHash = getCurrentHash();
             navigateTo(initialHash);

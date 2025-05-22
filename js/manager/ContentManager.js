@@ -1,7 +1,7 @@
 /**
  * ContentManager.js
- * Manages PIXI content for different pages
- * Works with view files (about.js, contact.js, etc.) to create and display Pixi content
+ * Manages PIXI content for different pages including project sub-routes
+ * Delegates content creation to respective view files
  */
 export class ContentManager 
 {
@@ -12,13 +12,19 @@ export class ContentManager
         this.contentGroup = contentGroup;
         this.pageGroups = pageGroups;
         this.currentPage = 'home';
+        this.currentSubpage = null;
         
         // Store initialization state
         this.initialized = {
             home: false,
             about: false,
             contact: false,
-            projects: false
+            projects: false,
+            // Project sub-pages
+            projects42: false,
+            projectsWeb: false,
+            projectsMobile: false,
+            projectsGames: false
         };
         
         // Store view module references
@@ -35,6 +41,9 @@ export class ContentManager
         // Pre-load view modules
         this.loadViewModules();
         
+        // Set up resize handler
+        window.addEventListener('resize', this.onResize.bind(this), { passive: true });
+        
         return this;
     }
     
@@ -45,16 +54,26 @@ export class ContentManager
     {
         try 
         {
-            // Dynamic imports for view modules
-            const homeModule = await import('../views/home.js');
-            const aboutModule = await import('../views/about.js');
-            const contactModule = await import('../views/contact.js');
+            // Dynamic imports for main view modules
+            const homeModule = await import('../views/Home.js');
+            const aboutModule = await import('../views/About.js');
+            const contactModule = await import('../views/Contact.js');
+            
+            // Dynamic imports for project sub-modules
+            const projects42Module = await import('../views/Projects42.js');
+            const projectsWebModule = await import('../views/ProjectsWeb.js');
+            const projectsMobileModule = await import('../views/ProjectsMobile.js');
+            const projectsGamesModule = await import('../views/ProjectsGames.js');
             
             // Store module references
             this.views = {
                 home: homeModule.default,
                 about: aboutModule.default,
-                contact: contactModule.default
+                contact: contactModule.default,
+                projects42: projects42Module.default,
+                projectsWeb: projectsWebModule.default,
+                projectsMobile: projectsMobileModule.default,
+                projectsGames: projectsGamesModule.default
             };
             
             console.log("View modules loaded");
@@ -66,12 +85,20 @@ export class ContentManager
     }
     
     /**
-     * Navigate to specific page
+     * Navigate to specific page or subpage
      * @param {string} page - Page name (home, about, contact, projects)
+     * @param {string} subpage - Optional subpage name (42, web, mobile, games)
      */
-    navigateTo(page) 
+    navigateTo(page, subpage = null) 
     {
-        // Ensure page name is valid
+        // Handle project sub-routes
+        if (page === 'projects' && subpage) 
+        {
+            this.navigateToProjectSubpage(subpage);
+            return this;
+        }
+        
+        // Handle main page navigation
         const pageContentName = page + 'Content';
         if (!this.pageGroups[pageContentName]) 
         {
@@ -79,11 +106,8 @@ export class ContentManager
             page = 'home';
         }
         
-        // Hide all page contents
-        for (const [name, group] of Object.entries(this.pageGroups)) 
-        {
-            group.visible = false;
-        }
+        // Hide all main page contents
+        this.hideAllMainPages();
         
         // Initialize the page if needed
         if (!this.initialized[page]) 
@@ -94,6 +118,7 @@ export class ContentManager
         // Show the requested page
         this.pageGroups[page + 'Content'].visible = true;
         this.currentPage = page;
+        this.currentSubpage = null;
         
         // Force sorting and rendering
         this.contentGroup.sortChildren();
@@ -101,6 +126,78 @@ export class ContentManager
         
         console.log(`Navigated to ${page} page`);
         return this;
+    }
+    
+    /**
+     * Navigate to project subpage
+     * @param {string} subpage - Subpage name (42, web, mobile, games)
+     */
+    navigateToProjectSubpage(subpage) 
+    {
+        const subpageKey = 'projects' + subpage.charAt(0).toUpperCase() + subpage.slice(1);
+        const subpageContentName = subpageKey + 'Content';
+        
+        if (!this.pageGroups[subpageContentName]) 
+        {
+            console.warn(`Project subpage ${subpage} not found`);
+            return this.navigateTo('projects');
+        }
+        
+        // Hide all main pages
+        this.hideAllMainPages();
+        
+        // Show projects main container
+        this.pageGroups.projectsContent.visible = true;
+        
+        // Hide all project subpages
+        this.hideAllProjectSubpages();
+        
+        // Initialize the subpage if needed
+        if (!this.initialized[subpageKey]) 
+        {
+            this.initProjectSubpage(subpage, subpageKey);
+        }
+        
+        // Show the requested subpage
+        this.pageGroups[subpageContentName].visible = true;
+        this.currentPage = 'projects';
+        this.currentSubpage = subpage;
+        
+        // Force sorting and rendering
+        this.contentGroup.sortChildren();
+        this.pageGroups.projectsContent.sortChildren();
+        this.app.renderer.render(this.app.stage);
+        
+        console.log(`Navigated to projects/${subpage} subpage`);
+        return this;
+    }
+    
+    /**
+     * Hide all main page containers
+     */
+    hideAllMainPages() 
+    {
+        const mainPages = ['homeContent', 'aboutContent', 'contactContent', 'projectsContent'];
+        mainPages.forEach(pageName => {
+            if (this.pageGroups[pageName]) 
+            {
+                this.pageGroups[pageName].visible = false;
+            }
+        });
+    }
+    
+    /**
+     * Hide all project subpage containers
+     */
+    hideAllProjectSubpages() 
+    {
+        const subPages = ['projects42Content', 'projectsWebContent', 'projectsMobileContent', 'projectsGamesContent'];
+        subPages.forEach(subPageName => {
+            if (this.pageGroups[subPageName]) 
+            {
+                this.pageGroups[subPageName].visible = false;
+            }
+        });
     }
     
     /**
@@ -116,20 +213,28 @@ export class ContentManager
         
         console.log(`Initializing ${page} page content`);
         
-        // Call the appropriate init function
+        const container = this.pageGroups[page + 'Content'];
+        
+        // Call the appropriate view file function
         switch (page) 
         {
             case 'home':
                 // Home content is already handled by GameInitializer
                 break;
             case 'about':
-                this.initAbout();
+                if (this.views.about) 
+                {
+                    this.views.about(container, this.app);
+                }
                 break;
             case 'contact':
-                this.initContact();
+                if (this.views.contact) 
+                {
+                    this.views.contact(container, this.app);
+                }
                 break;
             case 'projects':
-                this.initProjects();
+                this.initProjectsOverview(container);
                 break;
             default:
                 console.warn(`No initialization method for ${page}`);
@@ -141,306 +246,68 @@ export class ContentManager
     }
     
     /**
-     * Initialize About page content in Pixi using about.js
+     * Initialize project subpage content
+     * @param {string} subpage - Subpage name (42, web, mobile, games)
+     * @param {string} subpageKey - Internal key (projects42, projectsWeb, etc.)
      */
-    initAbout() 
+    initProjectSubpage(subpage, subpageKey) 
     {
-        const container = this.pageGroups.aboutContent;
-        
-        // Check if the about module is loaded
-        if (!this.views.about) 
+        if (this.initialized[subpageKey]) 
         {
-            console.error("About view module not loaded");
             return;
         }
         
-        // Call the about.js function with Pixi container instead of returning HTML
-        // This requires modifying about.js to accept a Pixi container
-        try 
+        console.log(`Initializing projects/${subpage} subpage content`);
+        
+        const container = this.pageGroups[subpageKey + 'Content'];
+        const viewKey = 'projects' + subpage.charAt(0).toUpperCase() + subpage.slice(1);
+        
+        // Call the appropriate view file function
+        if (this.views[viewKey]) 
         {
-            // For now, we'll handle this internally until about.js is updated
-            this.createAboutPixiContent(container);
-        } 
-        catch (error) 
-        {
-            console.error("Error initializing About content:", error);
+            this.views[viewKey](container, this.app);
         }
-    }
-    
-    /**
-     * Temporary method to create About content in Pixi
-     * Will be replaced when about.js is updated to create Pixi content directly
-     * @param {PIXI.Container} container - Container to add content to
-     */
-    createAboutPixiContent(container) 
-    {
-        // Character Stats section
-        const statsTitle = new PIXI.Text("Character Stats", {
-            fontFamily: "Honk, serif",
-            fontSize: 36,
-            fill: 0xffcc33
-        });
-        statsTitle.anchor.set(0.5, 0);
-        statsTitle.position.set(this.app.screen.width / 2, 150);
-        container.addChild(statsTitle);
-        
-        // Stats data (matching about.js)
-        const stats = [
-            { label: "Class:", value: "Software Developer" },
-            { label: "Former Class:", value: "Accountant" },
-            { label: "Level:", value: "34" },
-            { label: "Guild:", value: "42 Porto" },
-            { label: "Base:", value: "Porto, Portugal" },
-            { label: "Language:", value: "English B2" }
-        ];
-        
-        // Create two columns for stats
-        const leftColumn = stats.slice(0, 3);
-        const rightColumn = stats.slice(3);
-        
-        // Render left column stats
-        leftColumn.forEach((stat, index) => {
-            // Label
-            const label = new PIXI.Text(stat.label, {
-                fontFamily: "Arial",
-                fontSize: 18,
-                fontWeight: "bold",
-                fill: 0x33ccff
-            });
-            label.position.set(100, 200 + index * 30);
-            
-            // Value
-            const value = new PIXI.Text(stat.value, {
-                fontFamily: "Arial",
-                fontSize: 16,
-                fill: 0xffffff
-            });
-            value.position.set(100 + label.width + 10, 200 + index * 30);
-            
-            container.addChild(label);
-            container.addChild(value);
-        });
-        
-        // Render right column stats
-        rightColumn.forEach((stat, index) => {
-            // Label
-            const label = new PIXI.Text(stat.label, {
-                fontFamily: "Arial",
-                fontSize: 18,
-                fontWeight: "bold",
-                fill: 0x33ccff
-            });
-            label.position.set(this.app.screen.width / 2 + 50, 200 + index * 30);
-            
-            // Value
-            const value = new PIXI.Text(stat.value, {
-                fontFamily: "Arial",
-                fontSize: 16,
-                fill: 0xffffff
-            });
-            value.position.set(this.app.screen.width / 2 + 50 + label.width + 10, 200 + index * 30);
-            
-            container.addChild(label);
-            container.addChild(value);
-        });
-        
-        // Current Quest section
-        const questTitle = new PIXI.Text("Current Quest", {
-            fontFamily: "Honk, serif",
-            fontSize: 36,
-            fill: 0xffcc33
-        });
-        questTitle.anchor.set(0.5, 0);
-        questTitle.position.set(this.app.screen.width / 2, 320);
-        container.addChild(questTitle);
-        
-        // Quest background
-        const questBg = new PIXI.Graphics();
-        questBg.beginFill(0x212529, 0.2);
-        questBg.drawRoundedRect(50, 370, this.app.screen.width - 100, 150, 10);
-        questBg.endFill();
-        container.addChild(questBg);
-        
-        // Quest description text
-        const questText = new PIXI.Text(
-            "As a career changer diving into the world of game development, I am excited to explore and create innovative solutions using technology. Currently focusing on mastering C and developing small games in C#, I am passionate about discovering new technologies and leveraging them to craft high-quality projects.\n\nI am a student at 42 School, where I am honing my skills and expanding my horizons in this dynamic field.",
-            {
-                fontFamily: "Arial",
-                fontSize: 16,
-                fill: 0xffffff,
-                wordWrap: true,
-                wordWrapWidth: this.app.screen.width - 120,
-                lineHeight: 20
-            }
-        );
-        questText.position.set(70, 390);
-        container.addChild(questText);
-    }
-    
-    /**
-     * Initialize Contact page content in Pixi using contact.js
-     */
-    initContact() 
-    {
-        const container = this.pageGroups.contactContent;
-        
-        // Check if the contact module is loaded
-        if (!this.views.contact) 
+        else 
         {
-            console.error("Contact view module not loaded");
-            return;
+            console.warn(`No view module found for ${viewKey}`);
         }
         
-        // Call the contact.js function with Pixi container instead of returning HTML
-        // This requires modifying contact.js to accept a Pixi container
-        try 
-        {
-            // For now, we'll handle this internally until contact.js is updated
-            this.createContactPixiContent(container);
-        } 
-        catch (error) 
-        {
-            console.error("Error initializing Contact content:", error);
-        }
+        // Mark as initialized
+        this.initialized[subpageKey] = true;
     }
     
     /**
-     * Temporary method to create Contact content in Pixi
-     * Will be replaced when contact.js is updated to create Pixi content directly
-     * @param {PIXI.Container} container - Container to add content to
+     * Initialize main Projects page with overview
      */
-    createContactPixiContent(container) 
+    initProjectsOverview(container) 
     {
-        // Title
-        const title = new PIXI.Text("Contact Me", {
-            fontFamily: "Honk, serif",
-            fontSize: 40,
-            fill: 0xffcc33
-        });
-        title.anchor.set(0.5, 0);
-        title.position.set(this.app.screen.width / 2, 150);
-        container.addChild(title);
-        
-        // Get In Touch section
-        const infoTitle = new PIXI.Text("Get In Touch", {
-            fontFamily: "Honk, serif",
-            fontSize: 36,
-            fill: 0xffcc33
-        });
-        infoTitle.anchor.set(0.5, 0);
-        infoTitle.position.set(this.app.screen.width / 2, 220);
-        container.addChild(infoTitle);
-        
-        // Contact info background
-        const infoBg = new PIXI.Graphics();
-        infoBg.beginFill(0x212529, 0.2);
-        infoBg.drawRoundedRect(50, 270, this.app.screen.width - 100, 150, 10);
-        infoBg.endFill();
-        container.addChild(infoBg);
-        
-        // Contact items
-        const contacts = [
-            { type: "GitHub", value: "github.com/SirAlabar" },
-            { type: "LinkedIn", value: "linkedin.com/in/hugollmarta" }
-        ];
-        
-        // Create left contact item
-        this.createContactItem(container, contacts[0].type, contacts[0].value, 100, 300);
-        
-        // Create right contact item
-        this.createContactItem(container, contacts[1].type, contacts[1].value, this.app.screen.width / 2 + 50, 300);
-    }
-    
-    /**
-     * Create a contact item with icon, title and clickable link
-     * @param {PIXI.Container} container - Parent container
-     * @param {string} type - Contact type (GitHub, LinkedIn, etc.)
-     * @param {string} value - Contact value/URL
-     * @param {number} x - X position
-     * @param {number} y - Y position
-     */
-    createContactItem(container, type, value, x, y) 
-    {
-        // Title
-        const titleText = new PIXI.Text(type, {
-            fontFamily: "Arial",
-            fontSize: 18,
-            fontWeight: "bold",
-            fill: 0x0011f8
-        });
-        titleText.position.set(x, y);
-        
-        // Value with link styling
-        const valueText = new PIXI.Text(value, {
-            fontFamily: "Arial",
-            fontSize: 16,
-            fill: 0x0278a0
-        });
-        valueText.position.set(x, y + 30);
-        
-        // Interactive hitbox for the link
-        const hitArea = new PIXI.Graphics();
-        hitArea.beginFill(0xFFFFFF, 0.001);
-        hitArea.drawRect(valueText.x, valueText.y, valueText.width, valueText.height);
-        hitArea.endFill();
-        hitArea.interactive = true;
-        hitArea.cursor = 'pointer';
-        
-        // Open URL on click
-        hitArea.on('pointerdown', () => {
-            window.open('https://' + value, '_blank');
-        });
-        
-        // Hover effects
-        hitArea.on('pointerover', () => {
-            valueText.style.fill = 0xffcc33;
-        });
-        
-        hitArea.on('pointerout', () => {
-            valueText.style.fill = 0x0278a0;
-        });
-        
-        // Add to container
-        container.addChild(titleText);
-        container.addChild(valueText);
-        container.addChild(hitArea);
-    }
-    
-    /**
-     * Initialize Projects page with placeholder content
-     */
-    initProjects() 
-    {
-        const container = this.pageGroups.projectsContent;
-        
-        // Title
         const title = new PIXI.Text("My Projects", {
             fontFamily: "Honk, serif",
             fontSize: 40,
             fill: 0xffcc33
         });
         title.anchor.set(0.5, 0);
-        title.position.set(this.app.screen.width / 2, 150);
+        title.position.set(this.app.screen.width / 2, 100);
         container.addChild(title);
         
-        // Placeholder text
-        const placeholder = new PIXI.Text("Project cards coming soon...", {
+        const subtitle = new PIXI.Text("Choose a category from the dropdown menu above", {
             fontFamily: "Arial",
-            fontSize: 24,
+            fontSize: 18,
             fill: 0xffffff
         });
-        placeholder.anchor.set(0.5, 0.5);
-        placeholder.position.set(this.app.screen.width / 2, 300);
-        container.addChild(placeholder);
+        subtitle.anchor.set(0.5, 0.5);
+        subtitle.position.set(this.app.screen.width / 2, 200);
+        container.addChild(subtitle);
     }
     
     /**
-     * Get current page name
-     * @returns {string} Current page name
+     * Handle window resize events
      */
-    getCurrentPage() 
+    onResize() 
     {
-        return this.currentPage;
+        // For now, just re-initialize current page if needed
+        // Each view file should handle its own responsive behavior
+        console.log("Resize event - delegating to view files");
     }
     
     /**
@@ -448,6 +315,7 @@ export class ContentManager
      */
     destroy() 
     {
+        window.removeEventListener('resize', this.onResize.bind(this));
         console.log("ContentManager destroyed");
     }
 }

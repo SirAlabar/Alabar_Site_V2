@@ -158,12 +158,13 @@ export class LoadingManager
        backgroundGroup.name = "backgroundGroup";
        backgroundGroup.zIndex = 0;
        
-       // Create a content group for home,about,contact
+       // Create a content group for all page content
         const contentGroup = new PIXI.Container();
         contentGroup.name = "contentGroup";
         contentGroup.zIndex = 10;
         contentGroup.sortableChildren = true;
 
+        // Main page containers
         const homeContent = new PIXI.Container();
         homeContent.name = "homeContent";
         homeContent.visible = true;
@@ -176,17 +177,42 @@ export class LoadingManager
         contactContent.name = "contactContent";
         contactContent.visible = false;
         
+        // Projects main container
         const projectsContent = new PIXI.Container();
         projectsContent.name = "projectsContent";
         projectsContent.visible = false;
+        projectsContent.sortableChildren = true;
         
-        // Add page containers to content group
+        // Projects sub-containers (sub-routes)
+        const projects42Content = new PIXI.Container();
+        projects42Content.name = "projects42Content";
+        projects42Content.visible = false;
+        
+        const projectsWebContent = new PIXI.Container();
+        projectsWebContent.name = "projectsWebContent";
+        projectsWebContent.visible = false;
+        
+        const projectsMobileContent = new PIXI.Container();
+        projectsMobileContent.name = "projectsMobileContent";
+        projectsMobileContent.visible = false;
+        
+        const projectsGamesContent = new PIXI.Container();
+        projectsGamesContent.name = "projectsGamesContent";
+        projectsGamesContent.visible = false;
+        
+        // Add project sub-containers to projects main container
+        projectsContent.addChild(projects42Content);
+        projectsContent.addChild(projectsWebContent);
+        projectsContent.addChild(projectsMobileContent);
+        projectsContent.addChild(projectsGamesContent);
+        
+        // Add main page containers to content group
         contentGroup.addChild(homeContent);
         contentGroup.addChild(aboutContent);
         contentGroup.addChild(contactContent);
         contentGroup.addChild(projectsContent);
 
-       // Create a UI group for HUD elements
+       // Create a UI group for cursor effects and HUD elements (100% coverage)
        const uiGroup = new PIXI.Container();
        uiGroup.name = "uiGroup";
        uiGroup.zIndex = 999;
@@ -211,7 +237,12 @@ export class LoadingManager
                 homeContent,
                 aboutContent,
                 contactContent,
-                projectsContent
+                projectsContent,
+                // Project sub-containers
+                projects42Content,
+                projectsWebContent,
+                projectsMobileContent,
+                projectsGamesContent
             },
             uiGroup
        };
