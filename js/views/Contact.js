@@ -2,7 +2,7 @@
  * Contact page content creator for Pixi.js
  * Creates contact information display
  */
-export default function contact(container, app) 
+export default function contact(container, app, assetManager) 
 {
     console.log("Contact function called for Pixi content!");
     

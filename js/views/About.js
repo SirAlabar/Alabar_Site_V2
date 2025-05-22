@@ -2,7 +2,7 @@
  * About page content creator for Pixi.js
  * Creates character stats and quest description
  */
-export default function about(container, app) 
+export default function about(container, app, assetManager) 
 {
     console.log("About function called for Pixi content!");
     

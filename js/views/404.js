@@ -2,7 +2,7 @@
  * 404 page content creator for Pixi.js
  * Creates animated player with themed RPG message
  */
-export default function notFound404(container, app) 
+export default function notFound404(container, app, assetManager) 
 {
     console.log("404 function called for Pixi content!");
     
@@ -17,6 +17,7 @@ export default function notFound404(container, app)
     });
     title404.anchor.set(0.5, 0);
     title404.position.set(app.screen.width / 2, 60);
+    title404.name = 'title404';
     container.addChild(title404);
     
     // Main RPG message
@@ -29,6 +30,7 @@ export default function notFound404(container, app)
     });
     mainMessage.anchor.set(0.5, 0);
     mainMessage.position.set(app.screen.width / 2, 140);
+    mainMessage.name = 'mainMessage';
     container.addChild(mainMessage);
     
     // Subtitle message
@@ -41,16 +43,45 @@ export default function notFound404(container, app)
     });
     subtitleMessage.anchor.set(0.5, 0);
     subtitleMessage.position.set(app.screen.width / 2, 185);
+    subtitleMessage.name = 'subtitleMessage';
     container.addChild(subtitleMessage);
     
     // Create animated player sprite
-    createAnimatedPlayer(container, app);
+    createAnimatedPlayer(container, app, assetManager);
     
     // Return to quest button (functional)
     createReturnButton(container, app);
     
     // Add ambient particles
     createAmbientParticles(container, app);
+    
+    // Handle window resize
+    const resizeHandler = () => 
+    {
+        // Reposition elements on resize
+        title404.position.set(app.screen.width / 2, 60);
+        mainMessage.position.set(app.screen.width / 2, 140);
+        subtitleMessage.position.set(app.screen.width / 2, 185);
+        
+        // Update button position
+        const buttonContainer = container.getChildByName('returnButton');
+        if (buttonContainer) 
+        {
+            buttonContainer.position.set(app.screen.width / 2 - 140, app.screen.height * 0.35);
+        }
+        
+        // Update player position
+        const playerContainer = container.getChildByName('playerContainer');
+        if (playerContainer) 
+        {
+            playerContainer.position.set(app.screen.width / 2, app.screen.height * 0.2);
+        }
+    };
+    
+    window.addEventListener('resize', resizeHandler);
+    
+    // Store resize handler for cleanup
+    container.resizeHandler = resizeHandler;
     
     return true;
 }
@@ -59,24 +90,47 @@ export default function notFound404(container, app)
  * Create animated player using the loaded spritesheet with cycling animations
  * @param {PIXI.Container} container - Parent container
  * @param {PIXI.Application} app - Pixi application
+ * @param {Object} assetManager - Asset manager instance
  */
-function createAnimatedPlayer(container, app) 
+function createAnimatedPlayer(container, app, assetManager) 
 {
-    // Get the player spritesheet from the global asset manager
-    const playerSpritesheet = window.assetManager?.getSpritesheet('player_spritesheet');
+    // Get the player spritesheet from the asset manager
+    let playerSpritesheet = null;
+    
+    if (assetManager) 
+    {
+        playerSpritesheet = assetManager.getSpritesheet('player_spritesheet');
+        console.log("AssetManager found, trying to get spritesheet...");
+    }
+    
+    // If not found, try PIXI Assets cache as fallback
+    if (!playerSpritesheet) 
+    {
+        try 
+        {
+            playerSpritesheet = PIXI.Assets.cache.get('player_spritesheet');
+            console.log("Fallback: trying PIXI Assets cache...");
+        } 
+        catch (error) 
+        {
+            console.warn("Could not get spritesheet from PIXI.Assets cache");
+        }
+    }
     
     if (!playerSpritesheet || !playerSpritesheet.textures) 
     {
-        console.error("Player spritesheet not found!");
-        return;
+        console.error("Player spritesheet not found! Available cache:", Object.keys(PIXI.Assets.cache._cache || {}));
+        return; // Just return, no fallback
     }
     
-    // Define animation sequences based on the JSON structure
+    console.log("Player spritesheet found with textures:", Object.keys(playerSpritesheet.textures));
+    
+    // Define animation sequences based on the JSON structure (using normal frames, not shadow)
     const animationSequences = {
-        idleFront: ['IdleFrontShadow-0', 'IdleFrontShadow-1', 'IdleFrontShadow-2', 'IdleFrontShadow-3', 'IdleFrontShadow-4', 'IdleFrontShadow-5'],
-        idleLeft: ['IdleLeftShadow-0', 'IdleLeftShadow-1', 'IdleLeftShadow-2', 'IdleLeftShadow-3', 'IdleLeftShadow-4', 'IdleLeftShadow-5'],
-        idleRight: ['IdleRightShadow-0', 'IdleRightShadow-1', 'IdleRightShadow-2', 'IdleRightShadow-3', 'IdleRightShadow-4', 'IdleRightShadow-5'],
-        idleBack: ['IdleBackShadow-0', 'IdleBackShadow-1', 'IdleBackShadow-2', 'IdleBackShadow-3'],
+        idleFront: ['IdleLeft-0', 'IdleLeft-1', 'IdleLeft-2', 'IdleLeft-3', 'IdleLeft-4', 'IdleLeft-5'],
+        idleLeft: ['IdleLeft-0', 'IdleLeft-1', 'IdleLeft-2', 'IdleLeft-3', 'IdleLeft-4', 'IdleLeft-5'],
+        idleRight: ['IdleRight-0', 'IdleRight-1', 'IdleRight-2', 'IdleRight-3', 'IdleRight-4', 'IdleRight-5'],
+        idleBack: ['IdleLeft-0', 'IdleLeft-1', 'IdleLeft-2', 'IdleLeft-3'],
         
         walkFront: ['WalkFront-0', 'WalkFront-1', 'WalkFront-2', 'WalkFront-3', 'WalkFront-4', 'WalkFront-5'],
         walkLeft: ['WalkLeft-0', 'WalkLeft-1', 'WalkLeft-2', 'WalkLeft-3', 'WalkLeft-4', 'WalkLeft-5'],
@@ -91,7 +145,8 @@ function createAnimatedPlayer(container, app)
     
     // Create player container for easier management
     const playerContainer = new PIXI.Container();
-    playerContainer.position.set(app.screen.width / 2, app.screen.height / 2);
+    playerContainer.name = 'playerContainer';
+    playerContainer.position.set(app.screen.width / 2, app.screen.height * 0.25); // 25% da altura da tela (mais alto)
     container.addChild(playerContainer);
     
     // Animation state management
@@ -194,7 +249,7 @@ function createAnimatedPlayer(container, app)
     switchAnimation(currentDirection, currentAnimationType);
     
     // Animation cycle ticker
-    app.ticker.add((delta) => 
+    const tickerFunction = (delta) => 
     {
         animationTimer += delta / 60; // Convert to seconds
         directionTimer += delta / 60;
@@ -219,9 +274,76 @@ function createAnimatedPlayer(container, app)
         if (playerContainer)
         {
             const floatOffset = Math.sin(Date.now() * 0.001) * 5;
-            playerContainer.y = (app.screen.height / 2) + floatOffset;
+            playerContainer.y = (app.screen.height * 0.2) + floatOffset; // 20% da altura + float
         }
+    };
+    
+    app.ticker.add(tickerFunction);
+}
+
+/**
+ * Create simple player placeholder when spritesheet fails
+ * @param {PIXI.Container} container - Parent container
+ * @param {PIXI.Application} app - Pixi application
+ */
+function createSimplePlayerPlaceholder(container, app) 
+{
+    const playerContainer = new PIXI.Container();
+    playerContainer.name = 'playerContainer';
+    
+    // Body
+    const body = new PIXI.Graphics();
+    body.beginFill(0x4CAF50);
+    body.drawRect(-16, -24, 32, 48);
+    body.endFill();
+    
+    // Head
+    const head = new PIXI.Graphics();
+    head.beginFill(0xFFDBB5);
+    head.drawCircle(0, -32, 12);
+    head.endFill();
+    
+    // Eyes
+    const eye1 = new PIXI.Graphics();
+    eye1.beginFill(0x000000);
+    eye1.drawCircle(-4, -34, 2);
+    eye1.endFill();
+    
+    const eye2 = new PIXI.Graphics();
+    eye2.beginFill(0x000000);
+    eye2.drawCircle(4, -34, 2);
+    eye2.endFill();
+    
+    playerContainer.addChild(body);
+    playerContainer.addChild(head);
+    playerContainer.addChild(eye1);
+    playerContainer.addChild(eye2);
+    
+    playerContainer.position.set(app.screen.width / 2, app.screen.height * 0.25); // 25% da altura da tela
+    playerContainer.scale.set(2);
+    
+    // Add blinking animation
+    let blinkTimer = 0;
+    app.ticker.add(() => 
+    {
+        blinkTimer += 0.02;
+        if (Math.sin(blinkTimer * 3) > 0.9) 
+        {
+            eye1.visible = false;
+            eye2.visible = false;
+        } 
+        else 
+        {
+            eye1.visible = true;
+            eye2.visible = true;
+        }
+        
+        // Floating animation
+        const floatOffset = Math.sin(blinkTimer) * 3;
+        playerContainer.y = (app.screen.height * 0.25) + floatOffset; // 25% da altura + float
     });
+    
+    container.addChild(playerContainer);
 }
 
 /**
@@ -232,6 +354,7 @@ function createAnimatedPlayer(container, app)
 function createReturnButton(container, app) 
 {
     const buttonContainer = new PIXI.Container();
+    buttonContainer.name = 'returnButton';
     
     // Button background
     const buttonBg = new PIXI.Graphics();
@@ -253,7 +376,7 @@ function createReturnButton(container, app)
     // Add components to button container
     buttonContainer.addChild(buttonBg);
     buttonContainer.addChild(buttonText);
-    buttonContainer.position.set(app.screen.width / 2 - 140, app.screen.height / 2 + 120);
+    buttonContainer.position.set(app.screen.width / 2 - 140, app.screen.height * 0.35); // 35% da altura da tela (mais alto) (mais alto)
     
     // Make button interactive
     buttonContainer.interactive = true;

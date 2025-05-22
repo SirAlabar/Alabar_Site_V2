@@ -94,7 +94,7 @@ export class LoadingManager
         }
        
        // Initialize ContentManager
-       const contentManager = createContentManager(app, contentGroup, pageGroups);
+       const contentManager = createContentManager(app, contentGroup, pageGroups, this.assetManager);
        window.contentManager = contentManager;
        
        // Initialize Game in the homeContent container

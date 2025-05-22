@@ -5,12 +5,13 @@
  */
 export class ContentManager 
 {
-    constructor(app, contentGroup, pageGroups) 
+    constructor(app, contentGroup, pageGroups, assetManager) 
     {
         // Store references
         this.app = app;
         this.contentGroup = contentGroup;
         this.pageGroups = pageGroups;
+        this.assetManager = assetManager;
         this.currentPage = 'home';
         this.currentSubpage = null;
         
@@ -245,13 +246,13 @@ export class ContentManager
             case 'about':
                 if (this.views.about) 
                 {
-                    this.views.about(container, this.app);
+                    this.views.about(container, this.app, this.assetManager);
                 }
                 break;
             case 'contact':
                 if (this.views.contact) 
                 {
-                    this.views.contact(container, this.app);
+                    this.views.contact(container, this.app, this.assetManager);
                 }
                 break;
             case 'projects':
@@ -350,7 +351,7 @@ export class ContentManager
         // Call the 404 view function
         if (this.views.notFound) 
         {
-            this.views.notFound(container, this.app);
+            this.views.notFound(container, this.app, this.assetManager);
         }
         
         // Mark as initialized
@@ -373,7 +374,7 @@ export class ContentManager
  * @param {Object} pageGroups - Object containing page containers
  * @returns {ContentManager} Initialized ContentManager
  */
-export function createContentManager(app, contentGroup, pageGroups) 
+export function createContentManager(app, contentGroup, pageGroups, assetManager) 
 {
-    return new ContentManager(app, contentGroup, pageGroups).init();
+    return new ContentManager(app, contentGroup, pageGroups, assetManager).init();
 }
