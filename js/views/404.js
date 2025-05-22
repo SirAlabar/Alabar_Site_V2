@@ -6,6 +6,17 @@ export default function notFound404(container, app, assetManager)
 {
     console.log("404 function called for Pixi content!");
     
+    // ===== CONFIGURAÇÃO CENTRALIZADA - MUDE APENAS AQUI! =====
+    const CONFIG = {
+        // Posições em % da altura da tela
+        title: { y: 0.08 },           // 404 título
+        mainMessage: { y: 0.14 },     // "There's nothing to fight here..."
+        subtitle: { y: 0.18 },        // "You're off the path..."
+        player: { y: 0.23 },          // Player animado
+        button: { y: 0.35 }           // Botão "Return to quest"
+    };
+    // ========================================================
+    
     // 404 Title with RPG styling
     const title404 = new PIXI.Text("404", {
         fontFamily: "Honk, serif",
@@ -16,7 +27,7 @@ export default function notFound404(container, app, assetManager)
         strokeThickness: 3
     });
     title404.anchor.set(0.5, 0);
-    title404.position.set(app.screen.width / 2, 60);
+    title404.position.set(app.screen.width / 2, app.screen.height * CONFIG.title.y);
     title404.name = 'title404';
     container.addChild(title404);
     
@@ -29,7 +40,7 @@ export default function notFound404(container, app, assetManager)
         align: 'center'
     });
     mainMessage.anchor.set(0.5, 0);
-    mainMessage.position.set(app.screen.width / 2, 140);
+    mainMessage.position.set(app.screen.width / 2, app.screen.height * CONFIG.mainMessage.y);
     mainMessage.name = 'mainMessage';
     container.addChild(mainMessage);
     
@@ -42,15 +53,15 @@ export default function notFound404(container, app, assetManager)
         fontStyle: 'italic'
     });
     subtitleMessage.anchor.set(0.5, 0);
-    subtitleMessage.position.set(app.screen.width / 2, 185);
+    subtitleMessage.position.set(app.screen.width / 2, app.screen.height * CONFIG.subtitle.y);
     subtitleMessage.name = 'subtitleMessage';
     container.addChild(subtitleMessage);
     
     // Create animated player sprite
-    createAnimatedPlayer(container, app, assetManager);
+    createAnimatedPlayer(container, app, assetManager, CONFIG);
     
     // Return to quest button (functional)
-    createReturnButton(container, app);
+    createReturnButton(container, app, CONFIG);
     
     // Add ambient particles
     createAmbientParticles(container, app);
@@ -58,23 +69,23 @@ export default function notFound404(container, app, assetManager)
     // Handle window resize
     const resizeHandler = () => 
     {
-        // Reposition elements on resize
-        title404.position.set(app.screen.width / 2, 60);
-        mainMessage.position.set(app.screen.width / 2, 140);
-        subtitleMessage.position.set(app.screen.width / 2, 185);
+        // Reposition elements on resize using CONFIG
+        title404.position.set(app.screen.width / 2, app.screen.height * CONFIG.title.y);
+        mainMessage.position.set(app.screen.width / 2, app.screen.height * CONFIG.mainMessage.y);
+        subtitleMessage.position.set(app.screen.width / 2, app.screen.height * CONFIG.subtitle.y);
         
         // Update button position
         const buttonContainer = container.getChildByName('returnButton');
         if (buttonContainer) 
         {
-            buttonContainer.position.set(app.screen.width / 2 - 140, app.screen.height * 0.35);
+            buttonContainer.position.set(app.screen.width / 2 - 140, app.screen.height * CONFIG.button.y);
         }
         
         // Update player position
         const playerContainer = container.getChildByName('playerContainer');
         if (playerContainer) 
         {
-            playerContainer.position.set(app.screen.width / 2, app.screen.height * 0.2);
+            playerContainer.position.set(app.screen.width / 2, app.screen.height * CONFIG.player.y);
         }
     };
     
@@ -87,56 +98,28 @@ export default function notFound404(container, app, assetManager)
 }
 
 /**
- * Create animated player using the loaded spritesheet with cycling animations
+ * Create animated player using attack animations only
  * @param {PIXI.Container} container - Parent container
  * @param {PIXI.Application} app - Pixi application
  * @param {Object} assetManager - Asset manager instance
+ * @param {Object} config - Configuration object with positions
  */
-function createAnimatedPlayer(container, app, assetManager) 
+function createAnimatedPlayer(container, app, assetManager, config) 
 {
     // Get the player spritesheet from the asset manager
-    let playerSpritesheet = null;
-    
-    if (assetManager) 
-    {
-        playerSpritesheet = assetManager.getSpritesheet('player_spritesheet');
-        console.log("AssetManager found, trying to get spritesheet...");
-    }
-    
-    // If not found, try PIXI Assets cache as fallback
-    if (!playerSpritesheet) 
-    {
-        try 
-        {
-            playerSpritesheet = PIXI.Assets.cache.get('player_spritesheet');
-            console.log("Fallback: trying PIXI Assets cache...");
-        } 
-        catch (error) 
-        {
-            console.warn("Could not get spritesheet from PIXI.Assets cache");
-        }
-    }
+    const playerSpritesheet = assetManager?.getSpritesheet('player_spritesheet');
     
     if (!playerSpritesheet || !playerSpritesheet.textures) 
     {
-        console.error("Player spritesheet not found! Available cache:", Object.keys(PIXI.Assets.cache._cache || {}));
-        return; // Just return, no fallback
+        console.error("Player spritesheet not found!");
+        createSimplePlayerPlaceholder(container, app, config);
+        return;
     }
     
     console.log("Player spritesheet found with textures:", Object.keys(playerSpritesheet.textures));
     
-    // Define animation sequences based on the JSON structure (using normal frames, not shadow)
-    const animationSequences = {
-        idleFront: ['IdleLeft-0', 'IdleLeft-1', 'IdleLeft-2', 'IdleLeft-3', 'IdleLeft-4', 'IdleLeft-5'],
-        idleLeft: ['IdleLeft-0', 'IdleLeft-1', 'IdleLeft-2', 'IdleLeft-3', 'IdleLeft-4', 'IdleLeft-5'],
-        idleRight: ['IdleRight-0', 'IdleRight-1', 'IdleRight-2', 'IdleRight-3', 'IdleRight-4', 'IdleRight-5'],
-        idleBack: ['IdleLeft-0', 'IdleLeft-1', 'IdleLeft-2', 'IdleLeft-3'],
-        
-        walkFront: ['WalkFront-0', 'WalkFront-1', 'WalkFront-2', 'WalkFront-3', 'WalkFront-4', 'WalkFront-5'],
-        walkLeft: ['WalkLeft-0', 'WalkLeft-1', 'WalkLeft-2', 'WalkLeft-3', 'WalkLeft-4', 'WalkLeft-5'],
-        walkRight: ['WalkRight-0', 'WalkRight-1', 'WalkRight-2', 'WalkRight-3', 'WalkRight-4', 'WalkRight-5'],
-        walkBack: ['WalkBack-0', 'WalkBack-1', 'WalkBack-2', 'WalkBack-3', 'WalkBack-4', 'WalkBack-5'],
-        
+    // Focus only on attack animations since those are working
+    const attackAnimations = {
         attackFront: ['AtkFront-0', 'AtkFront-1', 'AtkFront-2', 'AtkFront-3', 'AtkFront-4', 'AtkFront-5'],
         attackLeft: ['AtkLeft-0', 'AtkLeft-1', 'AtkLeft-2', 'AtkLeft-3', 'AtkLeft-4', 'AtkLeft-5'],
         attackRight: ['AtkRight-0', 'AtkRight-1', 'AtkRight-2', 'AtkRight-3', 'AtkRight-4', 'AtkRight-5'],
@@ -146,39 +129,26 @@ function createAnimatedPlayer(container, app, assetManager)
     // Create player container for easier management
     const playerContainer = new PIXI.Container();
     playerContainer.name = 'playerContainer';
-    playerContainer.position.set(app.screen.width / 2, app.screen.height * 0.25); // 25% da altura da tela (mais alto)
+    playerContainer.position.set(app.screen.width / 2, app.screen.height * config.player.y);
     container.addChild(playerContainer);
     
     // Animation state management
     let currentAnimatedSprite = null;
     let currentDirection = 0; // 0: front, 1: left, 2: right, 3: back
-    let currentAnimationType = 0; // 0: idle, 1: walk, 2: attack
     let animationTimer = 0;
-    let directionTimer = 0;
     
     const directions = ['Front', 'Left', 'Right', 'Back'];
-    const animationTypes = ['idle', 'walk', 'attack'];
-    
-    // Animation durations (in seconds)
-    const animationDurations = {
-        idle: 3.0,
-        walk: 2.0,
-        attack: 1.5
-    };
+    const animationDuration = 120; // 2 seconds em frames (60fps * 2)
     
     /**
-     * Create animated sprite for specific animation sequence
-     * @param {string} animationKey - Key for animation sequence
+     * Create animated sprite for attack sequence
+     * @param {string} animationKey - Key for attack animation
      * @returns {PIXI.AnimatedSprite|null} Created animated sprite
      */
-    function createAnimatedSpriteForSequence(animationKey)
+    function createAttackSprite(animationKey)
     {
-        const frameNames = animationSequences[animationKey];
-        if (!frameNames)
-        {
-            console.warn(`Animation sequence ${animationKey} not found`);
-            return null;
-        }
+        const frameNames = attackAnimations[animationKey];
+        if (!frameNames) return null;
         
         // Get textures for this sequence
         const textures = [];
@@ -188,34 +158,27 @@ function createAnimatedPlayer(container, app, assetManager)
             {
                 textures.push(playerSpritesheet.textures[frameName]);
             }
-            else
-            {
-                console.warn(`Frame ${frameName} not found in spritesheet`);
-            }
         }
         
-        if (textures.length === 0)
-        {
-            console.warn(`No valid textures found for ${animationKey}`);
-            return null;
-        }
+        if (textures.length === 0) return null;
         
         const animatedSprite = new PIXI.AnimatedSprite(textures);
         animatedSprite.anchor.set(0.5, 0.5);
         animatedSprite.scale.set(3); // Make it bigger for visibility
-        animatedSprite.animationSpeed = 0.1;
+        animatedSprite.animationSpeed = 0.15; // Slightly faster for attacks
         animatedSprite.loop = true;
         
         return animatedSprite;
     }
     
     /**
-     * Switch to new animation
+     * Switch to new attack animation
      * @param {number} dirIndex - Direction index (0-3)
-     * @param {number} animIndex - Animation type index (0-2)
      */
-    function switchAnimation(dirIndex, animIndex)
+    function switchAttackAnimation(dirIndex)
     {
+        console.log(`Switching to direction index: ${dirIndex} (${directions[dirIndex]})`);
+        
         // Remove current sprite
         if (currentAnimatedSprite)
         {
@@ -224,69 +187,61 @@ function createAnimatedPlayer(container, app, assetManager)
             currentAnimatedSprite.destroy();
         }
         
-        // Build animation key
-        const direction = directions[dirIndex].toLowerCase();
-        const animType = animationTypes[animIndex];
-        const animationKey = animType + directions[dirIndex];
+        // Build attack animation key
+        const animationKey = 'attack' + directions[dirIndex];
         
-        console.log(`Switching to animation: ${animationKey}`);
+        console.log(`Creating attack animation: ${animationKey}`);
         
         // Create new animated sprite
-        currentAnimatedSprite = createAnimatedSpriteForSequence(animationKey);
+        currentAnimatedSprite = createAttackSprite(animationKey);
         
         if (currentAnimatedSprite)
         {
             playerContainer.addChild(currentAnimatedSprite);
             currentAnimatedSprite.play();
+            console.log(`Successfully created and started ${animationKey}`);
         }
         else
         {
-            console.error(`Failed to create animation for ${animationKey}`);
+            console.error(`Failed to create attack animation for ${animationKey}`);
         }
     }
     
-    // Start with idle front animation
-    switchAnimation(currentDirection, currentAnimationType);
+    // Start with attack front animation
+    switchAttackAnimation(currentDirection);
     
-    // Animation cycle ticker
-    const tickerFunction = (delta) => 
+    // Animation cycle ticker - CORRIGIDO para frames
+    const animationTicker = () => 
     {
-        animationTimer += delta / 60; // Convert to seconds
-        directionTimer += delta / 60;
+        animationTimer++;
         
-        // Change animation type after duration
-        if (animationTimer >= animationDurations[animationTypes[currentAnimationType]])
+        // Change direction after duration (em frames)
+        if (animationTimer >= animationDuration)
         {
             animationTimer = 0;
-            currentAnimationType = (currentAnimationType + 1) % animationTypes.length;
-            switchAnimation(currentDirection, currentAnimationType);
-        }
-        
-        // Change direction every 6 seconds
-        if (directionTimer >= 6.0)
-        {
-            directionTimer = 0;
             currentDirection = (currentDirection + 1) % directions.length;
-            switchAnimation(currentDirection, currentAnimationType);
+            console.log(`Changing to direction: ${directions[currentDirection]}`);
+            switchAttackAnimation(currentDirection);
         }
         
         // Add subtle floating animation
         if (playerContainer)
         {
             const floatOffset = Math.sin(Date.now() * 0.001) * 5;
-            playerContainer.y = (app.screen.height * 0.2) + floatOffset; // 20% da altura + float
+            playerContainer.y = (app.screen.height * config.player.y) + floatOffset;
         }
     };
     
-    app.ticker.add(tickerFunction);
+    app.ticker.add(animationTicker);
 }
 
 /**
  * Create simple player placeholder when spritesheet fails
  * @param {PIXI.Container} container - Parent container
  * @param {PIXI.Application} app - Pixi application
+ * @param {Object} config - Configuration object with positions
  */
-function createSimplePlayerPlaceholder(container, app) 
+function createSimplePlayerPlaceholder(container, app, config) 
 {
     const playerContainer = new PIXI.Container();
     playerContainer.name = 'playerContainer';
@@ -314,17 +269,13 @@ function createSimplePlayerPlaceholder(container, app)
     eye2.drawCircle(4, -34, 2);
     eye2.endFill();
     
-    playerContainer.addChild(body);
-    playerContainer.addChild(head);
-    playerContainer.addChild(eye1);
-    playerContainer.addChild(eye2);
-    
-    playerContainer.position.set(app.screen.width / 2, app.screen.height * 0.25); // 25% da altura da tela
+    playerContainer.addChild(body, head, eye1, eye2);
+    playerContainer.position.set(app.screen.width / 2, app.screen.height * config.player.y);
     playerContainer.scale.set(2);
     
     // Add blinking animation
     let blinkTimer = 0;
-    app.ticker.add(() => 
+    const tickerFunction = () => 
     {
         blinkTimer += 0.02;
         if (Math.sin(blinkTimer * 3) > 0.9) 
@@ -340,8 +291,10 @@ function createSimplePlayerPlaceholder(container, app)
         
         // Floating animation
         const floatOffset = Math.sin(blinkTimer) * 3;
-        playerContainer.y = (app.screen.height * 0.25) + floatOffset; // 25% da altura + float
-    });
+        playerContainer.y = (app.screen.height * config.player.y) + floatOffset;
+    };
+    
+    app.ticker.add(tickerFunction);
     
     container.addChild(playerContainer);
 }
@@ -350,8 +303,9 @@ function createSimplePlayerPlaceholder(container, app)
  * Create functional return button
  * @param {PIXI.Container} container - Parent container
  * @param {PIXI.Application} app - Pixi application
+ * @param {Object} config - Configuration object with positions
  */
-function createReturnButton(container, app) 
+function createReturnButton(container, app, config) 
 {
     const buttonContainer = new PIXI.Container();
     buttonContainer.name = 'returnButton';
@@ -374,14 +328,15 @@ function createReturnButton(container, app)
     buttonText.position.set(140, 27.5);
     
     // Add components to button container
-    buttonContainer.addChild(buttonBg);
-    buttonContainer.addChild(buttonText);
-    buttonContainer.position.set(app.screen.width / 2 - 140, app.screen.height * 0.35); // 35% da altura da tela (mais alto) (mais alto)
+    buttonContainer.addChild(buttonBg, buttonText);
+    buttonContainer.position.set(app.screen.width / 2 - 140, app.screen.height * config.button.y);
     
     // Make button interactive
     buttonContainer.interactive = true;
-    buttonContainer.buttonMode = true;
     buttonContainer.cursor = 'pointer';
+    
+    // Set hit area to ensure clicks work
+    buttonContainer.hitArea = new PIXI.Rectangle(0, 0, 280, 55);
     
     // Hover effects
     buttonContainer.on('pointerover', () => 
@@ -396,92 +351,137 @@ function createReturnButton(container, app)
         buttonContainer.scale.set(1.0);
     });
     
-    // Click handler - FUNCTIONAL
+    // Click handler - CORRIGIDO
     buttonContainer.on('pointerdown', () => 
     {
         console.log("Return button clicked!");
-        // Navigate to home
-        if (window.location) 
-        {
-            window.location.hash = '#/';
-        }
+        window.location.hash = '#/';
+    });
+    
+    buttonContainer.on('pointertap', () => 
+    {
+        console.log("Return button tapped!");
+        window.location.hash = '#/';
     });
     
     container.addChild(buttonContainer);
 }
 
 /**
- * Create ambient particles for atmosphere
+ * Create ambient particles for atmosphere - FIXED VERSION
  * @param {PIXI.Container} container - Parent container
  * @param {PIXI.Application} app - Pixi application
  */
 function createAmbientParticles(container, app) 
 {
-    const particleCount = 15;
+    const particleContainer = new PIXI.Container();
+    particleContainer.name = 'particleContainer';
+    container.addChild(particleContainer);
     
+    const particles = [];
+    const particleCount = 30; // Aumentado de 15 para 30
+    
+    // Create particles
     for (let i = 0; i < particleCount; i++) 
     {
         const particle = new PIXI.Graphics();
         
-        // Random particle type
+        // More variety in particle types
         const particleType = Math.random();
-        if (particleType < 0.5) 
+        if (particleType < 0.3) 
         {
-            // Circular particles
-            particle.beginFill(0xffcc33, 0.4);
-            particle.drawCircle(0, 0, Math.random() * 2 + 1);
+            // Circular particles - magical orbs
+            particle.beginFill(0xffcc33, 0.7);
+            particle.drawCircle(0, 0, Math.random() * 4 + 2);
             particle.endFill();
         } 
-        else 
+        else if (particleType < 0.6) 
         {
-            // Square particles
-            const size = Math.random() * 3 + 1;
-            particle.beginFill(0x33ccff, 0.3);
+            // Square particles - runes
+            const size = Math.random() * 5 + 2;
+            particle.beginFill(0x33ccff, 0.6);
             particle.drawRect(-size/2, -size/2, size, size);
             particle.endFill();
         }
-        
-        // Random position
-        particle.position.set(
-            Math.random() * app.screen.width,
-            Math.random() * app.screen.height
-        );
-        
-        // Random movement
-        particle.vx = (Math.random() - 0.5) * 0.5;
-        particle.vy = (Math.random() - 0.5) * 0.5;
-        particle.life = Math.random() * 5 + 2;
-        particle.maxLife = particle.life;
-        
-        container.addChild(particle);
-        
-        // Animate particle
-        app.ticker.add(() => 
+        else 
         {
-            particle.x += particle.vx;
-            particle.y += particle.vy;
-            particle.life -= 0.01;
+            // Diamond particles - crystals
+            const size = Math.random() * 4 + 2;
+            particle.beginFill(0xff3366, 0.5);
+            particle.moveTo(0, -size);
+            particle.lineTo(size, 0);
+            particle.lineTo(0, size);
+            particle.lineTo(-size, 0);
+            particle.closePath();
+            particle.endFill();
+        }
+        
+        // Initialize particle data
+        const particleData = {
+            graphic: particle,
+            x: Math.random() * app.screen.width,
+            y: Math.random() * app.screen.height,
+            vx: (Math.random() - 0.5) * 1.5, // Velocidade maior
+            vy: (Math.random() - 0.5) * 1.5,
+            life: Math.random() * 400 + 300, // Vida mais longa
+            maxLife: 0,
+            rotationSpeed: (Math.random() - 0.5) * 0.08
+        };
+        
+        particleData.maxLife = particleData.life;
+        
+        // Set initial position
+        particle.position.set(particleData.x, particleData.y);
+        
+        particleContainer.addChild(particle);
+        particles.push(particleData);
+    }
+    
+    // Animation ticker for particles - MELHORADO
+    const particleTicker = () => 
+    {
+        particles.forEach(p => {
+            // Update position
+            p.x += p.vx;
+            p.y += p.vy;
+            
+            // Update rotation
+            p.graphic.rotation += p.rotationSpeed;
+            
+            // Apply movement
+            p.graphic.position.set(p.x, p.y);
+            
+            // Decrease life
+            p.life--;
             
             // Fade out as life decreases
-            particle.alpha = particle.life / particle.maxLife * 0.6;
+            const lifeRatio = p.life / p.maxLife;
+            p.graphic.alpha = Math.max(0.1, lifeRatio * 0.9);
+            
+            // Add scale pulsing for more visual interest
+            const pulse = Math.sin(Date.now() * 0.005 + p.x * 0.01) * 0.2 + 1;
+            p.graphic.scale.set(pulse);
             
             // Reset particle when it dies
-            if (particle.life <= 0) 
+            if (p.life <= 0) 
             {
-                particle.x = Math.random() * app.screen.width;
-                particle.y = Math.random() * app.screen.height;
-                particle.life = particle.maxLife;
-                particle.vx = (Math.random() - 0.5) * 0.5;
-                particle.vy = (Math.random() - 0.5) * 0.5;
+                p.x = Math.random() * app.screen.width;
+                p.y = Math.random() * app.screen.height;
+                p.vx = (Math.random() - 0.5) * 1.5;
+                p.vy = (Math.random() - 0.5) * 1.5;
+                p.life = p.maxLife;
+                p.graphic.alpha = 0.9;
             }
             
-            // Wrap around screen
-            if (particle.x > app.screen.width) particle.x = 0;
-            if (particle.x < 0) particle.x = app.screen.width;
-            if (particle.y > app.screen.height) particle.y = 0;
-            if (particle.y < 0) particle.y = app.screen.height;
+            // Wrap around screen edges
+            if (p.x > app.screen.width + 20) p.x = -20;
+            if (p.x < -20) p.x = app.screen.width + 20;
+            if (p.y > app.screen.height + 20) p.y = -20;
+            if (p.y < -20) p.y = app.screen.height + 20;
         });
-    }
+    };
+    
+    app.ticker.add(particleTicker);
 }
 
 // Legacy function for backwards compatibility
