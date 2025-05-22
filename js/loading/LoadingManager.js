@@ -176,6 +176,10 @@ export class LoadingManager
         const contactContent = new PIXI.Container();
         contactContent.name = "contactContent";
         contactContent.visible = false;
+
+        const notFound404Content = new PIXI.Container(); 
+        notFound404Content.name = "notFound404Content";
+        notFound404Content.visible = false;
         
         // Projects main container
         const projectsContent = new PIXI.Container();
@@ -211,6 +215,7 @@ export class LoadingManager
         contentGroup.addChild(aboutContent);
         contentGroup.addChild(contactContent);
         contentGroup.addChild(projectsContent);
+        contentGroup.addChild(notFound404Content);
 
        // Create a UI group for cursor effects and HUD elements (100% coverage)
        const uiGroup = new PIXI.Container();
@@ -237,6 +242,7 @@ export class LoadingManager
                 homeContent,
                 aboutContent,
                 contactContent,
+                notFound404Content,
                 projectsContent,
                 // Project sub-containers
                 projects42Content,

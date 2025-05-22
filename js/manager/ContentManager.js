@@ -20,6 +20,7 @@ export class ContentManager
             about: false,
             contact: false,
             projects: false,
+            notFound: false,
             // Project sub-pages
             projects42: false,
             projectsWeb: false,
@@ -58,6 +59,7 @@ export class ContentManager
             const homeModule = await import('../views/Home.js');
             const aboutModule = await import('../views/About.js');
             const contactModule = await import('../views/Contact.js');
+            const notFoundModule = await import('../views/404.js');
             
             // Dynamic imports for project sub-modules
             const projects42Module = await import('../views/Projects42.js');
@@ -70,6 +72,7 @@ export class ContentManager
                 home: homeModule.default,
                 about: aboutModule.default,
                 contact: contactModule.default,
+                notFound: notFoundModule.default,
                 projects42: projects42Module.default,
                 projectsWeb: projectsWebModule.default,
                 projectsMobile: projectsMobileModule.default,
@@ -100,12 +103,30 @@ export class ContentManager
         
         // Handle main page navigation
         const pageContentName = page + 'Content';
-        if (!this.pageGroups[pageContentName]) 
+        if (!this.pageGroups[pageContentName] && page !== '404') 
         {
-            console.warn(`Page ${page} not found`);
-            page = 'home';
+            console.warn(`Page ${page} not found, showing 404`);
+            return this.navigateTo('404');
         }
         
+        if (page === '404') 
+        {
+            this.hideAllMainPages();
+            if (!this.initialized.notFound) 
+            {
+                this.init404Page();
+            }
+            this.pageGroups.notFound404Content.visible = true;
+            this.currentPage = '404';
+            this.currentSubpage = null;
+            
+            this.contentGroup.sortChildren();
+            this.app.renderer.render(this.app.stage);
+            
+            console.log("Navigated to 404 page");
+            return this;
+        }
+
         // Hide all main page contents
         this.hideAllMainPages();
         
@@ -177,7 +198,7 @@ export class ContentManager
      */
     hideAllMainPages() 
     {
-        const mainPages = ['homeContent', 'aboutContent', 'contactContent', 'projectsContent'];
+        const mainPages = ['homeContent', 'aboutContent', 'contactContent', 'projectsContent', 'notFound404Content'];
         mainPages.forEach(pageName => {
             if (this.pageGroups[pageName]) 
             {
@@ -235,6 +256,9 @@ export class ContentManager
                 break;
             case 'projects':
                 this.initProjectsOverview(container);
+                break;
+            case '404':
+                // Already handled in navigateTo method
                 break;
             default:
                 console.warn(`No initialization method for ${page}`);
@@ -309,7 +333,29 @@ export class ContentManager
         // Each view file should handle its own responsive behavior
         console.log("Resize event - delegating to view files");
     }
-    
+    /**
+     * Initialize 404 page with animated player
+     */
+    init404Page() 
+    {
+        if (this.initialized.notFound) 
+        {
+            return;
+        }
+        
+        // Clear the about container to use it for 404
+        const container = this.pageGroups.notFound404Content;
+        container.removeChildren();
+        
+        // Call the 404 view function
+        if (this.views.notFound) 
+        {
+            this.views.notFound(container, this.app);
+        }
+        
+        // Mark as initialized
+        this.initialized.notFound = true;
+    }
     /**
      * Clean up resources 
      */

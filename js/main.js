@@ -66,18 +66,23 @@ function navigateTo(hash)
     
     // Parse the route to get page and subpage
     const { page, subpage } = parseRoute(path);
-    
+
+    let targetPage = page;
+    if (!routes[path]) 
+    {
+        targetPage = '404';
+    }
     // Use ContentManager to switch to this page
     if (window.contentManager) 
     {
         // Navigate to main page or subpage
         if (subpage) 
         {
-            window.contentManager.navigateTo(page, subpage);
+            window.contentManager.navigateTo(targetPage, subpage);
         } 
         else 
         {
-            window.contentManager.navigateTo(page);
+            window.contentManager.navigateTo(targetPage);
         }
         
         // Force app stage sorting and rendering
