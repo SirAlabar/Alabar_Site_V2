@@ -10,12 +10,9 @@ export default function about(container, app, assetManager)
     
     const colors = {
         title: currentTheme === 'dark' ? 0xffcc33 : 0xcc0000,
-        label: currentTheme === 'dark' ? 0x33ccff : 0x003366,
-        value: currentTheme === 'dark' ? 0xffffff : 0x000000,
-        skillBg: currentTheme === 'dark' ? 0x4a4a4a : 0xffffff,
-        skillText: currentTheme === 'dark' ? 0xffffff : 0x000000,
+        skillBg: currentTheme === 'dark' ? 0x4a4a4a : 0xe6e6e6,
         fixedBlueBg: 0x1e3a5f,
-        questText: 0xffffff
+        whiteText: 0xffffff
     };
     
     const statsTitle = new PIXI.Text("Character Stats", 
@@ -44,19 +41,6 @@ export default function about(container, app, assetManager)
     
     const statsBg = new PIXI.Graphics();
     statsBg.name = 'statsBg';
-    
-    const statsY = 200;
-    const leftX = Math.max(100, app.screen.width * 0.1);
-    const rightX = Math.min(app.screen.width - 250, app.screen.width / 2 + 50);
-    const lineHeight = 30;
-    
-    const statsWidth = app.screen.width - 100;
-    const statsHeight = 120;
-    
-    statsBg.beginFill(colors.fixedBlueBg, 0.4);
-    statsBg.lineStyle(1, colors.fixedBlueBg, 0.6);
-    statsBg.drawRoundedRect(50, statsY - 15, statsWidth, statsHeight, 10);
-    statsBg.endFill();
     container.addChild(statsBg);
     
     const leftColumn = stats.slice(0, 3);
@@ -69,18 +53,18 @@ export default function about(container, app, assetManager)
             fontFamily: "Arial",
             fontSize: Math.min(18, app.screen.width * 0.025),
             fontWeight: "bold",
-            fill: 0xffffff
+            fill: colors.whiteText
         });
-        label.position.set(leftX, statsY + index * lineHeight);
+        label.position.set(100, 200 + index * 30);
         statsContainer.addChild(label);
         
         const value = new PIXI.Text(stat.value, 
         {
             fontFamily: "Arial",
             fontSize: Math.min(16, app.screen.width * 0.022),
-            fill: 0xffffff
+            fill: colors.whiteText
         });
-        value.position.set(leftX + label.width + 10, statsY + index * lineHeight);
+        value.position.set(100 + label.width + 10, 200 + index * 30);
         statsContainer.addChild(value);
     });
     
@@ -91,18 +75,18 @@ export default function about(container, app, assetManager)
             fontFamily: "Arial",
             fontSize: Math.min(18, app.screen.width * 0.025),
             fontWeight: "bold",
-            fill: 0xffffff
+            fill: colors.whiteText
         });
-        label.position.set(rightX, statsY + index * lineHeight);
+        label.position.set(400, 200 + index * 30);
         statsContainer.addChild(label);
         
         const value = new PIXI.Text(stat.value, 
         {
             fontFamily: "Arial",
             fontSize: Math.min(16, app.screen.width * 0.022),
-            fill: 0xffffff
+            fill: colors.whiteText
         });
-        value.position.set(rightX + label.width + 10, statsY + index * lineHeight);
+        value.position.set(400 + label.width + 10, 200 + index * 30);
         statsContainer.addChild(value);
     });
     
@@ -142,17 +126,6 @@ export default function about(container, app, assetManager)
     
     const skillsBg = new PIXI.Graphics();
     skillsBg.name = 'skillsBg';
-    
-    const skillsStartY = 370;
-    const skillRowHeight = 35;
-    
-    const skillsWidth = app.screen.width - 100;
-    const skillsHeight = 160;
-    
-    skillsBg.beginFill(colors.fixedBlueBg, 0.4);
-    skillsBg.lineStyle(1, colors.fixedBlueBg, 0.6);
-    skillsBg.drawRoundedRect(50, skillsStartY - 15, skillsWidth, skillsHeight, 10);
-    skillsBg.endFill();
     container.addChild(skillsBg);
     
     skillCategories.forEach((category, categoryIndex) => 
@@ -162,32 +135,32 @@ export default function about(container, app, assetManager)
             fontFamily: "Arial",
             fontSize: Math.min(16, app.screen.width * 0.023),
             fontWeight: "bold",
-            fill: 0xffffff
+            fill: colors.whiteText
         });
-        categoryTitle.position.set(leftX, skillsStartY + categoryIndex * skillRowHeight);
+        categoryTitle.position.set(100, 370 + categoryIndex * 35);
         skillsContainer.addChild(categoryTitle);
         
-        let skillX = leftX + categoryTitle.width + 15;
+        let skillX = 100 + categoryTitle.width + 15;
         
-        category.skills.forEach((skill, skillIndex) => 
+        category.skills.forEach((skill) => 
         {
             const skillBg = new PIXI.Graphics();
             skillBg.beginFill(colors.skillBg, currentTheme === 'light' ? 0.9 : 0.6);
-            skillBg.lineStyle(1, colors.label, currentTheme === 'light' ? 0.8 : 0.7);
+            skillBg.lineStyle(1, colors.skillBg, currentTheme === 'light' ? 0.8 : 0.7);
             
             const skillText = new PIXI.Text(skill, 
             {
                 fontFamily: "Arial",
                 fontSize: Math.min(14, app.screen.width * 0.02),
-                fill: colors.skillText
+                fill: colors.whiteText
             });
             
             const padding = 8;
             skillBg.drawRoundedRect(0, 0, skillText.width + padding * 2, skillText.height + padding, 6);
             skillBg.endFill();
-            skillBg.position.set(skillX, skillsStartY + categoryIndex * skillRowHeight - 2);
+            skillBg.position.set(skillX, 370 + categoryIndex * 35 - 2);
             
-            skillText.position.set(skillX + padding, skillsStartY + categoryIndex * skillRowHeight + 2);
+            skillText.position.set(skillX + padding, 370 + categoryIndex * 35 + 2);
             
             skillsContainer.addChild(skillBg);
             skillsContainer.addChild(skillText);
@@ -212,7 +185,7 @@ export default function about(container, app, assetManager)
         {
             fontFamily: "Arial",
             fontSize: Math.min(16, app.screen.width * 0.022),
-            fill: 0xffffff,
+            fill: colors.whiteText,
             wordWrap: true,
             wordWrapWidth: Math.min(app.screen.width - 120, 800),
             lineHeight: 20
@@ -222,19 +195,9 @@ export default function about(container, app, assetManager)
     
     const questBg = new PIXI.Graphics();
     questBg.name = 'questBg';
-    questBg.beginFill(colors.fixedBlueBg, 0.4);
-    questBg.lineStyle(1, colors.fixedBlueBg, 0.6);
-    
-    const questBgY = 590;
-    const questBgWidth = Math.min(questText.width + 40, app.screen.width - 100);
-    const questBgHeight = questText.height + 40;
-    const questBgX = (app.screen.width - questBgWidth) / 2;
-    
-    questBg.drawRoundedRect(questBgX, questBgY, questBgWidth, questBgHeight, 10);
-    questBg.endFill();
     container.addChild(questBg);
     
-    questText.position.set(questBgX + 20, questBgY + 20);
+    questText.position.set(0, 0);
     container.addChild(questText);
     
     const elements = {
@@ -249,6 +212,50 @@ export default function about(container, app, assetManager)
         skillsContainer
     };
     
+    const drawBackgrounds = () => 
+    {
+        const theme = document.body.getAttribute('data-theme') || 'light';
+        const bgColors = {
+            skillBg: theme === 'dark' ? 0x4a4a4a : 0xe6e6e6,
+            fixedBlueBg: 0x1e3a5f
+        };
+        
+        // Stats background - centered with content-based width
+        const statsWidth = 600;
+        const statsHeight = 120;
+        const statsX = (app.screen.width - statsWidth) / 2;
+        
+        elements.statsBg.clear();
+        elements.statsBg.beginFill(bgColors.fixedBlueBg, 0.4);
+        elements.statsBg.lineStyle(1, bgColors.fixedBlueBg, 0.6);
+        elements.statsBg.drawRoundedRect(statsX, 185, statsWidth, statsHeight, 10);
+        elements.statsBg.endFill();
+        
+        // Skills background - centered with content-based width
+        const skillsWidth = 700;
+        const skillsHeight = 160;
+        const skillsX = (app.screen.width - skillsWidth) / 2;
+        
+        elements.skillsBg.clear();
+        elements.skillsBg.beginFill(bgColors.fixedBlueBg, 0.4);
+        elements.skillsBg.lineStyle(1, bgColors.fixedBlueBg, 0.6);
+        elements.skillsBg.drawRoundedRect(skillsX, 355, skillsWidth, skillsHeight, 10);
+        elements.skillsBg.endFill();
+        
+        // Quest background
+        const questBgWidth = Math.min(elements.questText.width + 40, app.screen.width - 100);
+        const questBgHeight = elements.questText.height + 40;
+        const questBgX = (app.screen.width - questBgWidth) / 2;
+        
+        elements.questBg.clear();
+        elements.questBg.beginFill(bgColors.fixedBlueBg, 0.4);
+        elements.questBg.lineStyle(1, bgColors.fixedBlueBg, 0.6);
+        elements.questBg.drawRoundedRect(questBgX, 590, questBgWidth, questBgHeight, 10);
+        elements.questBg.endFill();
+        
+        elements.questText.position.set(questBgX + 20, 610);
+    };
+    
     const resizeElements = () => 
     {
         console.log("Resizing about page elements...");
@@ -256,14 +263,10 @@ export default function about(container, app, assetManager)
         const theme = document.body.getAttribute('data-theme') || 'light';
         const newColors = {
             title: theme === 'dark' ? 0xffcc33 : 0xcc0000,
-            label: theme === 'dark' ? 0x33ccff : 0x003366,
-            value: theme === 'dark' ? 0xffffff : 0x000000,
-            skillBg: theme === 'dark' ? 0x4a4a4a : 0xffffff,
-            skillText: theme === 'dark' ? 0xffffff : 0x000000,
-            fixedBlueBg: 0x1e3a5f,
-            questText: 0xffffff
+            skillBg: theme === 'dark' ? 0x4a4a4a : 0xe6e6e6
         };
         
+        // Update titles
         elements.statsTitle.position.set(app.screen.width / 2, 150);
         elements.statsTitle.style.fontSize = Math.min(36, app.screen.width * 0.06);
         elements.statsTitle.style.fill = newColors.title;
@@ -276,38 +279,20 @@ export default function about(container, app, assetManager)
         elements.questTitle.style.fontSize = Math.min(32, app.screen.width * 0.05);
         elements.questTitle.style.fill = newColors.title;
         
-        const newLeftX = Math.max(100, app.screen.width * 0.1);
-        const newRightX = Math.min(app.screen.width - 250, app.screen.width / 2 + 50);
-        
-        elements.statsBg.clear();
-        elements.statsBg.beginFill(newColors.fixedBlueBg, 0.4);
-        elements.statsBg.lineStyle(1, newColors.fixedBlueBg, 0.6);
-        elements.statsBg.drawRoundedRect(50, 185, app.screen.width - 100, 120, 10);
-        elements.statsBg.endFill();
-        
-        elements.skillsBg.clear();
-        elements.skillsBg.beginFill(newColors.fixedBlueBg, 0.4);
-        elements.skillsBg.lineStyle(1, newColors.fixedBlueBg, 0.6);
-        elements.skillsBg.drawRoundedRect(50, 355, app.screen.width - 100, 160, 10);
-        elements.skillsBg.endFill();
-        
+        // Update quest text properties
         elements.questText.style.fontSize = Math.min(16, app.screen.width * 0.022);
-        elements.questText.style.fill = 0xffffff;
         elements.questText.style.wordWrapWidth = Math.min(app.screen.width - 120, 800);
         
-        const newQuestBgWidth = Math.min(elements.questText.width + 40, app.screen.width - 100);
-        const newQuestBgHeight = elements.questText.height + 40;
-        const newQuestBgX = (app.screen.width - newQuestBgWidth) / 2;
+        // Redraw backgrounds
+        drawBackgrounds();
         
-        elements.questBg.clear();
-        elements.questBg.beginFill(newColors.fixedBlueBg, 0.4);
-        elements.questBg.lineStyle(1, newColors.fixedBlueBg, 0.6);
-        elements.questBg.drawRoundedRect(newQuestBgX, 590, newQuestBgWidth, newQuestBgHeight, 10);
-        elements.questBg.endFill();
-        
-        elements.questText.position.set(newQuestBgX + 20, 610);
-        
+        // Rebuild stats container with centered positions
         elements.statsContainer.removeChildren();
+        
+        const statsWidth = 600;
+        const statsX = (app.screen.width - statsWidth) / 2;
+        const leftX = statsX + 50;
+        const rightX = statsX + 300;
         
         const leftColumn = [
             { label: "Class:", value: "Software Developer" },
@@ -327,18 +312,18 @@ export default function about(container, app, assetManager)
                 fontFamily: "Arial",
                 fontSize: Math.min(18, app.screen.width * 0.025),
                 fontWeight: "bold",
-                fill: 0xffffff
+                fill: colors.whiteText
             });
-            label.position.set(newLeftX, 200 + index * 30);
+            label.position.set(leftX, 200 + index * 30);
             elements.statsContainer.addChild(label);
             
             const value = new PIXI.Text(stat.value, 
             {
                 fontFamily: "Arial",
                 fontSize: Math.min(16, app.screen.width * 0.022),
-                fill: 0xffffff
+                fill: colors.whiteText
             });
-            value.position.set(newLeftX + label.width + 10, 200 + index * 30);
+            value.position.set(leftX + label.width + 10, 200 + index * 30);
             elements.statsContainer.addChild(value);
         });
         
@@ -349,41 +334,27 @@ export default function about(container, app, assetManager)
                 fontFamily: "Arial",
                 fontSize: Math.min(18, app.screen.width * 0.025),
                 fontWeight: "bold",
-                fill: 0xffffff
+                fill: colors.whiteText
             });
-            label.position.set(newRightX, 200 + index * 30);
+            label.position.set(rightX, 200 + index * 30);
             elements.statsContainer.addChild(label);
             
             const value = new PIXI.Text(stat.value, 
             {
                 fontFamily: "Arial",
                 fontSize: Math.min(16, app.screen.width * 0.022),
-                fill: 0xffffff
+                fill: colors.whiteText
             });
-            value.position.set(newRightX + label.width + 10, 200 + index * 30);
+            value.position.set(rightX + label.width + 10, 200 + index * 30);
             elements.statsContainer.addChild(value);
         });
         
+        // Rebuild skills container with centered positions
         elements.skillsContainer.removeChildren();
         
-        const skillCategories = [
-            {
-                title: "Main Stack:",
-                skills: ["C", "C++", "Git"]
-            },
-            {
-                title: "Secondary Stack:",
-                skills: ["C#", "CSS", "HTML", "JavaScript"]
-            },
-            {
-                title: "Studying Now:",
-                skills: ["Unity", "Game Development", "Algorithms"]
-            },
-            {
-                title: "Tools:",
-                skills: [".NET", "VS Code", "Linux", "Slack"]
-            }
-        ];
+        const skillsWidth = 700;
+        const skillsX = (app.screen.width - skillsWidth) / 2;
+        const skillStartX = skillsX + 50;
         
         skillCategories.forEach((category, categoryIndex) => 
         {
@@ -392,24 +363,24 @@ export default function about(container, app, assetManager)
                 fontFamily: "Arial",
                 fontSize: Math.min(16, app.screen.width * 0.023),
                 fontWeight: "bold",
-                fill: 0xffffff
+                fill: colors.whiteText
             });
-            categoryTitle.position.set(newLeftX, 370 + categoryIndex * 35);
+            categoryTitle.position.set(skillStartX, 370 + categoryIndex * 35);
             elements.skillsContainer.addChild(categoryTitle);
             
-            let skillX = newLeftX + categoryTitle.width + 15;
+            let skillX = skillStartX + categoryTitle.width + 15;
             
             category.skills.forEach((skill) => 
             {
                 const skillBg = new PIXI.Graphics();
                 skillBg.beginFill(newColors.skillBg, theme === 'light' ? 0.9 : 0.6);
-                skillBg.lineStyle(1, newColors.label, theme === 'light' ? 0.8 : 0.7);
+                skillBg.lineStyle(1, newColors.skillBg, theme === 'light' ? 0.8 : 0.7);
                 
                 const skillText = new PIXI.Text(skill, 
                 {
                     fontFamily: "Arial",
                     fontSize: Math.min(14, app.screen.width * 0.02),
-                    fill: newColors.skillText
+                    fill: colors.whiteText
                 });
                 
                 const padding = 8;
@@ -426,6 +397,9 @@ export default function about(container, app, assetManager)
             });
         });
     };
+    
+    // Initial draw
+    drawBackgrounds();
     
     window.addEventListener('resize', resizeElements);
     
