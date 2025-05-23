@@ -327,38 +327,97 @@ function createReturnButton(container, app)
     buttonContainer.addChild(buttonBg, buttonText);
     buttonContainer.position.set(app.screen.width / 2 - 140, 540); // Below the text area
     
-    // Make button interactive
+    // Make button interactive - ENHANCED VERSION
     buttonContainer.interactive = true;
     buttonContainer.cursor = 'pointer';
+    buttonContainer.buttonMode = true; // Adiciona buttonMode
     
     // Set hit area to ensure clicks work
     buttonContainer.hitArea = new PIXI.Rectangle(0, 0, 280, 55);
     
-    // Hover effects
+    // Debug: log when hovering to confirm interactivity works
+    console.log("Setting up button interactivity...");
+    
+    // Hover effects - ENHANCED WITH DEBUG
     buttonContainer.on('pointerover', () => 
     {
+        console.log("Button hover - IN");
         buttonBg.tint = 0xdddddd;
         buttonContainer.scale.set(1.05);
     });
     
     buttonContainer.on('pointerout', () => 
     {
+        console.log("Button hover - OUT");
         buttonBg.tint = 0xffffff;
         buttonContainer.scale.set(1.0);
     });
     
-    // Click handler
-    buttonContainer.on('pointerdown', () => 
+    // Click handlers - Multiple events to ensure it works
+    const navigateHome = () => 
     {
-        console.log("Return button clicked!");
+        console.log("Return button clicked! Navigating to home...");
         window.location.hash = '#/';
-    });
+        
+        // Force navigation if hash doesn't work
+        setTimeout(() => {
+            if (window.location.hash !== '#/') {
+                window.location.href = window.location.origin + '/#/';
+            }
+        }, 100);
+    };
     
-    buttonContainer.on('pointertap', () => 
-    {
-        console.log("Return button tapped!");
-        window.location.hash = '#/';
-    });
+    // Try all possible click events
+    buttonContainer.on('click', navigateHome);
+    buttonContainer.on('pointerdown', navigateHome);
+    buttonContainer.on('pointerup', navigateHome);
+    buttonContainer.on('pointertap', navigateHome);
+    buttonContainer.on('tap', navigateHome);
+    
+    // Add mouse events as backup
+    buttonContainer.on('mousedown', navigateHome);
+    buttonContainer.on('mouseup', navigateHome);
+    
+    // DOM fallback - add a transparent DOM element as backup
+    setTimeout(() => {
+        const canvas = app.view;
+        const rect = canvas.getBoundingClientRect();
+        
+        // Calculate button position in screen coordinates
+        const buttonScreenX = rect.left + (app.screen.width / 2 - 140);
+        const buttonScreenY = rect.top + 540;
+        
+        console.log(`Button should be at screen position: ${buttonScreenX}, ${buttonScreenY}`);
+        console.log("If PIXI events don't work, try clicking exactly there!");
+        
+        // Create invisible DOM button as fallback
+        const domButton = document.createElement('div');
+        domButton.style.position = 'fixed';
+        domButton.style.left = buttonScreenX + 'px';
+        domButton.style.top = buttonScreenY + 'px';
+        domButton.style.width = '280px';
+        domButton.style.height = '55px';
+        domButton.style.backgroundColor = 'transparent';
+        domButton.style.zIndex = '10000';
+        domButton.style.cursor = 'pointer';
+        domButton.style.border = '2px dashed red'; // Visible for debug
+        domButton.title = 'DOM Fallback Button';
+        
+        domButton.addEventListener('click', () => {
+            console.log("DOM fallback button clicked!");
+            navigateHome();
+        });
+        
+        document.body.appendChild(domButton);
+        
+        // Remove DOM button after 10 seconds (just for testing)
+        setTimeout(() => {
+            if (domButton.parentNode) {
+                domButton.parentNode.removeChild(domButton);
+            }
+        }, 10000);
+        
+    }, 1000);
     
     container.addChild(buttonContainer);
 }
