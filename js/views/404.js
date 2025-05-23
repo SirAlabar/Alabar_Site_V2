@@ -1,67 +1,58 @@
 /**
  * 404 page content creator for Pixi.js
- * Creates animated player with themed RPG message
+ * Creates themed RPG 404 message following the same pattern as about.js
  */
 export default function notFound404(container, app, assetManager) 
 {
     console.log("404 function called for Pixi content!");
     
-    // ===== CONFIGURAÇÃO CENTRALIZADA - MUDE APENAS AQUI! =====
-    const CONFIG = {
-        // Posições em % da altura da tela
-        title: { y: 0.08 },           // 404 título
-        mainMessage: { y: 0.14 },     // "There's nothing to fight here..."
-        subtitle: { y: 0.18 },        // "You're off the path..."
-        player: { y: 0.23 },          // Player animado
-        button: { y: 0.35 }           // Botão "Return to quest"
-    };
-    // ========================================================
-    
-    // 404 Title with RPG styling
-    const title404 = new PIXI.Text("404", {
+    // 404 Title (following about.js pattern)
+    const errorTitle = new PIXI.Text("404 - Quest Not Found", {
         fontFamily: "Honk, serif",
-        fontSize: 72,
-        fill: 0xff3366,
-        fontWeight: "bold",
-        stroke: 0x000000,
-        strokeThickness: 3
+        fontSize: 36,
+        fill: 0xff3366
     });
-    title404.anchor.set(0.5, 0);
-    title404.position.set(app.screen.width / 2, app.screen.height * CONFIG.title.y);
-    title404.name = 'title404';
-    container.addChild(title404);
-    
-    // Main RPG message
-    const mainMessage = new PIXI.Text("There's nothing to fight here...", {
-        fontFamily: "Honk, serif",
-        fontSize: 32,
-        fill: 0xffcc33,
-        fontWeight: "bold",
-        align: 'center'
-    });
-    mainMessage.anchor.set(0.5, 0);
-    mainMessage.position.set(app.screen.width / 2, app.screen.height * CONFIG.mainMessage.y);
-    mainMessage.name = 'mainMessage';
-    container.addChild(mainMessage);
-    
-    // Subtitle message
-    const subtitleMessage = new PIXI.Text("You're off the path. The real battle is the other way!", {
-        fontFamily: "Arial",
-        fontSize: 18,
-        fill: 0xffffff,
-        align: 'center',
-        fontStyle: 'italic'
-    });
-    subtitleMessage.anchor.set(0.5, 0);
-    subtitleMessage.position.set(app.screen.width / 2, app.screen.height * CONFIG.subtitle.y);
-    subtitleMessage.name = 'subtitleMessage';
-    container.addChild(subtitleMessage);
+    errorTitle.anchor.set(0.5, 0);
+    errorTitle.position.set(app.screen.width / 2, 150); // Same as about statsTitle
+    container.addChild(errorTitle);
     
     // Create animated player sprite
-    createAnimatedPlayer(container, app, assetManager, CONFIG);
+    createAnimatedPlayer(container, app, assetManager);
     
-    // Return to quest button (functional)
-    createReturnButton(container, app, CONFIG);
+    // Error message section (following quest pattern)
+    const messageTitle = new PIXI.Text("Status Report", {
+        fontFamily: "Honk, serif",
+        fontSize: 36,
+        fill: 0xffcc33
+    });
+    messageTitle.anchor.set(0.5, 0);
+    messageTitle.position.set(app.screen.width / 2, 320); // Same as about questTitle
+    container.addChild(messageTitle);
+    
+    // Message background (following quest background pattern)
+    const messageBg = new PIXI.Graphics();
+    messageBg.beginFill(0x212529, 0.2);
+    messageBg.drawRoundedRect(50, 370, app.screen.width - 100, 150, 10); // Same as about questBg
+    messageBg.endFill();
+    container.addChild(messageBg);
+    
+    // Error description text (following quest text pattern)
+    const errorText = new PIXI.Text(
+        "Brave adventurer, you seem to have wandered into uncharted territory! The page you seek doesn't exist in this realm.\n\nBut fear not - your main quest awaits. Return to the known lands and continue your journey through the world of code and creation.",
+        {
+            fontFamily: "Arial",
+            fontSize: 16,
+            fill: 0xffffff,
+            wordWrap: true,
+            wordWrapWidth: app.screen.width - 120, // Same as about questText
+            lineHeight: 20
+        }
+    );
+    errorText.position.set(70, 390); // Same as about questText
+    container.addChild(errorText);
+    
+    // Return button
+    createReturnButton(container, app);
     
     // Add ambient particles
     createAmbientParticles(container, app);
@@ -69,23 +60,31 @@ export default function notFound404(container, app, assetManager)
     // Handle window resize
     const resizeHandler = () => 
     {
-        // Reposition elements on resize using CONFIG
-        title404.position.set(app.screen.width / 2, app.screen.height * CONFIG.title.y);
-        mainMessage.position.set(app.screen.width / 2, app.screen.height * CONFIG.mainMessage.y);
-        subtitleMessage.position.set(app.screen.width / 2, app.screen.height * CONFIG.subtitle.y);
+        // Reposition elements on resize
+        errorTitle.position.set(app.screen.width / 2, 150);
+        messageTitle.position.set(app.screen.width / 2, 320);
         
-        // Update button position
-        const buttonContainer = container.getChildByName('returnButton');
-        if (buttonContainer) 
-        {
-            buttonContainer.position.set(app.screen.width / 2 - 140, app.screen.height * CONFIG.button.y);
-        }
+        // Update background width
+        messageBg.clear();
+        messageBg.beginFill(0x212529, 0.2);
+        messageBg.drawRoundedRect(50, 370, app.screen.width - 100, 150, 10);
+        messageBg.endFill();
+        
+        // Update text wrap width
+        errorText.style.wordWrapWidth = app.screen.width - 120;
         
         // Update player position
         const playerContainer = container.getChildByName('playerContainer');
         if (playerContainer) 
         {
-            playerContainer.position.set(app.screen.width / 2, app.screen.height * CONFIG.player.y);
+            playerContainer.position.set(app.screen.width / 2, 250); // Between titles
+        }
+        
+        // Update button position
+        const buttonContainer = container.getChildByName('returnButton');
+        if (buttonContainer) 
+        {
+            buttonContainer.position.set(app.screen.width / 2 - 140, 540); // Below text
         }
     };
     
@@ -102,9 +101,8 @@ export default function notFound404(container, app, assetManager)
  * @param {PIXI.Container} container - Parent container
  * @param {PIXI.Application} app - Pixi application
  * @param {Object} assetManager - Asset manager instance
- * @param {Object} config - Configuration object with positions
  */
-function createAnimatedPlayer(container, app, assetManager, config) 
+function createAnimatedPlayer(container, app, assetManager) 
 {
     // Get the player spritesheet from the asset manager
     const playerSpritesheet = assetManager?.getSpritesheet('player_spritesheet');
@@ -112,7 +110,7 @@ function createAnimatedPlayer(container, app, assetManager, config)
     if (!playerSpritesheet || !playerSpritesheet.textures) 
     {
         console.error("Player spritesheet not found!");
-        createSimplePlayerPlaceholder(container, app, config);
+        createSimplePlayerPlaceholder(container, app);
         return;
     }
     
@@ -126,10 +124,10 @@ function createAnimatedPlayer(container, app, assetManager, config)
         attackBack: ['AtkBack-0', 'AtkBack-1', 'AtkBack-2', 'AtkBack-3', 'AtkBack-4', 'AtkBack-5']
     };
     
-    // Create player container for easier management
+    // Create player container positioned between the two titles
     const playerContainer = new PIXI.Container();
     playerContainer.name = 'playerContainer';
-    playerContainer.position.set(app.screen.width / 2, app.screen.height * config.player.y);
+    playerContainer.position.set(app.screen.width / 2, 250); // Between title (150) and message (320)
     container.addChild(playerContainer);
     
     // Animation state management
@@ -164,8 +162,8 @@ function createAnimatedPlayer(container, app, assetManager, config)
         
         const animatedSprite = new PIXI.AnimatedSprite(textures);
         animatedSprite.anchor.set(0.5, 0.5);
-        animatedSprite.scale.set(3); // Make it bigger for visibility
-        animatedSprite.animationSpeed = 0.15; // Slightly faster for attacks
+        animatedSprite.scale.set(2.5); // Slightly smaller to fit better
+        animatedSprite.animationSpeed = 0.15;
         animatedSprite.loop = true;
         
         return animatedSprite;
@@ -210,7 +208,7 @@ function createAnimatedPlayer(container, app, assetManager, config)
     // Start with attack front animation
     switchAttackAnimation(currentDirection);
     
-    // Animation cycle ticker - CORRIGIDO para frames
+    // Animation cycle ticker
     const animationTicker = () => 
     {
         animationTimer++;
@@ -227,8 +225,8 @@ function createAnimatedPlayer(container, app, assetManager, config)
         // Add subtle floating animation
         if (playerContainer)
         {
-            const floatOffset = Math.sin(Date.now() * 0.001) * 5;
-            playerContainer.y = (app.screen.height * config.player.y) + floatOffset;
+            const floatOffset = Math.sin(Date.now() * 0.001) * 3;
+            playerContainer.y = 250 + floatOffset; // Float around position 250
         }
     };
     
@@ -239,9 +237,8 @@ function createAnimatedPlayer(container, app, assetManager, config)
  * Create simple player placeholder when spritesheet fails
  * @param {PIXI.Container} container - Parent container
  * @param {PIXI.Application} app - Pixi application
- * @param {Object} config - Configuration object with positions
  */
-function createSimplePlayerPlaceholder(container, app, config) 
+function createSimplePlayerPlaceholder(container, app) 
 {
     const playerContainer = new PIXI.Container();
     playerContainer.name = 'playerContainer';
@@ -270,7 +267,7 @@ function createSimplePlayerPlaceholder(container, app, config)
     eye2.endFill();
     
     playerContainer.addChild(body, head, eye1, eye2);
-    playerContainer.position.set(app.screen.width / 2, app.screen.height * config.player.y);
+    playerContainer.position.set(app.screen.width / 2, 250); // Same position as real player
     playerContainer.scale.set(2);
     
     // Add blinking animation
@@ -291,7 +288,7 @@ function createSimplePlayerPlaceholder(container, app, config)
         
         // Floating animation
         const floatOffset = Math.sin(blinkTimer) * 3;
-        playerContainer.y = (app.screen.height * config.player.y) + floatOffset;
+        playerContainer.y = 250 + floatOffset;
     };
     
     app.ticker.add(tickerFunction);
@@ -303,9 +300,8 @@ function createSimplePlayerPlaceholder(container, app, config)
  * Create functional return button
  * @param {PIXI.Container} container - Parent container
  * @param {PIXI.Application} app - Pixi application
- * @param {Object} config - Configuration object with positions
  */
-function createReturnButton(container, app, config) 
+function createReturnButton(container, app) 
 {
     const buttonContainer = new PIXI.Container();
     buttonContainer.name = 'returnButton';
@@ -318,7 +314,7 @@ function createReturnButton(container, app, config)
     buttonBg.endFill();
     
     // Button text
-    const buttonText = new PIXI.Text("Return to the main quest", {
+    const buttonText = new PIXI.Text("Return to Main Quest", {
         fontFamily: "Arial",
         fontSize: 18,
         fill: 0xffffff,
@@ -329,7 +325,7 @@ function createReturnButton(container, app, config)
     
     // Add components to button container
     buttonContainer.addChild(buttonBg, buttonText);
-    buttonContainer.position.set(app.screen.width / 2 - 140, app.screen.height * config.button.y);
+    buttonContainer.position.set(app.screen.width / 2 - 140, 540); // Below the text area
     
     // Make button interactive
     buttonContainer.interactive = true;
@@ -351,7 +347,7 @@ function createReturnButton(container, app, config)
         buttonContainer.scale.set(1.0);
     });
     
-    // Click handler - CORRIGIDO
+    // Click handler
     buttonContainer.on('pointerdown', () => 
     {
         console.log("Return button clicked!");
@@ -368,7 +364,7 @@ function createReturnButton(container, app, config)
 }
 
 /**
- * Create ambient particles for atmosphere - FIXED VERSION
+ * Create ambient particles for atmosphere
  * @param {PIXI.Container} container - Parent container
  * @param {PIXI.Application} app - Pixi application
  */
@@ -379,40 +375,28 @@ function createAmbientParticles(container, app)
     container.addChild(particleContainer);
     
     const particles = [];
-    const particleCount = 30; // Aumentado de 15 para 30
+    const particleCount = 20; // Reduced for cleaner look
     
     // Create particles
     for (let i = 0; i < particleCount; i++) 
     {
         const particle = new PIXI.Graphics();
         
-        // More variety in particle types
+        // Simple particles to avoid distraction
         const particleType = Math.random();
-        if (particleType < 0.3) 
+        if (particleType < 0.5) 
         {
-            // Circular particles - magical orbs
-            particle.beginFill(0xffcc33, 0.7);
-            particle.drawCircle(0, 0, Math.random() * 4 + 2);
+            // Circular particles
+            particle.beginFill(0xffcc33, 0.4);
+            particle.drawCircle(0, 0, Math.random() * 2 + 1);
             particle.endFill();
         } 
-        else if (particleType < 0.6) 
-        {
-            // Square particles - runes
-            const size = Math.random() * 5 + 2;
-            particle.beginFill(0x33ccff, 0.6);
-            particle.drawRect(-size/2, -size/2, size, size);
-            particle.endFill();
-        }
         else 
         {
-            // Diamond particles - crystals
-            const size = Math.random() * 4 + 2;
-            particle.beginFill(0xff3366, 0.5);
-            particle.moveTo(0, -size);
-            particle.lineTo(size, 0);
-            particle.lineTo(0, size);
-            particle.lineTo(-size, 0);
-            particle.closePath();
+            // Square particles
+            const size = Math.random() * 3 + 1;
+            particle.beginFill(0x33ccff, 0.3);
+            particle.drawRect(-size/2, -size/2, size, size);
             particle.endFill();
         }
         
@@ -421,11 +405,11 @@ function createAmbientParticles(container, app)
             graphic: particle,
             x: Math.random() * app.screen.width,
             y: Math.random() * app.screen.height,
-            vx: (Math.random() - 0.5) * 1.5, // Velocidade maior
-            vy: (Math.random() - 0.5) * 1.5,
-            life: Math.random() * 400 + 300, // Vida mais longa
+            vx: (Math.random() - 0.5) * 0.8,
+            vy: (Math.random() - 0.5) * 0.8,
+            life: Math.random() * 400 + 300,
             maxLife: 0,
-            rotationSpeed: (Math.random() - 0.5) * 0.08
+            rotationSpeed: (Math.random() - 0.5) * 0.03
         };
         
         particleData.maxLife = particleData.life;
@@ -437,7 +421,7 @@ function createAmbientParticles(container, app)
         particles.push(particleData);
     }
     
-    // Animation ticker for particles - MELHORADO
+    // Animation ticker for particles
     const particleTicker = () => 
     {
         particles.forEach(p => {
@@ -456,28 +440,24 @@ function createAmbientParticles(container, app)
             
             // Fade out as life decreases
             const lifeRatio = p.life / p.maxLife;
-            p.graphic.alpha = Math.max(0.1, lifeRatio * 0.9);
-            
-            // Add scale pulsing for more visual interest
-            const pulse = Math.sin(Date.now() * 0.005 + p.x * 0.01) * 0.2 + 1;
-            p.graphic.scale.set(pulse);
+            p.graphic.alpha = Math.max(0.1, lifeRatio * 0.6);
             
             // Reset particle when it dies
             if (p.life <= 0) 
             {
                 p.x = Math.random() * app.screen.width;
                 p.y = Math.random() * app.screen.height;
-                p.vx = (Math.random() - 0.5) * 1.5;
-                p.vy = (Math.random() - 0.5) * 1.5;
+                p.vx = (Math.random() - 0.5) * 0.8;
+                p.vy = (Math.random() - 0.5) * 0.8;
                 p.life = p.maxLife;
-                p.graphic.alpha = 0.9;
+                p.graphic.alpha = 0.6;
             }
             
             // Wrap around screen edges
-            if (p.x > app.screen.width + 20) p.x = -20;
-            if (p.x < -20) p.x = app.screen.width + 20;
-            if (p.y > app.screen.height + 20) p.y = -20;
-            if (p.y < -20) p.y = app.screen.height + 20;
+            if (p.x > app.screen.width + 10) p.x = -10;
+            if (p.x < -10) p.x = app.screen.width + 10;
+            if (p.y > app.screen.height + 10) p.y = -10;
+            if (p.y < -10) p.y = app.screen.height + 10;
         });
     };
     
