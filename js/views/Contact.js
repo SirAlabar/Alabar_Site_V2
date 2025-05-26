@@ -1,93 +1,164 @@
 /**
  * Contact page content creator for Pixi.js
- * Creates contact information display
+ * Creates contact section following About.js patterns exactly
  */
 export default function contact(container, app, assetManager) 
 {
     console.log("Contact function called for Pixi content!");
     
-    // Title
-    const title = new PIXI.Text("Contact Me", {
-        fontFamily: "Honk, serif",
-        fontSize: 40,
-        fill: 0xffcc33
-    });
-    title.anchor.set(0.5, 0);
-    title.position.set(app.screen.width / 2, 150);
-    container.addChild(title);
+    // Get initial theme
+    const currentTheme = document.body.getAttribute('data-theme') || 'light';
     
-    // Get In Touch section
-    const infoTitle = new PIXI.Text("Get In Touch", {
+    // Define colors based on theme
+    const getColors = (theme) => 
+    {
+        return {
+            title: theme === 'dark' ? 0xffcc33 : 0xcc0000,
+            fixedBlueBg: 0x1e3a5f,
+            bgAlpha: 0.4,
+            bgLineAlpha: 0.6,
+            whiteText: 0xffffff
+        };
+    };
+    
+    let colors = getColors(currentTheme);
+    
+    const contactBg = new PIXI.Graphics();
+    contactBg.name = 'contactBg';
+    container.addChild(contactBg);
+    
+    // Main Title
+    const contactTitle = new PIXI.Text("Contact Me", 
+    {
         fontFamily: "Honk, serif",
-        fontSize: 36,
-        fill: 0xffcc33
+        fontSize: Math.min(36, app.screen.width * 0.06),
+        fill: colors.title
+    });
+    contactTitle.anchor.set(0.5, 0);
+    contactTitle.position.set(app.screen.width / 2, 150);
+    contactTitle.name = 'contactTitle';
+    container.addChild(contactTitle);
+    
+    // Get In Touch Title
+    const infoTitle = new PIXI.Text("Get In Touch", 
+    {
+        fontFamily: "Honk, serif",
+        fontSize: Math.min(32, app.screen.width * 0.05),
+        fill: colors.title
     });
     infoTitle.anchor.set(0.5, 0);
-    infoTitle.position.set(app.screen.width / 2, 220);
+    infoTitle.position.set(app.screen.width / 2, 540);
+    infoTitle.name = 'infoTitle';
     container.addChild(infoTitle);
     
-    // Contact info background
-    const infoBg = new PIXI.Graphics();
-    infoBg.beginFill(0x212529, 0.2);
-    infoBg.drawRoundedRect(50, 270, app.screen.width - 100, 150, 10);
-    infoBg.endFill();
-    container.addChild(infoBg);
-    
-    // Contact items
-    const contacts = [
-        { type: "GitHub", value: "github.com/SirAlabar" },
-        { type: "LinkedIn", value: "linkedin.com/in/hugollmarta" }
-    ];
-    
-    // Create contact items
-    contacts.forEach((contact, index) => {
-        const x = index === 0 ? 100 : app.screen.width / 2 + 50;
-        const y = 300;
-        
-        // Title
-        const titleText = new PIXI.Text(contact.type, {
+    // Coming Soon Text
+    const comingSoonText = new PIXI.Text(
+        "Coming Soon...\n\nI'm working on creating the perfect way for us to connect. Stay tuned for updates!",
+        {
             fontFamily: "Arial",
-            fontSize: 18,
-            fontWeight: "bold",
-            fill: 0x0011f8
+            fontSize: Math.min(16, app.screen.width * 0.022),
+            fill: colors.whiteText,
+            wordWrap: true,
+            wordWrapWidth: Math.min(app.screen.width - 120, 800),
+            lineHeight: 20,
+            align: 'center'
+        }
+    );
+    comingSoonText.name = 'comingSoonText';
+    container.addChild(comingSoonText);
+    
+    const elements = {
+        contactTitle,
+        infoTitle,
+        contactBg,
+        comingSoonText
+    };
+
+    const drawBackgrounds = () => 
+    {
+        // Contact background
+        const contactBgWidth = Math.min(elements.comingSoonText.width + 40, app.screen.width - 100);
+        const contactBgHeight = elements.comingSoonText.height + 40;
+        const contactBgX = (app.screen.width - contactBgWidth) / 2;
+        const contactBgY = 290;
+        
+        elements.contactBg.clear();
+        elements.contactBg.beginFill(colors.fixedBlueBg, colors.bgAlpha);
+        elements.contactBg.lineStyle(1, colors.fixedBlueBg, colors.bgLineAlpha);
+        elements.contactBg.drawRoundedRect(contactBgX, contactBgY, contactBgWidth, contactBgHeight, 10);
+        elements.contactBg.endFill();
+        
+        // Position coming soon text
+        elements.comingSoonText.position.set(contactBgX + 20, contactBgY + 20);
+    };
+    
+    const resizeElements = () => 
+    {
+        console.log("Resizing contact page elements...");
+        
+        // Check if elements still exist
+        if (!elements.contactTitle || !elements.comingSoonText) 
+        {
+            console.warn("Contact page elements not found during resize");
+            return;
+        }
+        
+        // Update titles positions and sizes
+        elements.contactTitle.position.set(app.screen.width / 2, 150);
+        elements.contactTitle.style.fontSize = Math.min(36, app.screen.width * 0.06);
+        
+        elements.infoTitle.position.set(app.screen.width / 2, 240);
+        elements.infoTitle.style.fontSize = Math.min(32, app.screen.width * 0.05);
+        
+        elements.comingSoonText.style.fontSize = Math.min(16, app.screen.width * 0.022);
+        elements.comingSoonText.style.wordWrapWidth = Math.min(app.screen.width - 120, 800);
+        
+        elements.comingSoonText._autoResolution = true;
+        
+        setTimeout(() => 
+        {
+            // Redraw backgrounds
+            drawBackgrounds();
+        }, 10);
+    };
+
+    const updateTheme = () => 
+    {
+        console.log("Updating contact page theme...");
+        
+        const newTheme = document.body.getAttribute('data-theme') || 'light';
+        colors = getColors(newTheme);
+        
+        elements.contactTitle.style.fill = colors.title;
+        elements.infoTitle.style.fill = colors.title;
+        
+        drawBackgrounds();
+    };
+    
+    // Initial build
+    drawBackgrounds();
+
+    // Resize listener
+    window.addEventListener('resize', resizeElements);
+    
+    // Theme change observer
+    const observer = new MutationObserver((mutations) => 
+    {
+        mutations.forEach((mutation) => 
+        {
+            if (mutation.attributeName === 'data-theme') 
+            {
+                updateTheme();
+            }
         });
-        titleText.position.set(x, y);
-        
-        // Value/link text
-        const valueText = new PIXI.Text(contact.value, {
-            fontFamily: "Arial",
-            fontSize: 16,
-            fill: 0x0278a0
-        });
-        valueText.position.set(x, y + 30);
-        
-        // Interactive hitbox for the link
-        const hitArea = new PIXI.Graphics();
-        hitArea.beginFill(0xFFFFFF, 0.001);
-        hitArea.drawRect(valueText.x, valueText.y, valueText.width, valueText.height);
-        hitArea.endFill();
-        hitArea.interactive = true;
-        hitArea.cursor = 'pointer';
-        
-        // Open URL on click
-        hitArea.on('pointerdown', () => {
-            window.open('https://' + contact.value, '_blank');
-        });
-        
-        // Hover effects
-        hitArea.on('pointerover', () => {
-            valueText.style.fill = 0xffcc33;
-        });
-        
-        hitArea.on('pointerout', () => {
-            valueText.style.fill = 0x0278a0;
-        });
-        
-        // Add to container
-        container.addChild(titleText);
-        container.addChild(valueText);
-        container.addChild(hitArea);
     });
+    observer.observe(document.body, { attributes: true });
+
+    container.cleanup = () => 
+    {
+        window.removeEventListener('resize', resizeElements);
+        observer.disconnect();
+    };
     
     return true;
 }
