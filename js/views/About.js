@@ -65,7 +65,7 @@ export default function about(container, app, assetManager)
         fill: colors.title
     });
     skillsTitle.anchor.set(0.5, 0);
-    skillsTitle.position.set(app.screen.width / 2, 320);
+    skillsTitle.position.set(app.screen.width / 2, 330);
     skillsTitle.name = 'skillsTitle';
     container.addChild(skillsTitle);
     
@@ -149,7 +149,7 @@ export default function about(container, app, assetManager)
         const statsWidth = Math.min(maxStatsWidth, Math.max(minStatsWidth, app.screen.width * 0.8));
         const statsHeight = 120;
         const statsX = (app.screen.width - statsWidth) / 2;
-        const statsY = 185;
+        const statsY = 200;
         
         elements.statsBg.clear();
         elements.statsBg.beginFill(colors.fixedBlueBg, colors.bgAlpha);
@@ -163,7 +163,7 @@ export default function about(container, app, assetManager)
         const skillsWidth = Math.min(maxSkillsWidth, Math.max(minSkillsWidth, app.screen.width * 0.85));
         const skillsHeight = 160;
         const skillsX = (app.screen.width - skillsWidth) / 2;
-        const skillsY = 355;
+        const skillsY = 370;
         
         elements.skillsBg.clear();
         elements.skillsBg.beginFill(colors.fixedBlueBg, colors.bgAlpha);
@@ -198,7 +198,7 @@ export default function about(container, app, assetManager)
         const statsX = (app.screen.width - statsWidth) / 2;
         const leftX = statsX + 50;  // 50px padding from left edge of background
         const rightX = statsX + (statsWidth / 2); // Middle of background
-        const startY = 200;
+        const startY = 215;
         
         const leftColumn = stats.slice(0, 3);
         const rightColumn = stats.slice(3);
@@ -258,7 +258,7 @@ export default function about(container, app, assetManager)
         const skillsWidth = Math.min(maxSkillsWidth, Math.max(minSkillsWidth, app.screen.width * 0.85));
         const skillsX = (app.screen.width - skillsWidth) / 2;
         const skillStartX = skillsX + 50; // 50px padding from left edge of background
-        const startY = 370;
+        const startY = 385;
         
         skillCategories.forEach((category, categoryIndex) => 
         {
@@ -317,7 +317,7 @@ export default function about(container, app, assetManager)
         elements.statsTitle.position.set(app.screen.width / 2, 150);
         elements.statsTitle.style.fontSize = Math.min(36, app.screen.width * 0.06);
         
-        elements.skillsTitle.position.set(app.screen.width / 2, 320);
+        elements.skillsTitle.position.set(app.screen.width / 2, 335);
         elements.skillsTitle.style.fontSize = Math.min(32, app.screen.width * 0.05);
         
         elements.questTitle.position.set(app.screen.width / 2, 540);
