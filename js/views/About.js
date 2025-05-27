@@ -1,6 +1,7 @@
 /**
  * About page content creator for Pixi.js
  * Creates character stats and quest description with improved responsive design
+ * Includes font fallback for Linux compatibility
  */
 export default function about(container, app, assetManager) 
 {
@@ -8,6 +9,27 @@ export default function about(container, app, assetManager)
     
     // Get initial theme
     const currentTheme = document.body.getAttribute('data-theme') || 'light';
+    
+    // Font detection and fallback - check if Honk causes excessive width
+    const getFontFamily = () => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        
+        // Test Honk font with a sample text
+        context.font = '32px Honk, serif';
+        const testWidth = context.measureText('Test').width;
+        
+        // If width is excessive (like 5000px), use fallback
+        if (testWidth > 200) {
+            console.log("Honk font causing excessive width, using fallback");
+            return "Impact, serif";
+        }
+        
+        return "Honk, serif";
+    };
+    
+    const fontFamily = getFontFamily();
+    console.log("Selected font family:", fontFamily);
     
     // Define colors based on theme - ONLY SET ONCE
     const getColors = (theme) => 
@@ -43,9 +65,10 @@ export default function about(container, app, assetManager)
     // Stats Title
     const statsTitle = new PIXI.Text("Character Stats", 
     {
-        fontFamily: "Honk, serif",
+        fontFamily: fontFamily,
         fontSize: Math.min(36, app.screen.width * 0.06),
-        fill: colors.title
+        fill: colors.title,
+        fontWeight: 'bold' // Add weight for better fallback appearance
     });
     statsTitle.anchor.set(0.5, 0);
     statsTitle.position.set(app.screen.width / 2, 150);
@@ -60,9 +83,10 @@ export default function about(container, app, assetManager)
     // Skills Title
     const skillsTitle = new PIXI.Text("Technical Skills", 
     {
-        fontFamily: "Honk, serif",
+        fontFamily: fontFamily,
         fontSize: Math.min(32, app.screen.width * 0.05),
-        fill: colors.title
+        fill: colors.title,
+        fontWeight: 'bold'
     });
     skillsTitle.anchor.set(0.5, 0);
     skillsTitle.position.set(app.screen.width / 2, 330);
@@ -77,9 +101,10 @@ export default function about(container, app, assetManager)
     // Quest Title
     const questTitle = new PIXI.Text("Current Quest", 
     {
-        fontFamily: "Honk, serif",
+        fontFamily: fontFamily,
         fontSize: Math.min(32, app.screen.width * 0.05),
-        fill: colors.title
+        fill: colors.title,
+        fontWeight: 'bold'
     });
     questTitle.anchor.set(0.5, 0);
     questTitle.position.set(app.screen.width / 2, 540);
@@ -90,7 +115,7 @@ export default function about(container, app, assetManager)
     const questText = new PIXI.Text(
         "As a career changer diving into the world of game development, I am excited to explore and create innovative solutions using technology. Currently focusing on mastering C and developing small games in C#, I am passionate about discovering new technologies and leveraging them to craft high-quality projects.\n\nI am a student at 42 School, where I am honing my skills and expanding my horizons in this dynamic field.",
         {
-            fontFamily: "Arial",
+            fontFamily: "Arial, Helvetica, sans-serif", // Use web-safe font for body text
             fontSize: Math.min(16, app.screen.width * 0.022),
             fill: colors.whiteText,
             wordWrap: true,
@@ -207,7 +232,7 @@ export default function about(container, app, assetManager)
         {
             const label = new PIXI.Text(stat.label, 
             {
-                fontFamily: "Arial",
+                fontFamily: "Arial, Helvetica, sans-serif",
                 fontSize: Math.min(18, app.screen.width * 0.025),
                 fontWeight: "bold",
                 fill: colors.whiteText
@@ -217,7 +242,7 @@ export default function about(container, app, assetManager)
             
             const value = new PIXI.Text(stat.value, 
             {
-                fontFamily: "Arial",
+                fontFamily: "Arial, Helvetica, sans-serif",
                 fontSize: Math.min(16, app.screen.width * 0.022),
                 fill: colors.whiteText
             });
@@ -229,7 +254,7 @@ export default function about(container, app, assetManager)
         {
             const label = new PIXI.Text(stat.label, 
             {
-                fontFamily: "Arial",
+                fontFamily: "Arial, Helvetica, sans-serif",
                 fontSize: Math.min(18, app.screen.width * 0.025),
                 fontWeight: "bold",
                 fill: colors.whiteText
@@ -239,7 +264,7 @@ export default function about(container, app, assetManager)
             
             const value = new PIXI.Text(stat.value, 
             {
-                fontFamily: "Arial",
+                fontFamily: "Arial, Helvetica, sans-serif",
                 fontSize: Math.min(16, app.screen.width * 0.022),
                 fill: colors.whiteText
             });
@@ -264,7 +289,7 @@ export default function about(container, app, assetManager)
         {
             const categoryTitle = new PIXI.Text(category.title, 
             {
-                fontFamily: "Arial",
+                fontFamily: "Arial, Helvetica, sans-serif",
                 fontSize: Math.min(16, app.screen.width * 0.023),
                 fontWeight: "bold",
                 fill: colors.whiteText
@@ -282,7 +307,7 @@ export default function about(container, app, assetManager)
                 
                 const skillText = new PIXI.Text(skill, 
                 {
-                    fontFamily: "Arial",
+                    fontFamily: "Arial, Helvetica, sans-serif",
                     fontSize: Math.min(14, app.screen.width * 0.02),
                     fill: colors.whiteText
                 });

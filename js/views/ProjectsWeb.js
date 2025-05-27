@@ -99,7 +99,7 @@ function createWebProjectCard(container, project, x, y, width, height)
 {
     // Card background with subtle gradient effect
     const cardBg = new PIXI.Graphics();
-    cardBg.beginFill(0x1a1a1a, 0.8);
+    cardBg.beginFill(0x1a1a1a, 0.5);
     cardBg.lineStyle(2, project.color, 0.6);
     cardBg.drawRoundedRect(0, 0, width, height, 12);
     cardBg.endFill();

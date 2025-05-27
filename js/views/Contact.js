@@ -9,6 +9,27 @@ export default function contact(container, app, assetManager)
     // Get initial theme
     const currentTheme = document.body.getAttribute('data-theme') || 'light';
     
+    // Font detection and fallback - check if Honk causes excessive width
+    const getFontFamily = () => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        
+        // Test Honk font with a sample text
+        context.font = '32px Honk, serif';
+        const testWidth = context.measureText('Test').width;
+        
+        // If width is excessive (like 5000px), use fallback
+        if (testWidth > 200) {
+            console.log("Honk font causing excessive width, using fallback");
+            return "Impact, serif";
+        }
+        
+        return "Honk, serif";
+    };
+    
+    const fontFamily = getFontFamily();
+    console.log("Selected font family:", fontFamily);
+    
     // Define colors based on theme
     const getColors = (theme) => 
     {
@@ -30,9 +51,10 @@ export default function contact(container, app, assetManager)
     // Main Title
     const contactTitle = new PIXI.Text("Contact Me", 
     {
-        fontFamily: "Honk, serif",
+        fontFamily: fontFamily,
         fontSize: Math.min(36, app.screen.width * 0.06),
-        fill: colors.title
+        fill: colors.title,
+        fontWeight: 'bold'
     });
     contactTitle.anchor.set(0.5, 0);
     contactTitle.position.set(app.screen.width / 2, 150);
@@ -42,9 +64,10 @@ export default function contact(container, app, assetManager)
     // Get In Touch Title
     const infoTitle = new PIXI.Text("Get In Touch", 
     {
-        fontFamily: "Honk, serif",
+        fontFamily: fontFamily,
         fontSize: Math.min(32, app.screen.width * 0.05),
-        fill: colors.title
+        fill: colors.title,
+        fontWeight: 'bold'
     });
     infoTitle.anchor.set(0.5, 0);
     infoTitle.position.set(app.screen.width / 2, 540);
@@ -55,7 +78,7 @@ export default function contact(container, app, assetManager)
     const comingSoonText = new PIXI.Text(
         "Coming Soon...\n\nI'm working on creating the perfect way for us to connect. Stay tuned for updates!",
         {
-            fontFamily: "Arial",
+            fontFamily: "Arial, sans-serif",
             fontSize: Math.min(16, app.screen.width * 0.022),
             fill: colors.whiteText,
             wordWrap: true,

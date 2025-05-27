@@ -6,49 +6,72 @@ export default function notFound404(container, app, assetManager)
 {
     console.log("404 function called for Pixi content!");
     
-    // 404 Title (following about.js pattern)
+    // Font detection and fallback - check if Honk causes excessive width
+    const getFontFamily = () => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        
+        // Test Honk font with a sample text
+        context.font = '32px Honk, serif';
+        const testWidth = context.measureText('Test').width;
+        
+        // fallback
+        if (testWidth > 200) {
+            console.log("Honk font causing excessive width, using fallback");
+            return "Impact, serif";
+        }
+        
+        return "Honk, serif";
+    };
+    
+    const fontFamily = getFontFamily();
+    console.log("Selected font family:", fontFamily);
+    
+    // 404 Title 
     const errorTitle = new PIXI.Text("404 - Quest Not Found", {
-        fontFamily: "Honk, serif",
+        fontFamily: fontFamily,
         fontSize: 36,
-        fill: 0xff3366
+        fill: 0xff3366,
+        fontWeight: 'bold'
     });
     errorTitle.anchor.set(0.5, 0);
-    errorTitle.position.set(app.screen.width / 2, 150); // Same as about statsTitle
+    errorTitle.position.set(app.screen.width / 2, 150);
     container.addChild(errorTitle);
     
     // Create animated player sprite
     createAnimatedPlayer(container, app, assetManager);
     
-    // Error message section (following quest pattern)
+    // Error message section
     const messageTitle = new PIXI.Text("Status Report", {
-        fontFamily: "Honk, serif",
+        fontFamily: fontFamily,
         fontSize: 36,
-        fill: 0xffcc33
+        fill: 0xffcc33,
+        fontWeight: 'bold'
     });
     messageTitle.anchor.set(0.5, 0);
-    messageTitle.position.set(app.screen.width / 2, 320); // Same as about questTitle
+    messageTitle.position.set(app.screen.width / 2, 320);
     container.addChild(messageTitle);
     
-    // Message background (following quest background pattern)
+    // Message background
     const messageBg = new PIXI.Graphics();
     messageBg.beginFill(0x212529, 0.2);
-    messageBg.drawRoundedRect(50, 370, app.screen.width - 100, 150, 10); // Same as about questBg
+    messageBg.drawRoundedRect(50, 370, app.screen.width - 100, 150, 10);
     messageBg.endFill();
     container.addChild(messageBg);
     
-    // Error description text (following quest text pattern)
+    // Error description text
     const errorText = new PIXI.Text(
         "Brave adventurer, you seem to have wandered into uncharted territory! The page you seek doesn't exist in this realm.\n\nBut fear not - your main quest awaits. Return to the known lands and continue your journey through the world of code and creation.",
         {
-            fontFamily: "Arial",
+            fontFamily: "Arial, sans-serif",
             fontSize: 16,
             fill: 0xffffff,
             wordWrap: true,
-            wordWrapWidth: app.screen.width - 120, // Same as about questText
+            wordWrapWidth: app.screen.width - 120,
             lineHeight: 20
         }
     );
-    errorText.position.set(70, 390); // Same as about questText
+    errorText.position.set(70, 390);
     container.addChild(errorText);
     
     // Return button
@@ -77,14 +100,14 @@ export default function notFound404(container, app, assetManager)
         const playerContainer = container.getChildByName('playerContainer');
         if (playerContainer) 
         {
-            playerContainer.position.set(app.screen.width / 2, 250); // Between titles
+            playerContainer.position.set(app.screen.width / 2, 250);
         }
         
         // Update button position
         const buttonContainer = container.getChildByName('returnButton');
         if (buttonContainer) 
         {
-            buttonContainer.position.set(app.screen.width / 2 - 140, 540); // Below text
+            buttonContainer.position.set(app.screen.width / 2 - 140, 540);
         }
     };
     
@@ -127,7 +150,7 @@ function createAnimatedPlayer(container, app, assetManager)
     // Create player container positioned between the two titles
     const playerContainer = new PIXI.Container();
     playerContainer.name = 'playerContainer';
-    playerContainer.position.set(app.screen.width / 2, 250); // Between title (150) and message (320)
+    playerContainer.position.set(app.screen.width / 2, 250);
     container.addChild(playerContainer);
     
     // Animation state management
@@ -136,7 +159,7 @@ function createAnimatedPlayer(container, app, assetManager)
     let animationTimer = 0;
     
     const directions = ['Front', 'Left', 'Right', 'Back'];
-    const animationDuration = 120; // 2 seconds em frames (60fps * 2)
+    const animationDuration = 120;
     
     /**
      * Create animated sprite for attack sequence
@@ -162,7 +185,7 @@ function createAnimatedPlayer(container, app, assetManager)
         
         const animatedSprite = new PIXI.AnimatedSprite(textures);
         animatedSprite.anchor.set(0.5, 0.5);
-        animatedSprite.scale.set(2.5); // Slightly smaller to fit better
+        animatedSprite.scale.set(2.5);
         animatedSprite.animationSpeed = 0.15;
         animatedSprite.loop = true;
         
@@ -213,7 +236,7 @@ function createAnimatedPlayer(container, app, assetManager)
     {
         animationTimer++;
         
-        // Change direction after duration (em frames)
+        // Change direction after duration
         if (animationTimer >= animationDuration)
         {
             animationTimer = 0;
@@ -226,7 +249,7 @@ function createAnimatedPlayer(container, app, assetManager)
         if (playerContainer)
         {
             const floatOffset = Math.sin(Date.now() * 0.001) * 3;
-            playerContainer.y = 250 + floatOffset; // Float around position 250
+            playerContainer.y = 250 + floatOffset;
         }
     };
     
@@ -267,7 +290,7 @@ function createSimplePlayerPlaceholder(container, app)
     eye2.endFill();
     
     playerContainer.addChild(body, head, eye1, eye2);
-    playerContainer.position.set(app.screen.width / 2, 250); // Same position as real player
+    playerContainer.position.set(app.screen.width / 2, 250);
     playerContainer.scale.set(2);
     
     // Add blinking animation
@@ -315,7 +338,7 @@ function createReturnButton(container, app)
     
     // Button text
     const buttonText = new PIXI.Text("Return to Main Quest", {
-        fontFamily: "Arial",
+        fontFamily: "Arial, sans-serif",
         fontSize: 18,
         fill: 0xffffff,
         fontWeight: "bold"
@@ -325,12 +348,12 @@ function createReturnButton(container, app)
     
     // Add components to button container
     buttonContainer.addChild(buttonBg, buttonText);
-    buttonContainer.position.set(app.screen.width / 2 - 140, 540); // Below the text area
+    buttonContainer.position.set(app.screen.width / 2 - 140, 540);
     
-    // Make button interactive - ENHANCED VERSION
+    // Make button interactive
     buttonContainer.interactive = true;
     buttonContainer.cursor = 'pointer';
-    buttonContainer.buttonMode = true; // Adiciona buttonMode
+    buttonContainer.buttonMode = true;
     
     // Set hit area to ensure clicks work
     buttonContainer.hitArea = new PIXI.Rectangle(0, 0, 280, 55);
@@ -338,7 +361,7 @@ function createReturnButton(container, app)
     // Debug: log when hovering to confirm interactivity works
     console.log("Setting up button interactivity...");
     
-    // Hover effects - ENHANCED WITH DEBUG
+    // Hover effects
     buttonContainer.on('pointerover', () => 
     {
         console.log("Button hover - IN");
@@ -353,7 +376,7 @@ function createReturnButton(container, app)
         buttonContainer.scale.set(1.0);
     });
     
-    // Click handlers - Multiple events to ensure it works
+    // Click handlers
     const navigateHome = () => 
     {
         console.log("Return button clicked! Navigating to home...");
@@ -377,48 +400,6 @@ function createReturnButton(container, app)
     // Add mouse events as backup
     buttonContainer.on('mousedown', navigateHome);
     buttonContainer.on('mouseup', navigateHome);
-    
-    // DOM fallback - add a transparent DOM element as backup
-    setTimeout(() => {
-        const canvas = app.view;
-        const rect = canvas.getBoundingClientRect();
-        
-        // Calculate button position in screen coordinates
-        const buttonScreenX = rect.left + (app.screen.width / 2 - 140);
-        const buttonScreenY = rect.top + 540;
-        
-        console.log(`Button should be at screen position: ${buttonScreenX}, ${buttonScreenY}`);
-        console.log("If PIXI events don't work, try clicking exactly there!");
-        
-        // Create invisible DOM button as fallback
-        const domButton = document.createElement('div');
-        domButton.style.position = 'fixed';
-        domButton.style.left = buttonScreenX + 'px';
-        domButton.style.top = buttonScreenY + 'px';
-        domButton.style.width = '280px';
-        domButton.style.height = '55px';
-        domButton.style.backgroundColor = 'transparent';
-        domButton.style.zIndex = '10000';
-        domButton.style.cursor = 'pointer';
-        domButton.style.border = '2px dashed red'; // Visible for debug
-        domButton.title = 'DOM Fallback Button';
-        
-        domButton.addEventListener('click', () => {
-            console.log("DOM fallback button clicked!");
-            navigateHome();
-        });
-        
-        document.body.appendChild(domButton);
-        
-        // Remove DOM button after 10 seconds (just for testing)
-        setTimeout(() => {
-            if (domButton.parentNode) {
-                domButton.parentNode.removeChild(domButton);
-            }
-        }, 10000);
-        
-    }, 1000);
-    
     container.addChild(buttonContainer);
 }
 
@@ -434,7 +415,7 @@ function createAmbientParticles(container, app)
     container.addChild(particleContainer);
     
     const particles = [];
-    const particleCount = 20; // Reduced for cleaner look
+    const particleCount = 20;
     
     // Create particles
     for (let i = 0; i < particleCount; i++) 
@@ -540,7 +521,6 @@ export function handleDirectAccess()
             redirectTo += '/#/';
         }
         
-        console.log("Redirecting to hash version:", redirectTo);
         window.location.replace(redirectTo);
         return true;
     }
