@@ -9,7 +9,6 @@ export default function projects42(container, app)
     // Enable sorting for proper z-index behavior
     container.sortableChildren = true;
     
-    // ===== RESPONSIVE BREAKPOINTS (simplified) =====
     const getScreenSize = () => {
         const width = app.screen.width;
         if (width <= 768) return 'mobile';
@@ -18,7 +17,7 @@ export default function projects42(container, app)
     
     const screenSize = getScreenSize();
     
-    // ===== FONT SIZES CONFIGURATION =====
+    // FONT SIZES CONFIG
     const FONT_SIZES = {
         mainTitle: {
             desktop: 36,
@@ -54,13 +53,13 @@ export default function projects42(container, app)
         }
     };
     
-    // ===== FONT FAMILIES CONFIGURATION =====
+    // FONT FAMILIES CONFIG
     const FONTS = {
         heading: "Honk, Arial, sans-serif", // With Linux fallback
         body: "Arial, sans-serif"
     };
     
-    // ===== LAYOUT CONFIGURATION - RESPONSIVE =====
+    // LAYOUT CONFIG
     const LAYOUT = {
         cardWidth: {
             desktop: 200,
@@ -87,7 +86,7 @@ export default function projects42(container, app)
     // Get initial theme
     const currentTheme = document.body.getAttribute('data-theme') || 'light';
     
-    // Define colors based on theme (same as About.js)
+    // Define colors based on theme
     const getColors = (theme) => 
     {
         return {
@@ -96,7 +95,7 @@ export default function projects42(container, app)
             cardBg: theme === 'dark' ? 0x2a2a2a : 0x1e3a5f,
             cardBgAlpha: 0.4,
             cardBorderAlpha: 0.6,
-            completedColor: 0x4CAF50, // Verde para todos os status
+            completedColor: 0x4CAF50,
             whiteText: 0xffffff,
             grayText: 0xcccccc
         };
@@ -248,7 +247,7 @@ export default function projects42(container, app)
         cardContainers: []
     };
     
-    // Main title - RESPONSIVE FONT SIZE
+    // Main title
     const mainTitle = new PIXI.Text("42 School Projects", {
         fontFamily: FONTS.heading,
         fontSize: FONT_SIZES.mainTitle[screenSize],
@@ -259,7 +258,7 @@ export default function projects42(container, app)
     container.addChild(mainTitle);
     elements.titles.push(mainTitle);
     
-    // Description - RESPONSIVE FONT SIZE + WHITE COLOR
+    // Description
     const description = new PIXI.Text(
         "Here are some of the projects I've completed during my studies at 42 School:",
         {
@@ -280,7 +279,7 @@ export default function projects42(container, app)
     
     // Create categories and cards
     projectCategories.forEach((category, categoryIndex) => {
-        // Category title - USING RESPONSIVE FONT CONFIG
+        // Category title
         const categoryTitle = new PIXI.Text(category.title, {
             fontFamily: FONTS.heading,
             fontSize: FONT_SIZES.categoryTitle[screenSize],
@@ -341,7 +340,7 @@ export default function projects42(container, app)
     }
     
     /**
-     * Create individual project card - RESPONSIVE SIZES
+     * Create individual project card
      */
     function createProjectCard(container, project, x, y, categoryColor) {
         // Use current responsive sizes
@@ -353,7 +352,6 @@ export default function projects42(container, app)
         cardContainer.position.set(x, y);
         cardContainer.sortableChildren = true;
         
-        // MAKE CONTAINER DIRECTLY INTERACTIVE - No hit area needed
         cardContainer.interactive = true;
         cardContainer.cursor = 'pointer';
         cardContainer.buttonMode = true;
@@ -366,7 +364,7 @@ export default function projects42(container, app)
         cardBg.endFill();
         cardBg.zIndex = 0;
         
-        // Project name - USING RESPONSIVE FONT CONFIG
+        // Project name
         const projectName = new PIXI.Text(project.name, {
             fontFamily: FONTS.heading,
             fontSize: FONT_SIZES.cardTitle[currentScreenSize],
@@ -401,7 +399,7 @@ export default function projects42(container, app)
         cardContainer.addChild(statusBg);
         cardContainer.addChild(statusText);
         
-        // Hover expansion background (initially hidden) - RESPONSIVE EXPANSION
+        // Hover expansion background (initially hidden)
         const hoverBg = new PIXI.Graphics();
         hoverBg.beginFill(colors.cardBg, colors.cardBgAlpha * 1.3);
         hoverBg.lineStyle(3, categoryColor, 1);
@@ -411,7 +409,7 @@ export default function projects42(container, app)
         hoverBg.zIndex = -1;
         cardContainer.addChild(hoverBg);
         
-        // Description - USING RESPONSIVE FONT CONFIG
+        // Description
         const description = new PIXI.Text(project.description, {
             fontFamily: FONTS.body,
             fontSize: FONT_SIZES.cardDescription[screenSize],
@@ -425,7 +423,7 @@ export default function projects42(container, app)
         description.zIndex = 3;
         cardContainer.addChild(description);
         
-        // Skills - USING RESPONSIVE FONT CONFIG
+        // Skills
         const skillsText = new PIXI.Text(`Skills: ${project.skills.join(', ')}`, {
             fontFamily: FONTS.body,
             fontSize: FONT_SIZES.cardSkills[screenSize],
@@ -438,9 +436,10 @@ export default function projects42(container, app)
         skillsText.zIndex = 3;
         cardContainer.addChild(skillsText);
         
-        // Grade - USING RESPONSIVE FONT CONFIG
+        // Grade
         let gradeElement = null;
-        if (project.grade !== "In Progress") {
+        if (project.grade !== "In Progress") 
+        {
             gradeElement = new PIXI.Text(`Grade: ${project.grade}`, {
                 fontFamily: FONTS.body,
                 fontSize: FONT_SIZES.cardGrade[screenSize],
@@ -455,15 +454,19 @@ export default function projects42(container, app)
         
         // Store hover elements
         const hoverElements = [description, skillsText];
-        if (gradeElement) hoverElements.push(gradeElement);
+        if (gradeElement) 
+        {
+            hoverElements.push(gradeElement);
+        }
         
-        // SIMPLE DIRECT EVENT HANDLERS
         let isHovered = false;
         
         cardContainer.on('pointerover', () => {
-            if (isHovered) return;
+            if (isHovered)
+            {
+                return;~
+            }
             isHovered = true;
-            console.log('Hover start on:', project.name); // Debug
             
             hoverBg.alpha = 1;
             hoverElements.forEach(element => element.alpha = 1);
@@ -472,9 +475,11 @@ export default function projects42(container, app)
         });
         
         cardContainer.on('pointerout', () => {
-            if (!isHovered) return;
+            if (!isHovered)
+            {
+                return;
+            }
             isHovered = false;
-            console.log('Hover end on:', project.name); // Debug
             
             hoverBg.alpha = 0;
             hoverElements.forEach(element => element.alpha = 0);
@@ -484,15 +489,16 @@ export default function projects42(container, app)
         // Mobile/Touch support
         cardContainer.on('pointertap', (event) => {
             event.stopPropagation();
-            console.log('Tap on:', project.name); // Debug
-            
-            if (isHovered) {
+            if (isHovered) 
+            {
                 // Hide
                 isHovered = false;
                 hoverBg.alpha = 0;
                 hoverElements.forEach(element => element.alpha = 0);
                 cardContainer.zIndex = 0;
-            } else {
+            } 
+            else 
+            {
                 // Show
                 isHovered = true;
                 hoverBg.alpha = 1;
@@ -502,7 +508,8 @@ export default function projects42(container, app)
                 
                 // Auto-hide after 3 seconds
                 setTimeout(() => {
-                    if (isHovered) {
+                    if (isHovered) 
+                    {
                         isHovered = false;
                         hoverBg.alpha = 0;
                         hoverElements.forEach(element => element.alpha = 0);
@@ -517,7 +524,7 @@ export default function projects42(container, app)
     }
     
     /**
-     * Simple resize handler - USING FONT CONFIG
+     * Simple resize handler
      */
     const resizeElements = () => {
         console.log("Resizing projects42 page elements...");
@@ -545,16 +552,18 @@ export default function projects42(container, app)
     function recreateCards() {
         // Remove existing card containers
         elements.cardContainers.forEach(cardContainer => {
-            if (cardContainer.parent) {
+            if (cardContainer.parent) 
+            {
                 cardContainer.parent.removeChild(cardContainer);
             }
         });
         
         elements.cardContainers = [];
         
-        // Remove existing category titles (keep main title and description)
+        // Remove existing category titles
         for (let i = elements.titles.length - 1; i >= 2; i--) {
-            if (elements.titles[i].parent) {
+            if (elements.titles[i].parent) 
+            {
                 elements.titles[i].parent.removeChild(elements.titles[i]);
             }
             elements.titles.splice(i, 1);
@@ -565,7 +574,7 @@ export default function projects42(container, app)
         const currentScreenSize = getScreenSize();
         
         projectCategories.forEach((category) => {
-            // Category title - USING FONT CONFIG
+            // Category title
             const categoryTitle = new PIXI.Text(category.title, {
                 fontFamily: FONTS.heading,
                 fontSize: FONT_SIZES.categoryTitle[currentScreenSize],
@@ -597,14 +606,15 @@ export default function projects42(container, app)
         const newTheme = document.body.getAttribute('data-theme') || 'light';
         colors = getColors(newTheme);
         
-        // Update title colors - BE SPECIFIC ABOUT WHICH ELEMENTS
+        // Update title colors
         elements.titles.forEach((title, index) => {
             if (title.style) {
-                if (index === 1) {
-                    // This is the description - keep it WHITE
+                if (index === 1) 
+                {
                     title.style.fill = colors.whiteText;
-                } else {
-                    // These are actual titles - use title color
+                } 
+                else 
+                {
                     title.style.fill = colors.title;
                 }
             }
