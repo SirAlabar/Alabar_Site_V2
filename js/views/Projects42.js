@@ -464,7 +464,7 @@ export default function projects42(container, app)
         cardContainer.on('pointerover', () => {
             if (isHovered)
             {
-                return;~
+                return;
             }
             isHovered = true;
             
