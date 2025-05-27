@@ -4,8 +4,6 @@
  */
 export default function contact(container, app, assetManager) 
 {
-    console.log("Contact function called for Pixi content!");
-    
     // Get initial theme
     const currentTheme = document.body.getAttribute('data-theme') || 'light';
     
@@ -19,8 +17,8 @@ export default function contact(container, app, assetManager)
         const testWidth = context.measureText('Test').width;
         
         // If width is excessive (like 5000px), use fallback
-        if (testWidth > 200) {
-            console.log("Honk font causing excessive width, using fallback");
+        if (testWidth > 200) 
+        {
             return "Impact, serif";
         }
         
@@ -28,7 +26,6 @@ export default function contact(container, app, assetManager)
     };
     
     const fontFamily = getFontFamily();
-    console.log("Selected font family:", fontFamily);
     
     // Define colors based on theme
     const getColors = (theme) => 
@@ -117,8 +114,6 @@ export default function contact(container, app, assetManager)
     
     const resizeElements = () => 
     {
-        console.log("Resizing contact page elements...");
-        
         // Check if elements still exist
         if (!elements.contactTitle || !elements.comingSoonText) 
         {
@@ -147,8 +142,6 @@ export default function contact(container, app, assetManager)
 
     const updateTheme = () => 
     {
-        console.log("Updating contact page theme...");
-        
         const newTheme = document.body.getAttribute('data-theme') || 'light';
         colors = getColors(newTheme);
         

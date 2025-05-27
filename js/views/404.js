@@ -4,8 +4,6 @@
  */
 export default function notFound404(container, app, assetManager) 
 {
-    console.log("404 function called for Pixi content!");
-    
     // Font detection and fallback - check if Honk causes excessive width
     const getFontFamily = () => {
         const canvas = document.createElement('canvas');
@@ -16,8 +14,8 @@ export default function notFound404(container, app, assetManager)
         const testWidth = context.measureText('Test').width;
         
         // fallback
-        if (testWidth > 200) {
-            console.log("Honk font causing excessive width, using fallback");
+        if (testWidth > 200) 
+        {
             return "Impact, serif";
         }
         
@@ -25,7 +23,6 @@ export default function notFound404(container, app, assetManager)
     };
     
     const fontFamily = getFontFamily();
-    console.log("Selected font family:", fontFamily);
     
     // 404 Title 
     const errorTitle = new PIXI.Text("404 - Quest Not Found", {
@@ -119,11 +116,8 @@ export default function notFound404(container, app, assetManager)
     return true;
 }
 
-/**
+/*
  * Create animated player using attack animations only
- * @param {PIXI.Container} container - Parent container
- * @param {PIXI.Application} app - Pixi application
- * @param {Object} assetManager - Asset manager instance
  */
 function createAnimatedPlayer(container, app, assetManager) 
 {
@@ -136,9 +130,7 @@ function createAnimatedPlayer(container, app, assetManager)
         createSimplePlayerPlaceholder(container, app);
         return;
     }
-    
-    console.log("Player spritesheet found with textures:", Object.keys(playerSpritesheet.textures));
-    
+
     // Focus only on attack animations since those are working
     const attackAnimations = {
         attackFront: ['AtkFront-0', 'AtkFront-1', 'AtkFront-2', 'AtkFront-3', 'AtkFront-4', 'AtkFront-5'],
@@ -161,15 +153,16 @@ function createAnimatedPlayer(container, app, assetManager)
     const directions = ['Front', 'Left', 'Right', 'Back'];
     const animationDuration = 120;
     
-    /**
+    /*
      * Create animated sprite for attack sequence
-     * @param {string} animationKey - Key for attack animation
-     * @returns {PIXI.AnimatedSprite|null} Created animated sprite
      */
     function createAttackSprite(animationKey)
     {
         const frameNames = attackAnimations[animationKey];
-        if (!frameNames) return null;
+        if (!frameNames) 
+        {
+            return null;
+        }
         
         // Get textures for this sequence
         const textures = [];
@@ -181,7 +174,10 @@ function createAnimatedPlayer(container, app, assetManager)
             }
         }
         
-        if (textures.length === 0) return null;
+        if (textures.length === 0) 
+        {
+            return null;
+        }
         
         const animatedSprite = new PIXI.AnimatedSprite(textures);
         animatedSprite.anchor.set(0.5, 0.5);
@@ -192,13 +188,11 @@ function createAnimatedPlayer(container, app, assetManager)
         return animatedSprite;
     }
     
-    /**
+    /*
      * Switch to new attack animation
-     * @param {number} dirIndex - Direction index (0-3)
      */
     function switchAttackAnimation(dirIndex)
     {
-        console.log(`Switching to direction index: ${dirIndex} (${directions[dirIndex]})`);
         
         // Remove current sprite
         if (currentAnimatedSprite)
@@ -211,7 +205,6 @@ function createAnimatedPlayer(container, app, assetManager)
         // Build attack animation key
         const animationKey = 'attack' + directions[dirIndex];
         
-        console.log(`Creating attack animation: ${animationKey}`);
         
         // Create new animated sprite
         currentAnimatedSprite = createAttackSprite(animationKey);
@@ -220,7 +213,6 @@ function createAnimatedPlayer(container, app, assetManager)
         {
             playerContainer.addChild(currentAnimatedSprite);
             currentAnimatedSprite.play();
-            console.log(`Successfully created and started ${animationKey}`);
         }
         else
         {
@@ -241,7 +233,6 @@ function createAnimatedPlayer(container, app, assetManager)
         {
             animationTimer = 0;
             currentDirection = (currentDirection + 1) % directions.length;
-            console.log(`Changing to direction: ${directions[currentDirection]}`);
             switchAttackAnimation(currentDirection);
         }
         
@@ -256,10 +247,8 @@ function createAnimatedPlayer(container, app, assetManager)
     app.ticker.add(animationTicker);
 }
 
-/**
+/*
  * Create simple player placeholder when spritesheet fails
- * @param {PIXI.Container} container - Parent container
- * @param {PIXI.Application} app - Pixi application
  */
 function createSimplePlayerPlaceholder(container, app) 
 {
@@ -319,10 +308,8 @@ function createSimplePlayerPlaceholder(container, app)
     container.addChild(playerContainer);
 }
 
-/**
+/*
  * Create functional return button
- * @param {PIXI.Container} container - Parent container
- * @param {PIXI.Application} app - Pixi application
  */
 function createReturnButton(container, app) 
 {
@@ -357,21 +344,16 @@ function createReturnButton(container, app)
     
     // Set hit area to ensure clicks work
     buttonContainer.hitArea = new PIXI.Rectangle(0, 0, 280, 55);
-    
-    // Debug: log when hovering to confirm interactivity works
-    console.log("Setting up button interactivity...");
-    
+
     // Hover effects
     buttonContainer.on('pointerover', () => 
     {
-        console.log("Button hover - IN");
         buttonBg.tint = 0xdddddd;
         buttonContainer.scale.set(1.05);
     });
     
     buttonContainer.on('pointerout', () => 
     {
-        console.log("Button hover - OUT");
         buttonBg.tint = 0xffffff;
         buttonContainer.scale.set(1.0);
     });
@@ -379,7 +361,6 @@ function createReturnButton(container, app)
     // Click handlers
     const navigateHome = () => 
     {
-        console.log("Return button clicked! Navigating to home...");
         window.location.hash = '#/';
         
         // Force navigation if hash doesn't work
@@ -403,10 +384,8 @@ function createReturnButton(container, app)
     container.addChild(buttonContainer);
 }
 
-/**
+/*
  * Create ambient particles for atmosphere
- * @param {PIXI.Container} container - Parent container
- * @param {PIXI.Application} app - Pixi application
  */
 function createAmbientParticles(container, app) 
 {
@@ -494,10 +473,22 @@ function createAmbientParticles(container, app)
             }
             
             // Wrap around screen edges
-            if (p.x > app.screen.width + 10) p.x = -10;
-            if (p.x < -10) p.x = app.screen.width + 10;
-            if (p.y > app.screen.height + 10) p.y = -10;
-            if (p.y < -10) p.y = app.screen.height + 10;
+            if (p.x > app.screen.width + 10)
+            {
+                p.x = -10;
+            }
+            if (p.x < -10) 
+            {
+                p.x = app.screen.width + 10;
+            }
+            if (p.y > app.screen.height + 10)
+            {
+                 p.y = -10;
+            }
+            if (p.y < -10)
+            {
+                p.y = app.screen.height + 10;
+            }
         });
     };
     

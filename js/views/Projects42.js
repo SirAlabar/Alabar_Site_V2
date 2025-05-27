@@ -4,14 +4,15 @@
  */
 export default function projects42(container, app) 
 {
-    console.log("Projects42 function called for Pixi content!");
-    
     // Enable sorting for proper z-index behavior
     container.sortableChildren = true;
     
     const getScreenSize = () => {
         const width = app.screen.width;
-        if (width <= 768) return 'mobile';
+        if (width <= 768) 
+        {
+            return 'mobile';
+        }
         return 'desktop';
     };
     
@@ -527,8 +528,6 @@ export default function projects42(container, app)
      * Simple resize handler
      */
     const resizeElements = () => {
-        console.log("Resizing projects42 page elements...");
-        
         const currentScreenSize = getScreenSize();
         
         // Update main title
@@ -601,8 +600,6 @@ export default function projects42(container, app)
      * Theme update handler - FIXED COLOR ISSUE
      */
     const updateTheme = () => {
-        console.log("Updating projects42 page theme...");
-        
         const newTheme = document.body.getAttribute('data-theme') || 'light';
         colors = getColors(newTheme);
         
@@ -629,7 +626,8 @@ export default function projects42(container, app)
     
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
-            if (mutation.attributeName === 'data-theme') {
+            if (mutation.attributeName === 'data-theme') 
+            {
                 updateTheme();
             }
         });

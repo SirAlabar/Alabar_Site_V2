@@ -4,9 +4,7 @@
  * Includes font fallback for Linux compatibility
  */
 export default function about(container, app, assetManager) 
-{
-    console.log("About function called for Pixi content!");
-    
+{ 
     // Get initial theme
     const currentTheme = document.body.getAttribute('data-theme') || 'light';
     
@@ -20,8 +18,8 @@ export default function about(container, app, assetManager)
         const testWidth = context.measureText('Test').width;
         
         // If width is excessive (like 5000px), use fallback
-        if (testWidth > 200) {
-            console.log("Honk font causing excessive width, using fallback");
+        if (testWidth > 200) 
+        {
             return "Impact, serif";
         }
         
@@ -29,7 +27,6 @@ export default function about(container, app, assetManager)
     };
     
     const fontFamily = getFontFamily();
-    console.log("Selected font family:", fontFamily);
     
     // Define colors based on theme - ONLY SET ONCE
     const getColors = (theme) => 
@@ -68,7 +65,7 @@ export default function about(container, app, assetManager)
         fontFamily: fontFamily,
         fontSize: Math.min(36, app.screen.width * 0.06),
         fill: colors.title,
-        fontWeight: 'bold' // Add weight for better fallback appearance
+        fontWeight: 'bold'
     });
     statsTitle.anchor.set(0.5, 0);
     statsTitle.position.set(app.screen.width / 2, 150);
@@ -115,7 +112,7 @@ export default function about(container, app, assetManager)
     const questText = new PIXI.Text(
         "As a career changer diving into the world of game development, I am excited to explore and create innovative solutions using technology. Currently focusing on mastering C and developing small games in C#, I am passionate about discovering new technologies and leveraging them to craft high-quality projects.\n\nI am a student at 42 School, where I am honing my skills and expanding my horizons in this dynamic field.",
         {
-            fontFamily: "Arial, Helvetica, sans-serif", // Use web-safe font for body text
+            fontFamily: "Arial, Helvetica, sans-serif",
             fontSize: Math.min(16, app.screen.width * 0.022),
             fill: colors.whiteText,
             wordWrap: true,
@@ -282,7 +279,7 @@ export default function about(container, app, assetManager)
         const minSkillsWidth = Math.min(app.screen.width - 40, 350);
         const skillsWidth = Math.min(maxSkillsWidth, Math.max(minSkillsWidth, app.screen.width * 0.85));
         const skillsX = (app.screen.width - skillsWidth) / 2;
-        const skillStartX = skillsX + 50; // 50px padding from left edge of background
+        const skillStartX = skillsX + 50;
         const startY = 385;
         
         skillCategories.forEach((category, categoryIndex) => 
@@ -329,8 +326,6 @@ export default function about(container, app, assetManager)
     
     const resizeElements = () => 
     {
-        console.log("Resizing about page elements...");
-        
         // Check if elements still exist
         if (!elements.statsTitle || !elements.questText) 
         {
@@ -369,8 +364,6 @@ export default function about(container, app, assetManager)
 
     const updateTheme = () => 
     {
-        console.log("Updating about page theme...");
-        
         const newTheme = document.body.getAttribute('data-theme') || 'light';
         colors = getColors(newTheme);
         
@@ -391,7 +384,7 @@ export default function about(container, app, assetManager)
     buildStatsContent();
     buildSkillsContent();
 
-    // Resize listener - only for sizes and positions
+    // Resize listener
     window.addEventListener('resize', resizeElements);
     
     // Theme change observer - only for colors and styles

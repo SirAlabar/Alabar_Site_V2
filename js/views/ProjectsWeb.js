@@ -200,8 +200,6 @@ export default function projectsWeb(container, app)
 
     const updateTheme = () => 
     {
-        console.log("Updating web projects page theme...");
-        
         const newTheme = document.body.getAttribute('data-theme') || 'light';
         colors = getColors(newTheme);
         

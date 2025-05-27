@@ -53,17 +53,17 @@ export default function projectsGames(container, app)
             color: 0x61DAFB
         },
         {
-            title: "Tower Defense Game",
-            description: "Strategic tower defense game with custom sprites and AI",
-            status: "Coming Soon",
-            tech: "C#, Unity, Game AI",
+            title: "cub3d (42 Project)",
+            description: "Raycasting engine creating 3D-like environment from 2D map",
+            status: "Completed",
+            tech: "C, Raycasting, MiniLibX, 3D Graphics",
             color: 0x4CAF50
         },
         {
-            title: "Puzzle Platformer",
-            description: "Physics-based puzzle game with innovative mechanics",
+            title: "Doom Nuked",
+            description: "Classic DOOM-style game engine with modern enhancements",
             status: "Coming Soon",
-            tech: "C#, Unity, Physics2D",
+            tech: "C++, OpenGL, Game Engine",
             color: 0xFF9800
         }
     ];
