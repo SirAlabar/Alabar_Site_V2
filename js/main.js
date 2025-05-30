@@ -47,7 +47,7 @@ function parseRoute(hash)
     return { page: segments[0], subpage: null };
 }
 
-// Function to navigate between pages - WITH PROJECT SUB-ROUTES
+// Function to navigate between pages - WITH PROJECT SUB-ROUTES AND SCROLL TO TOP
 function navigateTo(hash) 
 {
     // Ensure hash starts with #/
@@ -72,6 +72,35 @@ function navigateTo(hash)
     {
         targetPage = '404';
     }
+    
+    // SCROLL TO TOP - Multiple methods for cross-browser compatibility
+    // Method 1: Modern browsers
+    if (window.scrollTo) 
+    {
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth' // Smooth scroll animation
+        });
+    }
+    
+    // Method 2: Fallback for older browsers
+    try 
+    {
+        document.documentElement.scrollTop = 0; // Modern browsers
+        document.body.scrollTop = 0; // Safari
+    } 
+    catch (error) 
+    {
+        console.warn("Scroll to top failed:", error);
+    }
+    
+    // Method 3: Additional fallback
+    if (document.scrollingElement) 
+    {
+        document.scrollingElement.scrollTop = 0;
+    }
+    
     // Use ContentManager to switch to this page
     if (window.contentManager) 
     {
@@ -165,7 +194,7 @@ document.addEventListener('click', e =>
         e.preventDefault();
         // Get the hash from the link
         const hash = link.getAttribute('href');
-        // Navigate to the hash
+        // Navigate to the hash (will include scroll to top)
         navigateTo(hash);
     }
 });
@@ -175,7 +204,7 @@ window.addEventListener('hashchange', () =>
 {
     // Get the hash from the URL
     const hash = getCurrentHash();
-    // Navigate to the hash
+    // Navigate to the hash (will include scroll to top)
     navigateTo(hash);
 });
 
