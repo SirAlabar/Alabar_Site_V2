@@ -21,6 +21,10 @@ export class AssetManager
 				data: './assets/images/player/Little_Leo64px.json'
 			},
 			monsters: {
+				slime1: {
+					spritesheet: './assets/images/monsters/Slime2/Slime1.webp',
+					data: './assets/images/monsters/Slime2/Slime1.json'
+				},
 				slime2: {
 					spritesheet: './assets/images/monsters/Slime2/Slime2.webp',
 					data: './assets/images/monsters/Slime2/Slime2.json'

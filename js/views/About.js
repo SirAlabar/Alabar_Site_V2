@@ -3,407 +3,537 @@
  * Creates character stats and quest description with improved responsive design
  * Includes font fallback for Linux compatibility
  */
-export default function about(container, app, assetManager) 
-{ 
-    // Get initial theme
+
+const CONFIG = {
+    // Layout positions
+    layout: {
+        statsY: 150,
+        skillsY: 330,
+        questY: 540,
+        
+        // Backgrounds
+        statsBgY: 200,
+        statsBgHeight: 120,
+        skillsBgY: 370,
+        skillsBgHeight: 160,
+        questBgY: 590,
+        
+        // Content positioning
+        statsContentY: 215,
+        skillsContentY: 385,
+        statsLineSpacing: 30,
+        skillsLineSpacing: 35,
+        
+        // Padding
+        bgPadding: 50,
+        questPadding: 20,
+        skillTagPadding: 8,
+        skillTagSpacing: 10,
+        labelValueSpacing: 10,
+        categorySkillSpacing: 15
+    },
+    
+    // Responsive sizing
+    sizing: {
+        // Width constraints
+        statsMaxWidth: 600,
+        statsMinWidth: 300,
+        statsWidthPercent: 0.8,
+        
+        skillsMaxWidth: 700,
+        skillsMinWidth: 350,
+        skillsWidthPercent: 0.85,
+        
+        questMaxWidth: 800,
+        questMinMargin: 100,
+        
+        // Font sizes (percentage of screen width)
+        titleFontSize: 0.06,
+        titleMaxSize: 36,
+        
+        subtitleFontSize: 0.05,
+        subtitleMaxSize: 32,
+        
+        textFontSize: 0.022,
+        textMaxSize: 16,
+        
+        labelFontSize: 0.025,
+        labelMaxSize: 18,
+        
+        skillFontSize: 0.02,
+        skillMaxSize: 14,
+        
+        categoryFontSize: 0.023,
+        categoryMaxSize: 16
+    },
+    
+    // Border radius
+    borderRadius: 10,
+    skillTagRadius: 6,
+    
+    // Text line height
+    questLineHeight: 20
+};
+
+const THEME_COLORS = {
+    dark: {
+        title: 0xffcc33,
+        skillBg: 0x4a4a4a,
+        skillBgAlpha: 0.6,
+        skillBgLineAlpha: 0.7,
+        fixedBlueBg: 0x1e3a5f,
+        bgAlpha: 0.4,
+        bgLineAlpha: 0.6,
+        whiteText: 0xffffff
+    },
+    light: {
+        title: 0xcc0000,
+        skillBg: 0x4a4a4a,
+        skillBgAlpha: 0.6,
+        skillBgLineAlpha: 0.7,
+        fixedBlueBg: 0x1e3a5f,
+        bgAlpha: 0.4,
+        bgLineAlpha: 0.6,
+        whiteText: 0xffffff
+    }
+};
+
+const STATS_DATA = [
+    { label: "Class:", value: "Software Developer" },
+    { label: "Former Class:", value: "Accountant" },
+    { label: "Level:", value: "34" },
+    { label: "Guild:", value: "42 Porto" },
+    { label: "Base:", value: "Porto, Portugal" },
+    { label: "Interests:", value: "Game Design, Pixel Art" }
+];
+
+const SKILLS_DATA = [
+    {
+        title: "Main Stack:",
+        skills: ["C", "C++", "Git"]
+    },
+    {
+        title: "Secondary Stack:",
+        skills: ["C#", "CSS", "HTML", "JavaScript"]
+    },
+    {
+        title: "Studying Now:",
+        skills: ["Unity", "Game Development", "Algorithms"]
+    },
+    {
+        title: "Tools:",
+        skills: [".NET", "VS Code", "Linux", "Slack"]
+    }
+];
+
+const QUEST_TEXT = "As a career changer diving into the world of game development, I am excited to explore and create innovative solutions using technology. Currently focusing on mastering C and developing small games in C#, I am passionate about discovering new technologies and leveraging them to craft high-quality projects.\n\nI am a student at 42 School, where I am honing my skills and expanding my horizons in this dynamic field.";
+
+
+/**
+ * Detects if Honk font causes excessive width and returns appropriate fallback
+ */
+function detectFont() {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    
+    context.font = '32px Honk, serif';
+    const testWidth = context.measureText('Test').width;
+    
+    // If width is excessive, use fallback
+    return testWidth > 200 ? "Impact, serif" : "Honk, serif";
+}
+
+/**
+ * Calculate responsive font size
+ */
+function getResponsiveFontSize(screenWidth, percentOfWidth, maxSize) {
+    return Math.min(maxSize, screenWidth * percentOfWidth);
+}
+
+/**
+ * Calculate responsive width with min/max constraints
+ */
+function getResponsiveWidth(screenWidth, minWidth, maxWidth, percentOfWidth) {
+    const minConstraint = Math.min(screenWidth - 40, minWidth);
+    return Math.min(maxWidth, Math.max(minConstraint, screenWidth * percentOfWidth));
+}
+
+/**
+ * Center position calculation
+ */
+function getCenteredX(screenWidth, elementWidth) {
+    return (screenWidth - elementWidth) / 2;
+}
+
+/**
+ * Create text element with consistent styling
+ */
+function createText(text, options = {}) {
+    const defaults = {
+        fontFamily: "Arial, Helvetica, sans-serif",
+        fontSize: 16,
+        fill: 0xffffff,
+        fontWeight: 'normal'
+    };
+    
+    return new PIXI.Text(text, { ...defaults, ...options });
+}
+
+/**
+ * Draw rounded rectangle background
+ */
+function drawBackground(graphics, x, y, width, height, color, alpha, lineAlpha, radius) {
+    graphics.clear();
+    graphics.beginFill(color, alpha);
+    graphics.lineStyle(1, color, lineAlpha);
+    graphics.drawRoundedRect(x, y, width, height, radius);
+    graphics.endFill();
+}
+
+export default function about(container, app, assetManager) {
+    const fontFamily = detectFont();
     const currentTheme = document.body.getAttribute('data-theme') || 'light';
-    
-    // Font detection and fallback - check if Honk causes excessive width
-    const getFontFamily = () => {
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
+    let colors = THEME_COLORS[currentTheme];
+
+    const elements = {
+        // Backgrounds
+        statsBg: new PIXI.Graphics(),
+        skillsBg: new PIXI.Graphics(),
+        questBg: new PIXI.Graphics(),
         
-        // Test Honk font with a sample text
-        context.font = '32px Honk, serif';
-        const testWidth = context.measureText('Test').width;
+        // Containers
+        statsContainer: new PIXI.Container(),
+        skillsContainer: new PIXI.Container(),
         
-        // If width is excessive (like 5000px), use fallback
-        if (testWidth > 200) 
-        {
-            return "Impact, serif";
-        }
+        // Titles
+        statsTitle: createText("Character Stats", {
+            fontFamily,
+            fontSize: getResponsiveFontSize(app.screen.width, CONFIG.sizing.titleFontSize, CONFIG.sizing.titleMaxSize),
+            fill: colors.title,
+            fontWeight: 'bold'
+        }),
         
-        return "Honk, serif";
-    };
-    
-    const fontFamily = getFontFamily();
-    
-    // Define colors based on theme - ONLY SET ONCE
-    const getColors = (theme) => 
-    {
-        return {
-            title: theme === 'dark' ? 0xffcc33 : 0xcc0000,
-            skillBg: theme === 'dark' ? 0x4a4a4a : 0x4a4a4a,
-            skillBgAlpha: 0.6,
-            skillBgLineAlpha: 0.7,
-            fixedBlueBg: 0x1e3a5f,
-            bgAlpha: 0.4,
-            bgLineAlpha: 0.6,
-            whiteText: 0xffffff
-        };
-    };
-    
-    let colors = getColors(currentTheme);
-    
-    // CREATE ALL BACKGROUNDS
-    const statsBg = new PIXI.Graphics();
-    statsBg.name = 'statsBg';
-    container.addChild(statsBg);
-    
-    const skillsBg = new PIXI.Graphics();
-    skillsBg.name = 'skillsBg';
-    container.addChild(skillsBg);
-    
-    const questBg = new PIXI.Graphics();
-    questBg.name = 'questBg';
-    container.addChild(questBg);
-    
-    // CREATE ALL TEXT ELEMENTS
-    // Stats Title
-    const statsTitle = new PIXI.Text("Character Stats", 
-    {
-        fontFamily: fontFamily,
-        fontSize: Math.min(36, app.screen.width * 0.06),
-        fill: colors.title,
-        fontWeight: 'bold'
-    });
-    statsTitle.anchor.set(0.5, 0);
-    statsTitle.position.set(app.screen.width / 2, 150);
-    statsTitle.name = 'statsTitle';
-    container.addChild(statsTitle);
-    
-    // Stats Container
-    const statsContainer = new PIXI.Container();
-    statsContainer.name = 'statsContainer';
-    container.addChild(statsContainer);
-    
-    // Skills Title
-    const skillsTitle = new PIXI.Text("Technical Skills", 
-    {
-        fontFamily: fontFamily,
-        fontSize: Math.min(32, app.screen.width * 0.05),
-        fill: colors.title,
-        fontWeight: 'bold'
-    });
-    skillsTitle.anchor.set(0.5, 0);
-    skillsTitle.position.set(app.screen.width / 2, 330);
-    skillsTitle.name = 'skillsTitle';
-    container.addChild(skillsTitle);
-    
-    // Skills Container
-    const skillsContainer = new PIXI.Container();
-    skillsContainer.name = 'skillsContainer';
-    container.addChild(skillsContainer);
-    
-    // Quest Title
-    const questTitle = new PIXI.Text("Current Quest", 
-    {
-        fontFamily: fontFamily,
-        fontSize: Math.min(32, app.screen.width * 0.05),
-        fill: colors.title,
-        fontWeight: 'bold'
-    });
-    questTitle.anchor.set(0.5, 0);
-    questTitle.position.set(app.screen.width / 2, 540);
-    questTitle.name = 'questTitle';
-    container.addChild(questTitle);
-    
-    // Quest Text
-    const questText = new PIXI.Text(
-        "As a career changer diving into the world of game development, I am excited to explore and create innovative solutions using technology. Currently focusing on mastering C and developing small games in C#, I am passionate about discovering new technologies and leveraging them to craft high-quality projects.\n\nI am a student at 42 School, where I am honing my skills and expanding my horizons in this dynamic field.",
-        {
-            fontFamily: "Arial, Helvetica, sans-serif",
-            fontSize: Math.min(16, app.screen.width * 0.022),
+        skillsTitle: createText("Technical Skills", {
+            fontFamily,
+            fontSize: getResponsiveFontSize(app.screen.width, CONFIG.sizing.subtitleFontSize, CONFIG.sizing.subtitleMaxSize),
+            fill: colors.title,
+            fontWeight: 'bold'
+        }),
+        
+        questTitle: createText("Current Quest", {
+            fontFamily,
+            fontSize: getResponsiveFontSize(app.screen.width, CONFIG.sizing.subtitleFontSize, CONFIG.sizing.subtitleMaxSize),
+            fill: colors.title,
+            fontWeight: 'bold'
+        }),
+        
+        // Quest text
+        questText: createText(QUEST_TEXT, {
+            fontSize: getResponsiveFontSize(app.screen.width, CONFIG.sizing.textFontSize, CONFIG.sizing.textMaxSize),
             fill: colors.whiteText,
             wordWrap: true,
-            wordWrapWidth: Math.min(app.screen.width - 120, 800),
-            lineHeight: 20
-        }
+            wordWrapWidth: Math.min(app.screen.width - 120, CONFIG.sizing.questMaxWidth),
+            lineHeight: CONFIG.questLineHeight
+        })
+    };
+    
+    // Set name properties for easier debugging
+    Object.keys(elements).forEach(key => {
+        elements[key].name = key;
+    });
+    
+    // Set anchors for titles
+    elements.statsTitle.anchor.set(0.5, 0);
+    elements.skillsTitle.anchor.set(0.5, 0);
+    elements.questTitle.anchor.set(0.5, 0);
+    
+    // Add all elements to container
+    container.addChild(
+        elements.statsBg,
+        elements.skillsBg,
+        elements.questBg,
+        elements.statsTitle,
+        elements.skillsTitle,
+        elements.questTitle,
+        elements.questText,
+        elements.statsContainer,
+        elements.skillsContainer
     );
-    questText.name = 'questText';
-    container.addChild(questText);
     
-    const stats = [
-        { label: "Class:", value: "Software Developer" },
-        { label: "Former Class:", value: "Accountant" },
-        { label: "Level:", value: "34" },
-        { label: "Guild:", value: "42 Porto" },
-        { label: "Base:", value: "Porto, Portugal" },
-        { label: "Interests:", value: "Game Design, Pixel Art" }
-    ];
-    
-    const skillCategories = [
-        {
-            title: "Main Stack:",
-            skills: ["C", "C++", "Git"]
-        },
-        {
-            title: "Secondary Stack:",
-            skills: ["C#", "CSS", "HTML", "JavaScript"]
-        },
-        {
-            title: "Studying Now:",
-            skills: ["Unity", "Game Development", "Algorithms"]
-        },
-        {
-            title: "Tools:",
-            skills: [".NET", "VS Code", "Linux", "Slack"]
-        }
-    ];
-    
-    const elements = {
-        statsTitle,
-        skillsTitle,
-        questTitle,
-        statsBg,
-        skillsBg,
-        questBg,
-        questText,
-        statsContainer,
-        skillsContainer
-    };
+    function drawBackgrounds() {
+        const screenWidth = app.screen.width;
+        
+        // Stats background
+        const statsWidth = getResponsiveWidth(
+            screenWidth,
+            CONFIG.sizing.statsMinWidth,
+            CONFIG.sizing.statsMaxWidth,
+            CONFIG.sizing.statsWidthPercent
+        );
+        const statsX = getCenteredX(screenWidth, statsWidth);
+        
+        drawBackground(
+            elements.statsBg,
+            statsX,
+            CONFIG.layout.statsBgY,
+            statsWidth,
+            CONFIG.layout.statsBgHeight,
+            colors.fixedBlueBg,
+            colors.bgAlpha,
+            colors.bgLineAlpha,
+            CONFIG.borderRadius
+        );
+        
+        // Skills background
+        const skillsWidth = getResponsiveWidth(
+            screenWidth,
+            CONFIG.sizing.skillsMinWidth,
+            CONFIG.sizing.skillsMaxWidth,
+            CONFIG.sizing.skillsWidthPercent
+        );
+        const skillsX = getCenteredX(screenWidth, skillsWidth);
+        
+        drawBackground(
+            elements.skillsBg,
+            skillsX,
+            CONFIG.layout.skillsBgY,
+            skillsWidth,
+            CONFIG.layout.skillsBgHeight,
+            colors.fixedBlueBg,
+            colors.bgAlpha,
+            colors.bgLineAlpha,
+            CONFIG.borderRadius
+        );
+        
+        // Quest background (dynamic size based on text)
+        const questWidth = Math.min(
+            elements.questText.width + CONFIG.layout.questPadding * 2,
+            screenWidth - CONFIG.sizing.questMinMargin
+        );
+        const questHeight = elements.questText.height + CONFIG.layout.questPadding * 2;
+        const questX = getCenteredX(screenWidth, questWidth);
+        
+        drawBackground(
+            elements.questBg,
+            questX,
+            CONFIG.layout.questBgY,
+            questWidth,
+            questHeight,
+            colors.fixedBlueBg,
+            colors.bgAlpha,
+            colors.bgLineAlpha,
+            CONFIG.borderRadius
+        );
+        
+        // Position quest text relative to its background
+        elements.questText.position.set(
+            questX + CONFIG.layout.questPadding,
+            CONFIG.layout.questBgY + CONFIG.layout.questPadding
+        );
+    }
 
-    const drawBackgrounds = () => 
-    {
-        // Stats background - responsive width, centered
-        const maxStatsWidth = 600;
-        const minStatsWidth = Math.min(app.screen.width - 40, 300);
-        const statsWidth = Math.min(maxStatsWidth, Math.max(minStatsWidth, app.screen.width * 0.8));
-        const statsHeight = 120;
-        const statsX = (app.screen.width - statsWidth) / 2;
-        const statsY = 200;
-        
-        elements.statsBg.clear();
-        elements.statsBg.beginFill(colors.fixedBlueBg, colors.bgAlpha);
-        elements.statsBg.lineStyle(1, colors.fixedBlueBg, colors.bgLineAlpha);
-        elements.statsBg.drawRoundedRect(statsX, statsY, statsWidth, statsHeight, 10);
-        elements.statsBg.endFill();
-        
-        // Skills background - responsive width, centered
-        const maxSkillsWidth = 700;
-        const minSkillsWidth = Math.min(app.screen.width - 40, 350);
-        const skillsWidth = Math.min(maxSkillsWidth, Math.max(minSkillsWidth, app.screen.width * 0.85));
-        const skillsHeight = 160;
-        const skillsX = (app.screen.width - skillsWidth) / 2;
-        const skillsY = 370;
-        
-        elements.skillsBg.clear();
-        elements.skillsBg.beginFill(colors.fixedBlueBg, colors.bgAlpha);
-        elements.skillsBg.lineStyle(1, colors.fixedBlueBg, colors.bgLineAlpha);
-        elements.skillsBg.drawRoundedRect(skillsX, skillsY, skillsWidth, skillsHeight, 10);
-        elements.skillsBg.endFill();
-        
-        // Quest background - dynamic width based on text, centered
-        const questBgWidth = Math.min(elements.questText.width + 40, app.screen.width - 100);
-        const questBgHeight = elements.questText.height + 40;
-        const questBgX = (app.screen.width - questBgWidth) / 2;
-        const questBgY = 590;
-        
-        elements.questBg.clear();
-        elements.questBg.beginFill(colors.fixedBlueBg, colors.bgAlpha);
-        elements.questBg.lineStyle(1, colors.fixedBlueBg, colors.bgLineAlpha);
-        elements.questBg.drawRoundedRect(questBgX, questBgY, questBgWidth, questBgHeight, 10);
-        elements.questBg.endFill();
-        
-        // Position quest text RELATIVE to its background
-        elements.questText.position.set(questBgX + 20, questBgY + 20);
-    };
-
-    const buildStatsContent = () => 
-    {
+    function buildStatsContent() {
         elements.statsContainer.removeChildren();
         
-        // Calculate responsive positions RELATIVE to background
-        const maxStatsWidth = 600;
-        const minStatsWidth = Math.min(app.screen.width - 40, 300);
-        const statsWidth = Math.min(maxStatsWidth, Math.max(minStatsWidth, app.screen.width * 0.8));
-        const statsX = (app.screen.width - statsWidth) / 2;
-        const leftX = statsX + 50;  // 50px padding from left edge of background
-        const rightX = statsX + (statsWidth / 2); // Middle of background
-        const startY = 215;
+        const screenWidth = app.screen.width;
+        const statsWidth = getResponsiveWidth(
+            screenWidth,
+            CONFIG.sizing.statsMinWidth,
+            CONFIG.sizing.statsMaxWidth,
+            CONFIG.sizing.statsWidthPercent
+        );
+        const statsX = getCenteredX(screenWidth, statsWidth);
         
-        const leftColumn = stats.slice(0, 3);
-        const rightColumn = stats.slice(3);
+        const leftX = statsX + CONFIG.layout.bgPadding;
+        const rightX = statsX + (statsWidth / 2);
+        const startY = CONFIG.layout.statsContentY;
         
-        leftColumn.forEach((stat, index) => 
-        {
-            const label = new PIXI.Text(stat.label, 
-            {
-                fontFamily: "Arial, Helvetica, sans-serif",
-                fontSize: Math.min(18, app.screen.width * 0.025),
+        const fontSize = getResponsiveFontSize(screenWidth, CONFIG.sizing.labelFontSize, CONFIG.sizing.labelMaxSize);
+        const valueSize = getResponsiveFontSize(screenWidth, CONFIG.sizing.textFontSize, CONFIG.sizing.textMaxSize);
+        
+        // Split into two columns
+        const leftColumn = STATS_DATA.slice(0, 3);
+        const rightColumn = STATS_DATA.slice(3);
+        
+        // Helper function to create stat row
+        const createStatRow = (stat, x, y) => {
+            const label = createText(stat.label, {
+                fontSize,
                 fontWeight: "bold",
                 fill: colors.whiteText
             });
-            label.position.set(leftX, startY + index * 30);
+            label.position.set(x, y);
             elements.statsContainer.addChild(label);
             
-            const value = new PIXI.Text(stat.value, 
-            {
-                fontFamily: "Arial, Helvetica, sans-serif",
-                fontSize: Math.min(16, app.screen.width * 0.022),
+            const value = createText(stat.value, {
+                fontSize: valueSize,
                 fill: colors.whiteText
             });
-            value.position.set(leftX + label.width + 10, startY + index * 30);
+            value.position.set(x + label.width + CONFIG.layout.labelValueSpacing, y);
             elements.statsContainer.addChild(value);
+        };
+        
+        // Build left column
+        leftColumn.forEach((stat, index) => {
+            createStatRow(stat, leftX, startY + index * CONFIG.layout.statsLineSpacing);
         });
         
-        rightColumn.forEach((stat, index) => 
-        {
-            const label = new PIXI.Text(stat.label, 
-            {
-                fontFamily: "Arial, Helvetica, sans-serif",
-                fontSize: Math.min(18, app.screen.width * 0.025),
-                fontWeight: "bold",
-                fill: colors.whiteText
-            });
-            label.position.set(rightX, startY + index * 30);
-            elements.statsContainer.addChild(label);
-            
-            const value = new PIXI.Text(stat.value, 
-            {
-                fontFamily: "Arial, Helvetica, sans-serif",
-                fontSize: Math.min(16, app.screen.width * 0.022),
-                fill: colors.whiteText
-            });
-            value.position.set(rightX + label.width + 10, startY + index * 30);
-            elements.statsContainer.addChild(value);
+        // Build right column
+        rightColumn.forEach((stat, index) => {
+            createStatRow(stat, rightX, startY + index * CONFIG.layout.statsLineSpacing);
         });
-    };
+    }
 
-    const buildSkillsContent = () => 
-    {
+    function buildSkillsContent() {
         elements.skillsContainer.removeChildren();
         
-        // Calculate responsive positions RELATIVE to background
-        const maxSkillsWidth = 700;
-        const minSkillsWidth = Math.min(app.screen.width - 40, 350);
-        const skillsWidth = Math.min(maxSkillsWidth, Math.max(minSkillsWidth, app.screen.width * 0.85));
-        const skillsX = (app.screen.width - skillsWidth) / 2;
-        const skillStartX = skillsX + 50;
-        const startY = 385;
+        const screenWidth = app.screen.width;
+        const skillsWidth = getResponsiveWidth(
+            screenWidth,
+            CONFIG.sizing.skillsMinWidth,
+            CONFIG.sizing.skillsMaxWidth,
+            CONFIG.sizing.skillsWidthPercent
+        );
+        const skillsX = getCenteredX(screenWidth, skillsWidth);
+        const startX = skillsX + CONFIG.layout.bgPadding;
+        const startY = CONFIG.layout.skillsContentY;
         
-        skillCategories.forEach((category, categoryIndex) => 
-        {
-            const categoryTitle = new PIXI.Text(category.title, 
-            {
-                fontFamily: "Arial, Helvetica, sans-serif",
-                fontSize: Math.min(16, app.screen.width * 0.023),
+        const categorySize = getResponsiveFontSize(screenWidth, CONFIG.sizing.categoryFontSize, CONFIG.sizing.categoryMaxSize);
+        const skillSize = getResponsiveFontSize(screenWidth, CONFIG.sizing.skillFontSize, CONFIG.sizing.skillMaxSize);
+        
+        SKILLS_DATA.forEach((category, categoryIndex) => {
+            const y = startY + categoryIndex * CONFIG.layout.skillsLineSpacing;
+            
+            // Category title
+            const categoryTitle = createText(category.title, {
+                fontSize: categorySize,
                 fontWeight: "bold",
                 fill: colors.whiteText
             });
-            categoryTitle.position.set(skillStartX, startY + categoryIndex * 35);
+            categoryTitle.position.set(startX, y);
             elements.skillsContainer.addChild(categoryTitle);
             
-            let skillX = skillStartX + categoryTitle.width + 15;
+            // Skills as tags
+            let skillX = startX + categoryTitle.width + CONFIG.layout.categorySkillSpacing;
             
-            category.skills.forEach((skill) => 
-            {
+            category.skills.forEach((skill) => {
+                // Create skill tag background
                 const skillBg = new PIXI.Graphics();
-                skillBg.beginFill(colors.skillBg, colors.skillBgAlpha);
-                skillBg.lineStyle(1, colors.skillBg, colors.skillBgLineAlpha);
-                
-                const skillText = new PIXI.Text(skill, 
-                {
-                    fontFamily: "Arial, Helvetica, sans-serif",
-                    fontSize: Math.min(14, app.screen.width * 0.02),
+                const skillText = createText(skill, {
+                    fontSize: skillSize,
                     fill: colors.whiteText
                 });
                 
-                const padding = 8;
-                skillBg.drawRoundedRect(0, 0, skillText.width + padding * 2, skillText.height + padding, 6);
-                skillBg.endFill();
-                skillBg.position.set(skillX, startY + categoryIndex * 35 - 2);
+                const padding = CONFIG.layout.skillTagPadding;
+                const tagWidth = skillText.width + padding * 2;
+                const tagHeight = skillText.height + padding;
                 
-                skillText.position.set(skillX + padding, startY + categoryIndex * 35 + 2);
+                skillBg.beginFill(colors.skillBg, colors.skillBgAlpha);
+                skillBg.lineStyle(1, colors.skillBg, colors.skillBgLineAlpha);
+                skillBg.drawRoundedRect(0, 0, tagWidth, tagHeight, CONFIG.skillTagRadius);
+                skillBg.endFill();
+                skillBg.position.set(skillX, y - 2);
+                
+                skillText.position.set(skillX + padding, y + 2);
                 
                 elements.skillsContainer.addChild(skillBg);
                 elements.skillsContainer.addChild(skillText);
                 
-                skillX += skillText.width + padding * 2 + 10;
+                skillX += tagWidth + CONFIG.layout.skillTagSpacing;
             });
         });
-    };
-    
-    const resizeElements = () => 
-    {
-        // Check if elements still exist
-        if (!elements.statsTitle || !elements.questText) 
-        {
+    }
+
+    function resizeElements() {
+        if (!elements.statsTitle || !elements.questText) {
             console.warn("About page elements not found during resize");
             return;
         }
         
-        // Update titles positions and sizes
-        elements.statsTitle.position.set(app.screen.width / 2, 150);
-        elements.statsTitle.style.fontSize = Math.min(36, app.screen.width * 0.06);
+        const screenWidth = app.screen.width;
         
-        elements.skillsTitle.position.set(app.screen.width / 2, 335);
-        elements.skillsTitle.style.fontSize = Math.min(32, app.screen.width * 0.05);
+        // Update title positions and sizes
+        elements.statsTitle.position.set(screenWidth / 2, CONFIG.layout.statsY);
+        elements.statsTitle.style.fontSize = getResponsiveFontSize(
+            screenWidth,
+            CONFIG.sizing.titleFontSize,
+            CONFIG.sizing.titleMaxSize
+        );
         
-        elements.questTitle.position.set(app.screen.width / 2, 540);
-        elements.questTitle.style.fontSize = Math.min(32, app.screen.width * 0.05);
+        elements.skillsTitle.position.set(screenWidth / 2, CONFIG.layout.skillsY);
+        elements.skillsTitle.style.fontSize = getResponsiveFontSize(
+            screenWidth,
+            CONFIG.sizing.subtitleFontSize,
+            CONFIG.sizing.subtitleMaxSize
+        );
         
-        // Update quest text size and wrap width
-        elements.questText.style.fontSize = Math.min(16, app.screen.width * 0.022);
-        elements.questText.style.wordWrapWidth = Math.min(app.screen.width - 120, 800);
+        elements.questTitle.position.set(screenWidth / 2, CONFIG.layout.questY);
+        elements.questTitle.style.fontSize = getResponsiveFontSize(
+            screenWidth,
+            CONFIG.sizing.subtitleFontSize,
+            CONFIG.sizing.subtitleMaxSize
+        );
         
-        // Force text to recalculate after style changes
+        // Update quest text
+        elements.questText.style.fontSize = getResponsiveFontSize(
+            screenWidth,
+            CONFIG.sizing.textFontSize,
+            CONFIG.sizing.textMaxSize
+        );
+        elements.questText.style.wordWrapWidth = Math.min(
+            screenWidth - 120,
+            CONFIG.sizing.questMaxWidth
+        );
+        
+        // Force text recalculation
         elements.questText._autoResolution = true;
         
-        // Small delay to ensure text has recalculated before drawing backgrounds
-        setTimeout(() => 
-        {
-            // Redraw backgrounds
+        // Small delay to ensure text has recalculated
+        setTimeout(() => {
             drawBackgrounds();
-            
-            // Rebuild content with new positions
             buildStatsContent();
             buildSkillsContent();
         }, 10);
-    };
+    }
 
-    const updateTheme = () => 
-    {
+    function updateTheme() {
         const newTheme = document.body.getAttribute('data-theme') || 'light';
-        colors = getColors(newTheme);
+        colors = THEME_COLORS[newTheme];
         
         // Update title colors
         elements.statsTitle.style.fill = colors.title;
         elements.skillsTitle.style.fill = colors.title;
         elements.questTitle.style.fill = colors.title;
         
-        // Redraw backgrounds with new colors
+        // Redraw everything with new colors
         drawBackgrounds();
-        
-        // Rebuild skills with new colors (skills have colored backgrounds)
-        buildSkillsContent();
-    };
-    
+        buildSkillsContent(); // Skills have colored backgrounds
+    }
+
     // Initial build
     drawBackgrounds();
     buildStatsContent();
     buildSkillsContent();
+    
+    // Position titles after initial build
+    elements.statsTitle.position.set(app.screen.width / 2, CONFIG.layout.statsY);
+    elements.skillsTitle.position.set(app.screen.width / 2, CONFIG.layout.skillsY);
+    elements.questTitle.position.set(app.screen.width / 2, CONFIG.layout.questY);
 
-    // Resize listener
     window.addEventListener('resize', resizeElements);
     
-    // Theme change observer - only for colors and styles
-    const observer = new MutationObserver((mutations) => 
-    {
-        mutations.forEach((mutation) => 
-        {
-            if (mutation.attributeName === 'data-theme') 
-            {
+    const themeObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'data-theme') {
                 updateTheme();
             }
         });
     });
-    observer.observe(document.body, { attributes: true });
+    themeObserver.observe(document.body, { attributes: true });
 
-    container.cleanup = () => 
-    {
+    container.cleanup = () => {
         window.removeEventListener('resize', resizeElements);
-        observer.disconnect();
+        themeObserver.disconnect();
     };
     
     return true;

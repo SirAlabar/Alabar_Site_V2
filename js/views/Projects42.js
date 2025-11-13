@@ -1,643 +1,577 @@
 /**
- * 42 School Projects page with compact hover cards
- * Simple layout without complex responsive calculations
+ * 42 School Projects - Collectible Card Game Style
+ * Features: Game card design, shine effect, responsive grid
  */
-export default function projects42(container, app) 
-{
-    // Enable sorting for proper z-index behavior
+
+// Configuration
+const CONFIG = {
+    fonts: {
+        heading: "Honk, Arial, sans-serif",
+        body: "Arial, sans-serif"
+    },
+    
+    card: {
+        width: 180,
+        height: 240,
+        borderSize: 6,
+        cornerRadius: 12,
+        imageHeight: 120,
+        nameHeight: 30,
+        spacing: 20
+    },
+    
+    colors: {
+        dark: {
+            title: 0xffcc33,
+            text: 0xffffff,
+            cardBg: 0x2a3a4a,
+            // Rarity colors
+            common: 0x808080,
+            uncommon: 0x4CAF50,
+            rare: 0x2196F3,
+            epic: 0x9C27B0,
+            legendary: 0xFF9800
+        },
+        light: {
+            title: 0xcc0000,
+            text: 0xffffff,
+            cardBg: 0x2a3a4a,
+            common: 0x808080,
+            uncommon: 0x4CAF50,
+            rare: 0x2196F3,
+            epic: 0x9C27B0,
+            legendary: 0xFF9800
+        }
+    },
+    
+    shine: {
+        duration: 2000,
+        interval: 5000,
+        width: 40,
+        opacity: 0.6
+    }
+};
+
+// Project data with rarity
+const PROJECT_DATA = [
+    {
+        category: "📚 Foundation",
+        projects: [
+            {
+                name: "Libft",
+                icon: "📚",
+                skills: ["C", "Memory", "Algorithms"],
+                grade: "125/100",
+                rarity: "uncommon",
+                github: "https://github.com/SirAlabar/libft"
+            },
+            {
+                name: "Born2beRoot",
+                icon: "🖥️",
+                skills: ["Linux", "Security", "VM"],
+                grade: "125/100",
+                rarity: "uncommon",
+                github: "https://github.com/SirAlabar/born2beroot"
+            },
+            {
+                name: "ft_printf",
+                icon: "🖨️",
+                skills: ["C", "Variadic", "Format"],
+                grade: "125/100",
+                rarity: "uncommon",
+                github: "https://github.com/SirAlabar/ft_printf"
+            },
+            {
+                name: "get_next_line",
+                icon: "📄",
+                skills: ["C", "File I/O", "Static"],
+                grade: "125/100",
+                rarity: "uncommon",
+                github: "https://github.com/SirAlabar/get_next_line"
+            }
+        ]
+    },
+    {
+        category: "🔄 Algorithmic",
+        projects: [
+            {
+                name: "push_swap",
+                icon: "🔄",
+                skills: ["C", "Algo", "Optimize"],
+                grade: "125/100",
+                rarity: "rare",
+                github: "https://github.com/SirAlabar/push_swap"
+            },
+            {
+                name: "pipex",
+                icon: "⚙️",
+                skills: ["C", "Process", "IPC"],
+                grade: "125/100",
+                rarity: "rare",
+                github: "https://github.com/SirAlabar/pipex"
+            },
+            {
+                name: "so_long",
+                icon: "🎮",
+                skills: ["C", "Graphics", "Game"],
+                grade: "125/100",
+                rarity: "rare",
+                github: "https://github.com/SirAlabar/so_long"
+            },
+            {
+                name: "NetPractice",
+                icon: "🌐",
+                skills: ["Network", "IP", "Subnet"],
+                grade: "100/100",
+                rarity: "rare",
+                github: "https://github.com/SirAlabar/netpractice"
+            }
+        ]
+    },
+    {
+        category: "👥 Team",
+        projects: [
+            {
+                name: "minishell",
+                icon: "🐚",
+                skills: ["C", "Parse", "Process"],
+                grade: "125/100",
+                rarity: "epic",
+                github: "https://github.com/SirAlabar/minishell"
+            },
+            {
+                name: "cub3d",
+                icon: "🎯",
+                skills: ["C", "Graphics", "Math"],
+                grade: "125/100",
+                rarity: "epic",
+                github: "https://github.com/SirAlabar/cub3d"
+            },
+            {
+                name: "ft_irc",
+                icon: "💬",
+                skills: ["C++", "Network", "Protocol"],
+                grade: "Progress",
+                rarity: "common",
+                github: null
+            },
+            {
+                name: "transcendence",
+                icon: "🎲",
+                skills: ["TypeScript", "NestJS", "SQL"],
+                grade: "Progress",
+                rarity: "common",
+                github: null
+            }
+        ]
+    },
+    {
+        category: "🧠 Advanced",
+        projects: [
+            {
+                name: "Philosophers",
+                icon: "🤔",
+                skills: ["C", "Thread", "Mutex"],
+                grade: "125/100",
+                rarity: "legendary",
+                github: "https://github.com/SirAlabar/philosophers"
+            },
+            {
+                name: "Inception",
+                icon: "🐳",
+                skills: ["Docker", "Compose", "DevOps"],
+                grade: "Progress",
+                rarity: "common",
+                github: null
+            },
+            {
+                name: "CPP Modules",
+                icon: "⚡",
+                skills: ["C++", "OOP", "Templates"],
+                grade: "100/100",
+                rarity: "legendary",
+                github: "https://github.com/SirAlabar/cpp-modules"
+            }
+        ]
+    }
+];
+
+export default function projects42(container, app) {
     container.sortableChildren = true;
     
-    const getScreenSize = () => {
-        const width = app.screen.width;
-        if (width <= 768) 
-        {
-            return 'mobile';
-        }
-        return 'desktop';
+    const getTheme = () => document.body.getAttribute('data-theme') || 'light';
+    let colors = CONFIG.colors[getTheme()];
+    
+    const elements = { cards: [], titles: [], shines: [] };
+    
+    // Create shine effect for a card
+    const createShineEffect = (cardContainer) => {
+        const shine = new PIXI.Graphics();
+        shine.beginFill(0xffffff, CONFIG.shine.opacity);
+        shine.drawRect(0, 0, CONFIG.shine.width, CONFIG.card.height);
+        shine.endFill();
+        shine.position.x = -CONFIG.shine.width;
+        shine.alpha = 0;
+        cardContainer.addChild(shine);
+        
+        return shine;
     };
     
-    const screenSize = getScreenSize();
-    
-    // FONT SIZES CONFIG
-    const FONT_SIZES = {
-        mainTitle: {
-            desktop: 36,
-            mobile: Math.min(36, app.screen.width * 0.05)
-        },
-        description: {
-            desktop: 16,
-            mobile: Math.min(16, app.screen.width * 0.022)
-        },
-        categoryTitle: {
-            desktop: 28,
-            mobile: Math.min(28, app.screen.width * 0.04)
-        },
-        cardTitle: {
-            desktop: 20,
-            mobile: 14
-        },
-        cardDescription: {
-            desktop: 10,
-            mobile: 10
-        },
-        cardSkills: {
-            desktop: 9,
-            mobile: 9
-        },
-        cardGrade: {
-            desktop: 10,
-            mobile: 10
-        },
-        statusIcon: {
-            desktop: 9,
-            mobile: 9
-        }
-    };
-    
-    // FONT FAMILIES CONFIG
-    const FONTS = {
-        heading: "Honk, Arial, sans-serif", // With Linux fallback
-        body: "Arial, sans-serif"
-    };
-    
-    // LAYOUT CONFIG
-    const LAYOUT = {
-        cardWidth: {
-            desktop: 200,
-            mobile: 160
-        },
-        cardHeight: {
-            desktop: 90,
-            mobile: 70
-        },
-        spacing: {
-            desktop: 15,
-            mobile: 12
-        },
-        titleSpacing: {
-            desktop: 40,
-            mobile: 30
-        },
-        categorySpacing: {
-            desktop: 20,
-            mobile: 15
-        }
-    };
-    
-    // Get initial theme
-    const currentTheme = document.body.getAttribute('data-theme') || 'light';
-    
-    // Define colors based on theme
-    const getColors = (theme) => 
-    {
-        return {
-            title: theme === 'dark' ? 0xffcc33 : 0xcc0000,
-            categoryTitle: theme === 'dark' ? 0xffcc33 : 0xcc0000,
-            cardBg: theme === 'dark' ? 0x2a2a2a : 0x1e3a5f,
-            cardBgAlpha: 0.4,
-            cardBorderAlpha: 0.6,
-            completedColor: 0x4CAF50,
-            whiteText: 0xffffff,
-            grayText: 0xcccccc
+    // Animate shine across card
+    const animateShine = (shine) => {
+        shine.alpha = 0;
+        shine.position.x = -CONFIG.shine.width;
+        
+        const startTime = Date.now();
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = elapsed / CONFIG.shine.duration;
+            
+            if (progress < 1) {
+                shine.position.x = -CONFIG.shine.width + (CONFIG.card.width + CONFIG.shine.width) * progress;
+                shine.alpha = Math.sin(progress * Math.PI) * CONFIG.shine.opacity;
+                requestAnimationFrame(animate);
+            } else {
+                shine.alpha = 0;
+            }
         };
+        
+        animate();
     };
     
-    let colors = getColors(currentTheme);
-    
-    // Use responsive layout constants
-    const CARD_WIDTH = LAYOUT.cardWidth[screenSize];
-    const CARD_HEIGHT = LAYOUT.cardHeight[screenSize];
-    const SPACING = LAYOUT.spacing[screenSize];
-    
-    // Project data organized by categories
-    const projectCategories = [
-        {
-            title: "📚 Foundation Projects",
-            color: 0x4CAF50,
-            projects: [
-                {
-                    name: "Libft",
-                    description: "Custom C library implementation with essential functions",
-                    skills: ["C", "Library Creation", "Memory Management"],
-                    status: "Completed",
-                    grade: "125/100"
-                },
-                {
-                    name: "Born2beRoot", 
-                    description: "System administration project with VirtualBox",
-                    skills: ["System Admin", "Virtualization", "Security"],
-                    status: "Completed",
-                    grade: "125/100"
-                },
-                {
-                    name: "ft_printf",
-                    description: "Recoded printf function with various conversions",
-                    skills: ["C", "Variadic Functions", "String Formatting"],
-                    status: "Completed", 
-                    grade: "125/100"
-                },
-                {
-                    name: "get_next_line",
-                    description: "Function that reads a line from file descriptor",
-                    skills: ["C", "File I/O", "Static Variables"],
-                    status: "Completed",
-                    grade: "125/100"
-                }
-            ]
-        },
-        {
-            title: "🔄 Algorithmic Projects",
-            color: 0x2196F3,
-            projects: [
-                {
-                    name: "push_swap",
-                    description: "Sorting algorithm optimization project",
-                    skills: ["C", "Algorithm Design", "Data Structures"],
-                    status: "Completed",
-                    grade: "125/100"
-                },
-                {
-                    name: "pipex",
-                    description: "Recreated shell pipe functionality",
-                    skills: ["C", "Process Creation", "IPC"],
-                    status: "Completed",
-                    grade: "125/100"
-                },
-                {
-                    name: "so_long",
-                    description: "2D game project using MiniLibX",
-                    skills: ["C", "Graphics", "Game Development"],
-                    status: "Completed",
-                    grade: "125/100"
-                },
-                {
-                    name: "NetPractice",
-                    description: "IP addressing and network configuration",
-                    skills: ["Networking", "IP Addressing", "Subnetting"],
-                    status: "Completed",
-                    grade: "100/100"
-                }
-            ]
-        },
-        {
-            title: "👥 Team Projects",
-            color: 0x9C27B0,
-            projects: [
-                {
-                    name: "minishell",
-                    description: "Simple shell implementation in C (group project)",
-                    skills: ["C", "Parsing", "Process Management"],
-                    status: "Completed",
-                    grade: "125/100"
-                },
-                {
-                    name: "cub3d",
-                    description: "Raycasting engine for 3D-like environment",
-                    skills: ["C", "Graphics", "Mathematics"],
-                    status: "Completed",
-                    grade: "125/100"
-                },
-                {
-                    name: "ft_irc",
-                    description: "IRC server compliant with RFC standards",
-                    skills: ["C++", "Network Programming", "Protocols"],
-                    status: "Coming Soon",
-                    grade: "In Progress"
-                },
-                {
-                    name: "ft_transcendence",
-                    description: "Full-stack web app with multiplayer Pong",
-                    skills: ["TypeScript", "NestJS", "PostgreSQL"],
-                    status: "Coming Soon",
-                    grade: "In Progress"
-                }
-            ]
-        },
-        {
-            title: "🧠 Advanced Concepts",
-            color: 0xFF9800,
-            projects: [
-                {
-                    name: "Philosophers",
-                    description: "Dining philosophers problem with threads",
-                    skills: ["C", "Multi-threading", "Mutexes"],
-                    status: "Completed",
-                    grade: "125/100"
-                },
-                {
-                    name: "Inception",
-                    description: "Docker infrastructure with containers",
-                    skills: ["Docker", "Docker-Compose", "System Admin"],
-                    status: "Coming Soon",
-                    grade: "In Progress"
-                },
-                {
-                    name: "CPP Modules",
-                    description: "Object-Oriented Programming in C++",
-                    skills: ["C++", "OOP", "Templates", "STL"],
-                    status: "Completed",
-                    grade: "100/100"
-                }
-            ]
-        }
-    ];
-    
-    // Store all elements for theme updates and resize
-    const elements = {
-        titles: [],
-        cardContainers: []
-    };
-    
-    // Main title
-    const mainTitle = new PIXI.Text("42 School Projects", {
-        fontFamily: FONTS.heading,
-        fontSize: FONT_SIZES.mainTitle[screenSize],
-        fill: colors.title
-    });
-    mainTitle.anchor.set(0.5, 0);
-    mainTitle.position.set(app.screen.width / 2, 80);
-    container.addChild(mainTitle);
-    elements.titles.push(mainTitle);
-    
-    // Description
-    const description = new PIXI.Text(
-        "Here are some of the projects I've completed during my studies at 42 School:",
-        {
-            fontFamily: FONTS.body,
-            fontSize: FONT_SIZES.description[screenSize],
-            fill: colors.whiteText, // FIXED: Back to white
-            wordWrap: true,
-            wordWrapWidth: app.screen.width - 100,
-            align: 'center'
-        }
-    );
-    description.anchor.set(0.5, 0);
-    description.position.set(app.screen.width / 2, 120);
-    container.addChild(description);
-    elements.titles.push(description);
-    
-    let currentY = 160; // Reduced starting position
-    
-    // Create categories and cards
-    projectCategories.forEach((category, categoryIndex) => {
-        // Category title
-        const categoryTitle = new PIXI.Text(category.title, {
-            fontFamily: FONTS.heading,
-            fontSize: FONT_SIZES.categoryTitle[screenSize],
-            fill: colors.categoryTitle
-        });
-        categoryTitle.anchor.set(0.5, 0);
-        categoryTitle.position.set(app.screen.width / 2, currentY);
-        container.addChild(categoryTitle);
-        elements.titles.push(categoryTitle);
-        
-        currentY += LAYOUT.titleSpacing[screenSize];
-        
-        // Create cards for this category
-        const cardsContainer = createCategoryCards(container, category, currentY);
-        elements.cardContainers.push(cardsContainer);
-        
-        // Calculate next Y position - simple math
-        const cardsPerRow = Math.floor((app.screen.width - 100) / (CARD_WIDTH + SPACING));
-        const rows = Math.ceil(category.projects.length / cardsPerRow);
-        currentY += rows * (CARD_HEIGHT + SPACING) + LAYOUT.categorySpacing[screenSize];
-    });
-    
-    /**
-     * Create cards for a category - responsive approach
-     */
-    function createCategoryCards(container, category, startY) {
-        const cardsContainer = new PIXI.Container();
-        cardsContainer.name = `category-${category.title}`;
-        cardsContainer.sortableChildren = true;
-        container.addChild(cardsContainer);
-        
-        // Use current screen size for responsive layout
-        const currentScreenSize = getScreenSize();
-        const cardWidth = LAYOUT.cardWidth[currentScreenSize];
-        const cardHeight = LAYOUT.cardHeight[currentScreenSize];
-        const spacing = LAYOUT.spacing[currentScreenSize];
-        
-        // Simple calculation - how many cards fit per row
-        const availableWidth = app.screen.width - 100; // 50px margin each side
-        const cardsPerRow = Math.floor(availableWidth / (cardWidth + spacing));
-        
-        category.projects.forEach((project, index) => {
-            const row = Math.floor(index / cardsPerRow);
-            const col = index % cardsPerRow;
-            
-            // Center the entire row
-            const actualCardsInThisRow = Math.min(cardsPerRow, category.projects.length - row * cardsPerRow);
-            const rowWidth = actualCardsInThisRow * cardWidth + (actualCardsInThisRow - 1) * spacing;
-            const startX = (app.screen.width - rowWidth) / 2;
-            
-            const cardX = startX + col * (cardWidth + spacing);
-            const cardY = startY + row * (cardHeight + spacing);
-            
-            createProjectCard(cardsContainer, project, cardX, cardY, category.color);
-        });
-        
-        return cardsContainer;
-    }
-    
-    /**
-     * Create individual project card
-     */
-    function createProjectCard(container, project, x, y, categoryColor) {
-        // Use current responsive sizes
-        const currentScreenSize = getScreenSize();
-        const cardWidth = LAYOUT.cardWidth[currentScreenSize];
-        const cardHeight = LAYOUT.cardHeight[currentScreenSize];
-        
+    // Create game card
+    const createGameCard = (project, x, y) => {
         const cardContainer = new PIXI.Container();
         cardContainer.position.set(x, y);
         cardContainer.sortableChildren = true;
         
-        cardContainer.interactive = true;
-        cardContainer.cursor = 'pointer';
-        cardContainer.buttonMode = true;
+        const borderColor = colors[project.rarity];
+        const hasLink = project.github !== null;
+        
+        if (hasLink) {
+            cardContainer.interactive = true;
+            cardContainer.buttonMode = true;
+            cardContainer.cursor = 'pointer';
+        }
+        
+        // Card shadow
+        const shadow = new PIXI.Graphics();
+        shadow.beginFill(0x000000, 0.4);
+        shadow.drawRoundedRect(4, 4, CONFIG.card.width, CONFIG.card.height, CONFIG.card.cornerRadius);
+        shadow.endFill();
+        shadow.zIndex = 0;
+        cardContainer.addChild(shadow);
         
         // Card background
         const cardBg = new PIXI.Graphics();
-        cardBg.beginFill(colors.cardBg, colors.cardBgAlpha);
-        cardBg.lineStyle(2, categoryColor, colors.cardBorderAlpha);
-        cardBg.drawRoundedRect(0, 0, cardWidth, cardHeight, 8);
+        cardBg.beginFill(colors.cardBg, 1);
+        cardBg.drawRoundedRect(0, 0, CONFIG.card.width, CONFIG.card.height, CONFIG.card.cornerRadius);
         cardBg.endFill();
-        cardBg.zIndex = 0;
+        cardBg.zIndex = 1;
+        cardContainer.addChild(cardBg);
+        
+        // Thick border (game card style)
+        const border = new PIXI.Graphics();
+        border.lineStyle(CONFIG.card.borderSize, borderColor, 1);
+        border.drawRoundedRect(
+            CONFIG.card.borderSize / 2,
+            CONFIG.card.borderSize / 2,
+            CONFIG.card.width - CONFIG.card.borderSize,
+            CONFIG.card.height - CONFIG.card.borderSize,
+            CONFIG.card.cornerRadius
+        );
+        border.zIndex = 2;
+        cardContainer.addChild(border);
+        
+        // Image area background (darker)
+        const imageArea = new PIXI.Graphics();
+        imageArea.beginFill(0x1a1a2e, 1);
+        imageArea.drawRoundedRect(
+            CONFIG.card.borderSize,
+            CONFIG.card.borderSize,
+            CONFIG.card.width - CONFIG.card.borderSize * 2,
+            CONFIG.card.imageHeight,
+            8
+        );
+        imageArea.endFill();
+        imageArea.zIndex = 3;
+        cardContainer.addChild(imageArea);
+        
+        // Icon (large emoji)
+        const icon = new PIXI.Text(project.icon, {
+            fontFamily: CONFIG.fonts.body,
+            fontSize: 60,
+            fill: colors.text
+        });
+        icon.anchor.set(0.5, 0.5);
+        icon.position.set(
+            CONFIG.card.width / 2,
+            CONFIG.card.borderSize + CONFIG.card.imageHeight / 2
+        );
+        icon.zIndex = 4;
+        cardContainer.addChild(icon);
+        
+        // Name banner
+        const nameBanner = new PIXI.Graphics();
+        nameBanner.beginFill(borderColor, 0.9);
+        nameBanner.drawRoundedRect(
+            CONFIG.card.borderSize,
+            CONFIG.card.borderSize + CONFIG.card.imageHeight - 5,
+            CONFIG.card.width - CONFIG.card.borderSize * 2,
+            CONFIG.card.nameHeight,
+            6
+        );
+        nameBanner.endFill();
+        nameBanner.zIndex = 5;
+        cardContainer.addChild(nameBanner);
         
         // Project name
-        const projectName = new PIXI.Text(project.name, {
-            fontFamily: FONTS.heading,
-            fontSize: FONT_SIZES.cardTitle[currentScreenSize],
-            fill: categoryColor,
-            fontWeight: "bold"
-        });
-        projectName.anchor.set(0.5, 0.5);
-        projectName.position.set(cardWidth / 2, cardHeight / 2 - 8);
-        projectName.zIndex = 1;
-        
-        // Status badge (always visible)
-        const statusColor = project.status === "Completed" ? colors.completedColor : 0x757575;
-        const statusBg = new PIXI.Graphics();
-        statusBg.beginFill(statusColor, 0.8);
-        statusBg.drawRoundedRect(5, cardHeight - 22, 30, 15, 6);
-        statusBg.endFill();
-        statusBg.zIndex = 1;
-        
-        const statusText = new PIXI.Text(project.status === "Completed" ? "✓" : "⏳", {
-            fontFamily: FONTS.body,
-            fontSize: FONT_SIZES.statusIcon[currentScreenSize],
+        const nameText = new PIXI.Text(project.name, {
+            fontFamily: CONFIG.fonts.heading,
+            fontSize: 16,
             fill: 0xffffff,
-            fontWeight: "bold"
-        });
-        statusText.anchor.set(0.5, 0.5);
-        statusText.position.set(20, cardHeight - 14.5);
-        statusText.zIndex = 2;
-        
-        // Add basic elements
-        cardContainer.addChild(cardBg);
-        cardContainer.addChild(projectName);
-        cardContainer.addChild(statusBg);
-        cardContainer.addChild(statusText);
-        
-        // Hover expansion background (initially hidden)
-        const hoverBg = new PIXI.Graphics();
-        hoverBg.beginFill(colors.cardBg, colors.cardBgAlpha * 1.3);
-        hoverBg.lineStyle(3, categoryColor, 1);
-        hoverBg.drawRoundedRect(-8, -8, cardWidth + 16, cardHeight + 90, 12);
-        hoverBg.endFill();
-        hoverBg.alpha = 0;
-        hoverBg.zIndex = -1;
-        cardContainer.addChild(hoverBg);
-        
-        // Description
-        const description = new PIXI.Text(project.description, {
-            fontFamily: FONTS.body,
-            fontSize: FONT_SIZES.cardDescription[screenSize],
-            fill: colors.grayText,
+            fontWeight: 'bold',
             wordWrap: true,
-            wordWrapWidth: cardWidth - 8,
-            lineHeight: 12
+            wordWrapWidth: CONFIG.card.width - CONFIG.card.borderSize * 2 - 10
         });
-        description.position.set(4, cardHeight + 2);
-        description.alpha = 0;
-        description.zIndex = 3;
-        cardContainer.addChild(description);
+        nameText.anchor.set(0.5, 0.5);
+        nameText.position.set(
+            CONFIG.card.width / 2,
+            CONFIG.card.borderSize + CONFIG.card.imageHeight + CONFIG.card.nameHeight / 2 - 5
+        );
+        nameText.zIndex = 6;
+        cardContainer.addChild(nameText);
         
-        // Skills
-        const skillsText = new PIXI.Text(`Skills: ${project.skills.join(', ')}`, {
-            fontFamily: FONTS.body,
-            fontSize: FONT_SIZES.cardSkills[screenSize],
-            fill: colors.whiteText,
-            wordWrap: true,
-            wordWrapWidth: cardWidth - 8
-        });
-        skillsText.position.set(4, cardHeight + 30);
-        skillsText.alpha = 0;
-        skillsText.zIndex = 3;
-        cardContainer.addChild(skillsText);
+        // Skills section
+        const skillsY = CONFIG.card.borderSize + CONFIG.card.imageHeight + CONFIG.card.nameHeight + 5;
         
-        // Grade
-        let gradeElement = null;
-        if (project.grade !== "In Progress") 
-        {
-            gradeElement = new PIXI.Text(`Grade: ${project.grade}`, {
-                fontFamily: FONTS.body,
-                fontSize: FONT_SIZES.cardGrade[screenSize],
-                fill: colors.completedColor,
-                fontWeight: "bold"
+        project.skills.forEach((skill, index) => {
+            const skillText = new PIXI.Text(`• ${skill}`, {
+                fontFamily: CONFIG.fonts.body,
+                fontSize: 11,
+                fill: colors.text
             });
-            gradeElement.position.set(4, cardHeight + 50);
-            gradeElement.alpha = 0;
-            gradeElement.zIndex = 3;
-            cardContainer.addChild(gradeElement);
-        }
-        
-        // Store hover elements
-        const hoverElements = [description, skillsText];
-        if (gradeElement) 
-        {
-            hoverElements.push(gradeElement);
-        }
-        
-        let isHovered = false;
-        
-        cardContainer.on('pointerover', () => {
-            if (isHovered)
-            {
-                return;
-            }
-            isHovered = true;
-            
-            hoverBg.alpha = 1;
-            hoverElements.forEach(element => element.alpha = 1);
-            cardContainer.zIndex = 1000;
-            container.sortChildren();
+            skillText.position.set(
+                CONFIG.card.borderSize + 10,
+                skillsY + index * 16
+            );
+            skillText.zIndex = 6;
+            cardContainer.addChild(skillText);
         });
         
-        cardContainer.on('pointerout', () => {
-            if (!isHovered)
-            {
-                return;
-            }
-            isHovered = false;
-            
-            hoverBg.alpha = 0;
-            hoverElements.forEach(element => element.alpha = 0);
-            cardContainer.zIndex = 0;
-        });
+        // Grade badge at bottom
+        const gradeY = CONFIG.card.height - CONFIG.card.borderSize - 25;
+        const gradeColor = project.grade.includes('Progress') ? 0xFF9800 : 0x4CAF50;
         
-        // Mobile/Touch support
-        cardContainer.on('pointertap', (event) => {
-            event.stopPropagation();
-            if (isHovered) 
-            {
-                // Hide
-                isHovered = false;
-                hoverBg.alpha = 0;
-                hoverElements.forEach(element => element.alpha = 0);
-                cardContainer.zIndex = 0;
-            } 
-            else 
-            {
-                // Show
+        const gradeBg = new PIXI.Graphics();
+        gradeBg.beginFill(gradeColor, 0.3);
+        gradeBg.lineStyle(2, gradeColor, 0.8);
+        gradeBg.drawRoundedRect(
+            CONFIG.card.borderSize + 5,
+            gradeY,
+            CONFIG.card.width - CONFIG.card.borderSize * 2 - 10,
+            20,
+            6
+        );
+        gradeBg.endFill();
+        gradeBg.zIndex = 6;
+        cardContainer.addChild(gradeBg);
+        
+        const gradeText = new PIXI.Text(project.grade, {
+            fontFamily: CONFIG.fonts.body,
+            fontSize: 12,
+            fill: gradeColor,
+            fontWeight: 'bold'
+        });
+        gradeText.anchor.set(0.5, 0.5);
+        gradeText.position.set(CONFIG.card.width / 2, gradeY + 10);
+        gradeText.zIndex = 7;
+        cardContainer.addChild(gradeText);
+        
+        // Shine effect
+        const shine = createShineEffect(cardContainer);
+        shine.zIndex = 10;
+        elements.shines.push(shine);
+        
+        // Start random shine animation
+        const startShine = () => {
+            const randomDelay = Math.random() * CONFIG.shine.interval;
+            setTimeout(() => {
+                animateShine(shine);
+                startShine(); // Loop
+            }, randomDelay);
+        };
+        startShine();
+        
+        // Hover effects
+        if (hasLink) {
+            let isHovered = false;
+            
+            cardContainer.on('pointerover', () => {
+                if (isHovered) return;
                 isHovered = true;
-                hoverBg.alpha = 1;
-                hoverElements.forEach(element => element.alpha = 1);
-                cardContainer.zIndex = 1000;
-                container.sortChildren();
                 
-                // Auto-hide after 3 seconds
-                setTimeout(() => {
-                    if (isHovered) 
-                    {
-                        isHovered = false;
-                        hoverBg.alpha = 0;
-                        hoverElements.forEach(element => element.alpha = 0);
-                        cardContainer.zIndex = 0;
-                    }
-                }, 3000);
-            }
-        });
+                cardContainer.scale.set(1.08);
+                cardContainer.zIndex = 1000;
+                
+                // Brighten border
+                border.clear();
+                border.lineStyle(CONFIG.card.borderSize + 2, borderColor, 1);
+                border.drawRoundedRect(
+                    CONFIG.card.borderSize / 2,
+                    CONFIG.card.borderSize / 2,
+                    CONFIG.card.width - CONFIG.card.borderSize,
+                    CONFIG.card.height - CONFIG.card.borderSize,
+                    CONFIG.card.cornerRadius
+                );
+                
+                // Trigger shine on hover
+                animateShine(shine);
+                
+                cardContainer.parent.sortChildren();
+            });
+            
+            cardContainer.on('pointerout', () => {
+                if (!isHovered) return;
+                isHovered = false;
+                
+                cardContainer.scale.set(1);
+                cardContainer.zIndex = 0;
+                
+                // Reset border
+                border.clear();
+                border.lineStyle(CONFIG.card.borderSize, borderColor, 1);
+                border.drawRoundedRect(
+                    CONFIG.card.borderSize / 2,
+                    CONFIG.card.borderSize / 2,
+                    CONFIG.card.width - CONFIG.card.borderSize,
+                    CONFIG.card.height - CONFIG.card.borderSize,
+                    CONFIG.card.cornerRadius
+                );
+            });
+            
+            cardContainer.on('pointertap', (event) => {
+                event.stopPropagation();
+                window.open(project.github, '_blank');
+            });
+        }
         
-        cardContainer.sortChildren();
-        container.addChild(cardContainer);
-    }
-    
-    /**
-     * Simple resize handler
-     */
-    const resizeElements = () => {
-        const currentScreenSize = getScreenSize();
-        
-        // Update main title
-        elements.titles[0].position.set(app.screen.width / 2, 80);
-        elements.titles[0].style.fontSize = FONT_SIZES.mainTitle[currentScreenSize];
-        
-        // Update description
-        elements.titles[1].position.set(app.screen.width / 2, 120);
-        elements.titles[1].style.fontSize = FONT_SIZES.description[currentScreenSize];
-        elements.titles[1].style.wordWrapWidth = app.screen.width - 100;
-        
-        // Recreate cards with new layout
-        setTimeout(() => {
-            recreateCards();
-        }, 10);
+        return cardContainer;
     };
     
-    /**
-     * Recreate cards - simple approach
-     */
-    function recreateCards() {
-        // Remove existing card containers
-        elements.cardContainers.forEach(cardContainer => {
-            if (cardContainer.parent) 
-            {
-                cardContainer.parent.removeChild(cardContainer);
-            }
+    // Build page
+    const buildPage = () => {
+        // Clear existing
+        elements.cards.forEach(card => card.destroy());
+        elements.titles.forEach(title => title.destroy());
+        elements.cards = [];
+        elements.titles = [];
+        elements.shines = [];
+        
+        // Main title
+        const mainTitle = new PIXI.Text('42 School Projects', {
+            fontFamily: CONFIG.fonts.heading,
+            fontSize: 36,
+            fill: colors.title
         });
+        mainTitle.anchor.set(0.5, 0);
+        mainTitle.position.set(app.screen.width / 2, 60);
+        container.addChild(mainTitle);
+        elements.titles.push(mainTitle);
         
-        elements.cardContainers = [];
-        
-        // Remove existing category titles
-        for (let i = elements.titles.length - 1; i >= 2; i--) {
-            if (elements.titles[i].parent) 
+        // Description
+        const description = new PIXI.Text(
+            'Collectible Project Cards - Click to view on GitHub',
             {
-                elements.titles[i].parent.removeChild(elements.titles[i]);
+                fontFamily: CONFIG.fonts.body,
+                fontSize: 16,
+                fill: colors.text,
+                wordWrap: true,
+                wordWrapWidth: app.screen.width - 100,
+                align: 'center'
             }
-            elements.titles.splice(i, 1);
-        }
+        );
+        description.anchor.set(0.5, 0);
+        description.position.set(app.screen.width / 2, 105);
+        container.addChild(description);
+        elements.titles.push(description);
         
-        // Recreate everything
-        let currentY = 160;
-        const currentScreenSize = getScreenSize();
+        let currentY = 150;
         
-        projectCategories.forEach((category) => {
+        // Calculate cards per row (responsive)
+        const minMargin = 40;
+        const availableWidth = app.screen.width - minMargin * 2;
+        const cardsPerRow = Math.max(1, Math.floor((availableWidth + CONFIG.card.spacing) / (CONFIG.card.width + CONFIG.card.spacing)));
+        
+        // Create categories
+        PROJECT_DATA.forEach(category => {
             // Category title
-            const categoryTitle = new PIXI.Text(category.title, {
-                fontFamily: FONTS.heading,
-                fontSize: FONT_SIZES.categoryTitle[currentScreenSize],
-                fill: colors.categoryTitle
+            const categoryTitle = new PIXI.Text(category.category, {
+                fontFamily: CONFIG.fonts.heading,
+                fontSize: 24,
+                fill: colors.title
             });
             categoryTitle.anchor.set(0.5, 0);
             categoryTitle.position.set(app.screen.width / 2, currentY);
             container.addChild(categoryTitle);
             elements.titles.push(categoryTitle);
             
-            currentY += LAYOUT.titleSpacing[currentScreenSize];
+            currentY += 40;
             
-            // Create cards
-            const cardsContainer = createCategoryCards(container, category, currentY);
-            elements.cardContainers.push(cardsContainer);
+            // Create cards in rows
+            category.projects.forEach((project, index) => {
+                const row = Math.floor(index / cardsPerRow);
+                const col = index % cardsPerRow;
+                
+                // Center each row
+                const cardsInRow = Math.min(cardsPerRow, category.projects.length - row * cardsPerRow);
+                const rowWidth = cardsInRow * CONFIG.card.width + (cardsInRow - 1) * CONFIG.card.spacing;
+                const startX = (app.screen.width - rowWidth) / 2;
+                
+                const cardX = startX + col * (CONFIG.card.width + CONFIG.card.spacing);
+                const cardY = currentY + row * (CONFIG.card.height + CONFIG.card.spacing);
+                
+                const card = createGameCard(project, cardX, cardY);
+                container.addChild(card);
+                elements.cards.push(card);
+            });
             
-            const cardsPerRow = Math.floor((app.screen.width - 100) / (LAYOUT.cardWidth[currentScreenSize] + LAYOUT.spacing[currentScreenSize]));
+            // Update Y for next category
             const rows = Math.ceil(category.projects.length / cardsPerRow);
-            currentY += rows * (LAYOUT.cardHeight[currentScreenSize] + LAYOUT.spacing[currentScreenSize]) + LAYOUT.categorySpacing[currentScreenSize];
+            currentY += rows * (CONFIG.card.height + CONFIG.card.spacing) + 40;
         });
-    }
-    
-    /**
-     * Theme update handler - FIXED COLOR ISSUE
-     */
-    const updateTheme = () => {
-        const newTheme = document.body.getAttribute('data-theme') || 'light';
-        colors = getColors(newTheme);
-        
-        // Update title colors
-        elements.titles.forEach((title, index) => {
-            if (title.style) {
-                if (index === 1) 
-                {
-                    title.style.fill = colors.whiteText;
-                } 
-                else 
-                {
-                    title.style.fill = colors.title;
-                }
-            }
-        });
-        
-        // Recreate cards with new colors
-        recreateCards();
     };
     
-    // Event listeners
-    window.addEventListener('resize', resizeElements);
+    // Resize handler
+    const handleResize = () => {
+        setTimeout(() => buildPage(), 10);
+    };
     
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.attributeName === 'data-theme') 
-            {
-                updateTheme();
+    // Theme handler
+    const handleTheme = () => {
+        colors = CONFIG.colors[getTheme()];
+        buildPage();
+    };
+    
+    // Initial build
+    buildPage();
+    
+    // Event listeners
+    window.addEventListener('resize', handleResize);
+    
+    const themeObserver = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+            if (mutation.attributeName === 'data-theme') {
+                handleTheme();
             }
         });
     });
-    observer.observe(document.body, { attributes: true });
+    themeObserver.observe(document.body, { attributes: true });
     
     // Cleanup
     container.cleanup = () => {
-        window.removeEventListener('resize', resizeElements);
-        observer.disconnect();
+        window.removeEventListener('resize', handleResize);
+        themeObserver.disconnect();
     };
     
     return true;

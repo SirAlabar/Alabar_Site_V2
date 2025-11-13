@@ -98,11 +98,7 @@ class GameAreaManager
 		mask.beginFill(0xFFFFFF);
 		mask.drawRect(0, 0, this.bounds.width, this.bounds.height);
 		mask.endFill();
-		
-		// Apply the mask to the gameplay group if needed
-		// Note: Only uncomment this if you want to strictly mask gameplay elements
-		// this.gameInstance.gameplayGroup.mask = mask;
-		
+
 		// Add to gameplay group for reference
 		this.gameInstance.gameplayGroup.addChild(mask);
 		
